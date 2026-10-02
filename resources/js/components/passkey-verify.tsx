@@ -31,7 +31,7 @@ export default function PasskeyVerify({
             },
         }),
         onSuccess: (response) => {
-            router.visit(response.redirect ?? '/desa');
+            router.visit(response.redirect ?? '/village');
         },
     });
 

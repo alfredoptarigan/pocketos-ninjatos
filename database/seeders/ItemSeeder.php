@@ -19,7 +19,7 @@ class ItemSeeder extends Seeder
 
         if (! is_file($path)) {
             throw new RuntimeException(
-                'Data item belum ada. Jalankan: python3 tools/extract_item_assets.py ~/Privates/game-pockieninja',
+                'Item data not found. Run: python3 tools/extract_item_assets.py ~/Privates/game-pockieninja',
             );
         }
 

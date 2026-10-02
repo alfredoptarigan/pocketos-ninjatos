@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
-class ApotekController extends Controller
+class PharmacyController extends Controller
 {
     /**
      * Show the pharmacy stock and how many of each the player carries.
@@ -19,7 +19,7 @@ class ApotekController extends Controller
     {
         $character = $request->user()->character;
 
-        return Inertia::render('bangunan/apotek', [
+        return Inertia::render('buildings/pharmacy', [
             'items' => Item::query()->pharmacy()->orderBy('code')->get([
                 'id', 'name', 'icon', 'price', 'restore_hp', 'restore_chakra', 'restore_energy', 'max_stack',
             ]),
@@ -37,8 +37,8 @@ class ApotekController extends Controller
 
         $purchase->handle($request->user()->character, $item, $quantity);
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => "Membeli {$quantity} {$item->name}."]);
+        Inertia::flash('toast', ['type' => 'success', 'message' => "Bought {$quantity} {$item->name}."]);
 
-        return to_route('apotek.show');
+        return to_route('pharmacy.show');
     }
 }

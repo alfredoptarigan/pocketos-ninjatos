@@ -33,7 +33,7 @@ def main() -> None:
         sys.exit(__doc__)
     scene_dir = Path(sys.argv[1]).expanduser() / SCENE_DIR
     if not scene_dir.is_dir():
-        sys.exit(f'Folder scene tidak ditemukan: {scene_dir}')
+        sys.exit(f'Scene folder not found: {scene_dir}')
 
     (OUT_DIR / 'villages').mkdir(parents=True, exist_ok=True)
     villages = {}
@@ -48,7 +48,7 @@ def main() -> None:
             'background': f'/game-assets/villages/{village_id}.jpg',
             'buildings': buildings,
         }
-        print(f'{village_id}: {len(buildings)} bangunan')
+        print(f'{village_id}: {len(buildings)} buildings')
 
     (OUT_DIR / 'villages.json').write_text(json.dumps(villages, indent=2))
 

@@ -14,7 +14,7 @@ export default function PlayerHud({ character }: { character: Character }) {
                 <p className="font-semibold">{character.name}</p>
                 <p className="text-xs text-amber-300">
                     Level {character.level} ·{' '}
-                    {character.gold.toLocaleString('id-ID')} koin
+                    {character.gold.toLocaleString('en-US')} gold
                 </p>
             </div>
         </div>

@@ -39,8 +39,8 @@ class BuyItemRequest extends FormRequest
     public function attributes(): array
     {
         return [
-            'item_id' => 'barang',
-            'quantity' => 'jumlah',
+            'item_id' => 'item',
+            'quantity' => 'quantity',
         ];
     }
 }

@@ -13,13 +13,13 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { desa } from '@/routes';
+import { village } from '@/routes';
 import type { NavItem } from '@/types';
 
 const mainNavItems: NavItem[] = [
     {
-        title: 'Desa',
-        href: desa(),
+        title: 'Village',
+        href: village(),
         icon: LayoutGrid,
     },
 ];
@@ -44,7 +44,7 @@ export function AppSidebar() {
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
-                            <Link href={desa()} prefetch>
+                            <Link href={village()} prefetch>
                                 <AppLogo />
                             </Link>
                         </SidebarMenuButton>

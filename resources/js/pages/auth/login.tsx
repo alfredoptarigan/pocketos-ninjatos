@@ -20,7 +20,7 @@ type Props = {
 export default function Login({ status, canResetPassword }: Props) {
     return (
         <>
-            <Head title="Masuk" />
+            <Head title="Log in" />
 
             <PasskeyVerify />
 
@@ -33,7 +33,7 @@ export default function Login({ status, canResetPassword }: Props) {
                     <>
                         <div className="grid gap-6">
                             <div className="grid gap-2">
-                                <Label htmlFor="email">Alamat email</Label>
+                                <Label htmlFor="email">Email address</Label>
                                 <Input
                                     id="email"
                                     type="email"
@@ -56,7 +56,7 @@ export default function Login({ status, canResetPassword }: Props) {
                                             className="ml-auto text-sm"
                                             tabIndex={5}
                                         >
-                                            Lupa password?
+                                            Forgot your password?
                                         </TextLink>
                                     )}
                                 </div>
@@ -77,7 +77,7 @@ export default function Login({ status, canResetPassword }: Props) {
                                     name="remember"
                                     tabIndex={3}
                                 />
-                                <Label htmlFor="remember">Ingat saya</Label>
+                                <Label htmlFor="remember">Remember me</Label>
                             </div>
 
                             <Button
@@ -88,14 +88,14 @@ export default function Login({ status, canResetPassword }: Props) {
                                 data-test="login-button"
                             >
                                 {processing && <Spinner />}
-                                Masuk
+                                Log in
                             </Button>
                         </div>
 
                         <div className="text-center text-sm text-muted-foreground">
-                            Belum punya akun?{' '}
+                            Don't have an account?{' '}
                             <TextLink href={register()} tabIndex={5}>
-                                Daftar
+                                Sign up
                             </TextLink>
                         </div>
                     </>
@@ -112,6 +112,6 @@ export default function Login({ status, canResetPassword }: Props) {
 }
 
 Login.layout = {
-    title: 'Masuk ke desa ninja',
-    description: 'Masukkan email dan password untuk masuk',
+    title: 'Log in to your account',
+    description: 'Enter your email and password below to log in',
 };

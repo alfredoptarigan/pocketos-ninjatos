@@ -64,7 +64,7 @@ export default function CharacterSprite({ avatar, className }: Props) {
         <div ref={hostRef} className={className}>
             {error !== null && (
                 <p className="p-2 text-xs text-muted-foreground">
-                    Sprite belum diekstrak.
+                    Sprite not extracted yet.
                 </p>
             )}
         </div>

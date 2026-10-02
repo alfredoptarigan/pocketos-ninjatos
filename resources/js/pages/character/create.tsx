@@ -7,17 +7,17 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
-import { store } from '@/routes/karakter';
+import { store } from '@/routes/character';
 import { characterAssets, isFemaleAvatar } from '@/types/game';
 
 type Props = { avatars: string[] };
 
 const GENDERS = [
-    { label: 'Pria', female: false },
-    { label: 'Wanita', female: true },
+    { label: 'Male', female: false },
+    { label: 'Female', female: true },
 ];
 
-export default function Buat({ avatars }: Props) {
+export default function CreateCharacter({ avatars }: Props) {
     const [selected, setSelected] = useState(avatars[0]);
     const showFemale = isFemaleAvatar(selected);
     const visible = avatars.filter(
@@ -36,12 +36,12 @@ export default function Buat({ avatars }: Props) {
 
     return (
         <>
-            <Head title="Buat Ninja" />
+            <Head title="Create Ninja" />
             <div className="grid flex-1 gap-6 p-4 lg:grid-cols-2">
                 <section className="relative flex min-h-[420px] items-end justify-center overflow-hidden rounded-xl border border-sidebar-border/70 bg-gradient-to-b from-sky-200 to-amber-100 dark:border-sidebar-border dark:from-slate-800 dark:to-slate-950">
                     <img
                         src={characterAssets(selected).portrait}
-                        alt="Potret ninja terpilih"
+                        alt="Selected ninja portrait"
                         className="absolute inset-x-0 top-4 mx-auto h-[70%] [mask-image:linear-gradient(to_bottom,black_75%,transparent)] object-contain"
                     />
                     <CharacterSprite
@@ -53,17 +53,19 @@ export default function Buat({ avatars }: Props) {
 
                 <section className="flex flex-col gap-6">
                     <div>
-                        <h1 className="text-2xl font-semibold">Buat ninjamu</h1>
+                        <h1 className="text-2xl font-semibold">
+                            Create your ninja
+                        </h1>
                         <p className="text-muted-foreground">
-                            Pilih penampilan dan nama. Nama tidak bisa diubah
-                            nanti.
+                            Pick a look and a name. The name cannot be changed
+                            later.
                         </p>
                     </div>
 
                     <div
                         className="flex gap-2"
                         role="radiogroup"
-                        aria-label="Jenis kelamin"
+                        aria-label="Gender"
                     >
                         {GENDERS.map(({ label, female }) => (
                             <Button
@@ -127,7 +129,7 @@ export default function Buat({ avatars }: Props) {
                                 <InputError message={errors.avatar} />
 
                                 <div className="grid gap-2">
-                                    <Label htmlFor="name">Nama ninja</Label>
+                                    <Label htmlFor="name">Ninja name</Label>
                                     <Input
                                         id="name"
                                         name="name"
@@ -135,7 +137,7 @@ export default function Buat({ avatars }: Props) {
                                         minLength={3}
                                         maxLength={16}
                                         autoComplete="off"
-                                        placeholder="3–16 huruf atau angka"
+                                        placeholder="3–16 letters or numbers"
                                     />
                                     <InputError message={errors.name} />
                                 </div>
@@ -146,7 +148,7 @@ export default function Buat({ avatars }: Props) {
                                     data-test="create-character-button"
                                 >
                                     {processing && <Spinner />}
-                                    Mulai petualangan
+                                    Start your adventure
                                 </Button>
                             </>
                         )}

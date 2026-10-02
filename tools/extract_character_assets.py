@@ -118,7 +118,7 @@ def main() -> None:
     source = Path(sys.argv[1]).expanduser() / SOURCE
     create_dir = source / 'bitmap/peoplecreate'
     if not create_dir.is_dir():
-        sys.exit(f'Folder peoplecreate tidak ditemukan: {create_dir}')
+        sys.exit(f'peoplecreate folder not found: {create_dir}')
 
     for create_swf in sorted(create_dir.glob('avatars_*_clothing_create*.swf')):
         print(extract_avatar(source, create_swf))

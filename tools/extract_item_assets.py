@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Extract the pharmacy (Apotek) items from the Pockie Ninja backup.
+"""Extract the pharmacy items from the Pockie Ninja backup.
 
 Usage: python3 tools/extract_item_assets.py <path-to-game-pockieninja>
 
@@ -24,26 +24,26 @@ DATATABLE_DIR = 'apache/source/binary/datatable'
 ICON_DIR = 'apache/source/bitmap/icon'
 HEADER_ROW = 1  # row 0 holds Chinese column descriptions
 
-# Indonesian names for the original item name keys (source names are Chinese).
+# English names for the original item name keys (source names are Chinese).
 NAMES = {
-    'Energy1': 'Obat Mujarab Sakura', 'Energy2': 'Obat Mujarab Shizune',
-    'Energy3': 'Obat Mujarab Tsunade', 'Energy4': 'Obat Rahasia Katak',
-    'Energy5': 'Obat Rahasia Konoha',
-    'HP1': 'Bubuk Penyembuh', 'HP2': 'Kapsul Penyembuh',
-    'HP3': 'Ramuan Penyembuh Kecil', 'HP4': 'Ramuan Penyembuh Sedang',
-    'HP5': 'Ramuan Penyembuh Besar', 'HP6': 'Botol Penyembuh Kecil',
-    'HP7': 'Botol Penyembuh Sedang', 'HP8': 'Botol Penyembuh Besar',
-    'HP9': 'Sari Stamina', 'HP10': 'Sumber Stamina', 'HP11': 'Sumber Stamina Agung',
-    'SP1': 'Bubuk Cakra', 'SP2': 'Kapsul Cakra',
-    'SP3': 'Ramuan Cakra Kecil', 'SP4': 'Ramuan Cakra Sedang',
-    'SP5': 'Ramuan Cakra Besar', 'SP6': 'Botol Cakra Kecil',
-    'SP7': 'Botol Cakra Sedang', 'SP8': 'Botol Cakra Besar',
-    'SP9': 'Sari Cakra', 'SP10': 'Sumber Cakra', 'SP11': 'Sumber Cakra Agung',
-    'HPSP1': 'Bubuk Pemulih', 'HPSP2': 'Kapsul Pemulih',
-    'HPSP3': 'Ramuan Pemulih Kecil', 'HPSP4': 'Ramuan Pemulih Sedang',
-    'HPSP5': 'Ramuan Pemulih Besar', 'HPSP6': 'Botol Pemulih Kecil',
-    'HPSP7': 'Botol Pemulih Sedang', 'HPSP8': 'Botol Pemulih Besar',
-    'HPSP9': 'Sari Energi', 'HPSP10': 'Sumber Energi', 'HPSP11': 'Sumber Energi Agung',
+    'Energy1': "Sakura's Miracle Pill", 'Energy2': "Shizune's Miracle Pill",
+    'Energy3': "Tsunade's Miracle Pill", 'Energy4': 'Toad Secret Remedy',
+    'Energy5': 'Leaf Secret Remedy',
+    'HP1': 'Healing Powder', 'HP2': 'Healing Capsule',
+    'HP3': 'Small Healing Potion', 'HP4': 'Medium Healing Potion',
+    'HP5': 'Large Healing Potion', 'HP6': 'Small Healing Flask',
+    'HP7': 'Medium Healing Flask', 'HP8': 'Large Healing Flask',
+    'HP9': 'Stamina Essence', 'HP10': 'Stamina Source', 'HP11': 'Grand Stamina Source',
+    'SP1': 'Chakra Powder', 'SP2': 'Chakra Capsule',
+    'SP3': 'Small Chakra Potion', 'SP4': 'Medium Chakra Potion',
+    'SP5': 'Large Chakra Potion', 'SP6': 'Small Chakra Flask',
+    'SP7': 'Medium Chakra Flask', 'SP8': 'Large Chakra Flask',
+    'SP9': 'Chakra Essence', 'SP10': 'Chakra Source', 'SP11': 'Grand Chakra Source',
+    'HPSP1': 'Restoration Powder', 'HPSP2': 'Restoration Capsule',
+    'HPSP3': 'Small Restoration Potion', 'HPSP4': 'Medium Restoration Potion',
+    'HPSP5': 'Large Restoration Potion', 'HPSP6': 'Small Restoration Flask',
+    'HPSP7': 'Medium Restoration Flask', 'HPSP8': 'Large Restoration Flask',
+    'HPSP9': 'Energy Essence', 'HPSP10': 'Energy Source', 'HPSP11': 'Grand Energy Source',
 }
 
 
@@ -107,7 +107,7 @@ def main() -> None:
         })
 
     DATA_OUT.write_text(json.dumps(items, indent=2, ensure_ascii=False))
-    print(f'{len(items)} item apotek ditulis ke {DATA_OUT.relative_to(ROOT)}')
+    print(f'Wrote {len(items)} pharmacy items to {DATA_OUT.relative_to(ROOT)}')
 
 
 if __name__ == '__main__':

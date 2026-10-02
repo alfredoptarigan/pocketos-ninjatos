@@ -3,18 +3,18 @@ import { useState } from 'react';
 import PlayerHud from '@/components/player-hud';
 import VillageCanvas from '@/components/village-canvas';
 import { buildingName } from '@/game/village-scene';
-import { desa } from '@/routes';
-import { show as apotek } from '@/routes/apotek';
+import { village } from '@/routes';
+import { show as pharmacy } from '@/routes/pharmacy';
 
 // Main city of the original game; other villages come with travel later.
 const HOME_VILLAGE_ID = '111';
 
-// Buildings that already have a screen; the rest show "segera hadir".
+// Buildings that already have a screen; the rest show "coming soon".
 const BUILDING_ROUTES: Record<string, () => { url: string }> = {
-    pharmacy: apotek,
+    pharmacy,
 };
 
-export default function Desa() {
+export default function Village() {
     const { character } = usePage().props;
     const [selected, setSelected] = useState<string | null>(null);
 
@@ -30,16 +30,16 @@ export default function Desa() {
 
     return (
         <>
-            <Head title="Desa" />
+            <Head title="Village" />
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
                 <div>
                     <h1 className="text-2xl font-semibold">
-                        Selamat datang, {character?.name}!
+                        Welcome, {character?.name}!
                     </h1>
                     <p className="text-muted-foreground">
                         {selected
-                            ? `${buildingName(selected)} segera hadir.`
-                            : 'Klik bangunan di desa untuk mengunjunginya.'}
+                            ? `${buildingName(selected)} is coming soon.`
+                            : 'Click a building to visit it.'}
                     </p>
                 </div>
                 <div className="relative aspect-video w-full overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
@@ -54,11 +54,11 @@ export default function Desa() {
     );
 }
 
-Desa.layout = {
+Village.layout = {
     breadcrumbs: [
         {
-            title: 'Desa',
-            href: desa(),
+            title: 'Village',
+            href: village(),
         },
     ],
 };

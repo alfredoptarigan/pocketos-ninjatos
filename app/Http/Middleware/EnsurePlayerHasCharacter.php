@@ -16,7 +16,7 @@ class EnsurePlayerHasCharacter
     public function handle(Request $request, Closure $next): Response
     {
         if (! $request->user()?->character()->exists()) {
-            return to_route('karakter.create');
+            return to_route('character.create');
         }
 
         return $next($request);

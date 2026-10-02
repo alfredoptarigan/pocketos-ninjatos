@@ -28,13 +28,13 @@ class PurchaseItem
 
             if ($owned + $quantity > $item->max_stack) {
                 throw ValidationException::withMessages([
-                    'quantity' => "Tas hanya muat {$item->max_stack} {$item->name}. Kamu sudah punya {$owned}.",
+                    'quantity' => "Your bag holds at most {$item->max_stack} {$item->name}. You already have {$owned}.",
                 ]);
             }
 
             if ($cost > $buyer->gold) {
                 throw ValidationException::withMessages([
-                    'quantity' => "Koin tidak cukup: butuh {$cost}, kamu punya {$buyer->gold}.",
+                    'quantity' => "Not enough gold: you need {$cost} but have {$buyer->gold}.",
                 ]);
             }
 

@@ -9,12 +9,12 @@ const VILLAGES_URL = '/game-assets/villages.json';
 
 const BUILDING_NAMES: Record<string, string> = {
     arena: 'Arena',
-    pharmacy: 'Apotek',
-    hall: 'Balai Desa',
-    equip: 'Toko Perlengkapan',
-    foundry: 'Pandai Besi',
-    trade: 'Pasar',
-    rest: 'Penginapan',
+    pharmacy: 'Pharmacy',
+    hall: 'Mission Hall',
+    equip: 'Equipment Shop',
+    foundry: 'Blacksmith',
+    trade: 'Market',
+    rest: 'Inn',
 };
 
 type Building = { x: number; y: number };
@@ -74,7 +74,7 @@ export async function createVillage(
     const village = villages[villageId];
 
     if (!village) {
-        throw new Error(`Desa ${villageId} tidak ada di ${VILLAGES_URL}`);
+        throw new Error(`Village ${villageId} is missing from ${VILLAGES_URL}`);
     }
 
     const world = new Container();

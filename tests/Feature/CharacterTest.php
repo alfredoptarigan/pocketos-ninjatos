@@ -14,24 +14,24 @@ class CharacterTest extends TestCase
 
     public function test_guests_are_redirected_to_the_login_page()
     {
-        $this->get(route('karakter.create'))->assertRedirect(route('login'));
+        $this->get(route('character.create'))->assertRedirect(route('login'));
     }
 
     public function test_players_without_a_character_are_sent_to_create_one()
     {
         $this->actingAs(User::factory()->create());
 
-        $this->get(route('desa'))->assertRedirect(route('karakter.create'));
+        $this->get(route('village'))->assertRedirect(route('character.create'));
     }
 
     public function test_create_screen_lists_the_avatars()
     {
         $this->actingAs(User::factory()->create());
 
-        $this->get(route('karakter.create'))
+        $this->get(route('character.create'))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
-                ->component('karakter/buat')
+                ->component('character/create')
                 ->has('avatars', count(config('game.avatars'))));
     }
 
@@ -40,12 +40,12 @@ class CharacterTest extends TestCase
         $user = User::factory()->create();
         $this->actingAs($user);
 
-        $response = $this->post(route('karakter.store'), [
+        $response = $this->post(route('character.store'), [
             'name' => 'Naruto',
             'avatar' => '0_12',
         ]);
 
-        $response->assertRedirect(route('desa'));
+        $response->assertRedirect(route('village'));
         $this->assertDatabaseHas('characters', [
             'user_id' => $user->id,
             'name' => 'Naruto',
@@ -60,7 +60,7 @@ class CharacterTest extends TestCase
         Character::factory()->create(['name' => 'Naruto']);
         $this->actingAs(User::factory()->create());
 
-        $this->post(route('karakter.store'), ['name' => 'Naruto', 'avatar' => '0_12'])
+        $this->post(route('character.store'), ['name' => 'Naruto', 'avatar' => '0_12'])
             ->assertSessionHasErrors('name');
     }
 
@@ -69,7 +69,7 @@ class CharacterTest extends TestCase
         $this->actingAs(User::factory()->create());
 
         foreach (['', 'ab', str_repeat('a', 17), 'nama<script>'] as $name) {
-            $this->post(route('karakter.store'), ['name' => $name, 'avatar' => '0_12'])
+            $this->post(route('character.store'), ['name' => $name, 'avatar' => '0_12'])
                 ->assertSessionHasErrors('name');
         }
     }
@@ -78,7 +78,7 @@ class CharacterTest extends TestCase
     {
         $this->actingAs(User::factory()->create());
 
-        $this->post(route('karakter.store'), ['name' => 'Naruto', 'avatar' => '9_999'])
+        $this->post(route('character.store'), ['name' => 'Naruto', 'avatar' => '9_999'])
             ->assertSessionHasErrors('avatar');
     }
 
@@ -87,9 +87,9 @@ class CharacterTest extends TestCase
         $character = Character::factory()->create();
         $this->actingAs($character->user);
 
-        $this->get(route('karakter.create'))->assertRedirect(route('desa'));
-        $this->post(route('karakter.store'), ['name' => 'Kedua', 'avatar' => '0_12'])
-            ->assertRedirect(route('desa'));
+        $this->get(route('character.create'))->assertRedirect(route('village'));
+        $this->post(route('character.store'), ['name' => 'Kedua', 'avatar' => '0_12'])
+            ->assertRedirect(route('village'));
 
         $this->assertDatabaseCount('characters', 1);
     }
@@ -99,7 +99,7 @@ class CharacterTest extends TestCase
         $character = Character::factory()->create(['name' => 'Sakura', 'avatar' => '1_26']);
         $this->actingAs($character->user);
 
-        $this->get(route('desa'))->assertInertia(fn (Assert $page) => $page
+        $this->get(route('village'))->assertInertia(fn (Assert $page) => $page
             ->where('character.name', 'Sakura')
             ->where('character.avatar', '1_26')
             ->where('character.level', 1));

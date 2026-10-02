@@ -37,7 +37,7 @@ export default function VillageCanvas({ villageId, onBuildingSelect }: Props) {
             <div ref={hostRef} className="absolute inset-0" />
             {error !== null && (
                 <p className="absolute inset-x-4 top-4 rounded-md bg-red-950/90 p-3 font-mono text-sm text-red-100">
-                    Aset desa belum ada. Jalankan: python3
+                    Village assets are missing. Run: python3
                     tools/extract_village_assets.py ~/Privates/game-pockieninja
                 </p>
             )}

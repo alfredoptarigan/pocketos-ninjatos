@@ -35,7 +35,7 @@ class StoreCharacterRequest extends FormRequest
     public function attributes(): array
     {
         return [
-            'name' => 'nama ninja',
+            'name' => 'ninja name',
             'avatar' => 'avatar',
         ];
     }
@@ -46,8 +46,8 @@ class StoreCharacterRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'name.regex' => 'Nama ninja hanya boleh berisi huruf, angka, spasi, - dan _.',
-            'name.unique' => 'Nama ninja ini sudah dipakai.',
+            'name.regex' => 'Ninja names may only contain letters, numbers, spaces, - and _.',
+            'name.unique' => 'That ninja name is already taken.',
         ];
     }
 }

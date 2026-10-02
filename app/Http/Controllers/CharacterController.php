@@ -16,10 +16,10 @@ class CharacterController extends Controller
     public function create(Request $request): Response|RedirectResponse
     {
         if ($request->user()->character()->exists()) {
-            return to_route('desa');
+            return to_route('village');
         }
 
-        return Inertia::render('karakter/buat', [
+        return Inertia::render('character/create', [
             'avatars' => config('game.avatars'),
         ]);
     }
@@ -30,7 +30,7 @@ class CharacterController extends Controller
     public function store(StoreCharacterRequest $request): RedirectResponse
     {
         if ($request->user()->character()->exists()) {
-            return to_route('desa');
+            return to_route('village');
         }
 
         // gold is not mass assignable: it only changes through game actions.
@@ -38,6 +38,6 @@ class CharacterController extends Controller
             ->forceFill(['gold' => config('game.starting_gold')])
             ->save();
 
-        return to_route('desa');
+        return to_route('village');
     }
 }

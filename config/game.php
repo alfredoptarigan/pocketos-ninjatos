@@ -23,7 +23,7 @@ return [
     | Starting Gold
     |--------------------------------------------------------------------------
     |
-    | Koin a freshly created ninja carries into the village.
+    | Gold a freshly created ninja carries into the village.
     |
     */
 
