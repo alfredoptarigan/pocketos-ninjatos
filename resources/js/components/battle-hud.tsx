@@ -48,7 +48,7 @@ export default function BattleHud({ fighters, hp, floor }: Props) {
                     <img
                         src={`${FIGHT_UI}/vs-text.png`}
                         alt="Versus"
-                        className="absolute top-[20px] left-px"
+                        className="absolute top-[20px] left-px h-[22px] w-[62px]"
                     />
                 </div>
                 <TopGroup side="enemy" fighter={opponent} hp={hp[1]} />

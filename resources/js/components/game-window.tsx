@@ -18,7 +18,7 @@ export default function GameWindow({ title, closeHref, children }: Props) {
             <img
                 src="/game-assets/ui/frame-ornament.png"
                 alt=""
-                className="pointer-events-none absolute -top-[34px] left-1/2 -translate-x-1/2"
+                className="pointer-events-none absolute -top-[34px] left-1/2 h-[34px] w-[204px] -translate-x-1/2"
             />
             {closeHref && (
                 <Link

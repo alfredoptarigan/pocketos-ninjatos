@@ -172,6 +172,17 @@ python3 tools/extract_tower_assets.py ~/Privates/game-pockieninja --hd       # ~
 - Faces, create-screen portraits and boss portraits are upscaled in place.
 - Without `--hd` the extractors write the original 1x art; both work with the game.
 
+### HD UI skin, battle HUD and item icons
+
+- `extract_ui_assets.py` always renders vector art (window skin, bottom menu, battle HUD)
+  at `UI_ZOOM = 2` with JPEXS `-zoom 2`. The frontend keeps original sizes: CSS
+  `border-image` slices are in 2x pixels (`68 64 64 64` for the frame, `12` for buttons)
+  while border widths stay 1x, and images get explicit sizes (`game-window.tsx`,
+  `game-menu.tsx`, `battle-hud.tsx`). Change `UI_ZOOM` and those values together.
+- `extract_ui_assets.py --hd` also upscales the bitmap NPC portrait 2x.
+- `extract_item_assets.py --hd` upscales the ~24-40px item icons 4x into PNGs (the JSON
+  then points at `.png`); re-run `php artisan db:seed --class=ItemSeeder` afterwards.
+
 ## 7. Id cheat sheet
 
 - **Avatar keys** `"<sex>_<id>"` (0 male, 1 female): the 18 creatable avatars are listed

@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
 """Render the original game's window skin, menu buttons, battle HUD, NPC portraits and music.
 
-Usage: python3 tools/extract_ui_assets.py <path-to-game-pockieninja>
+Usage: python3 tools/extract_ui_assets.py <path-to-game-pockieninja> [--hd]
+
+Vector art (skin, menu, battle HUD) is always rendered at UI_ZOOM (2x) for
+sharp HiDPI screens; the frontend draws it at its original size.
+--hd also AI-upscales the bitmap NPC portraits (see tools/upscale.py).
 
 The skin is vector art, so it is rendered with JPEXS Free Flash Decompiler:
   JAVA       java binary   (default /opt/homebrew/opt/openjdk/bin/java)
@@ -21,6 +25,8 @@ import tempfile
 from pathlib import Path
 
 from swf import read_swf, symbol_classes
+from upscale import available as upscaler_available
+from upscale import upscale_file
 
 OUT_DIR = Path(__file__).resolve().parent.parent / 'public' / 'game-assets'
 SKIN_SWF = 'apache/source/movieclip/ui/uilookandfeel.s12755.swf'
@@ -28,6 +34,11 @@ NPC_PORTRAITS = 'apache/source/bitmap/npcbackphoto'
 MENU_SWF = 'apache/source/movieclip/ui/sceneui/bottommenu.s14661.swf'
 MUSIC_DIR = 'apache/source/music'
 FIGHT_SWF = 'apache/source/movieclip/ui/fighting.s53608.swf'
+
+# Vector pieces are rendered at this zoom; CSS slices and image sizes in the
+# frontend assume it (resources/css/app.css, game-window.tsx, game-menu.tsx).
+UI_ZOOM = 2
+HD_SCALE = 2
 
 # Output file -> AsWing look-and-feel symbol used by the original client.
 SKIN_SYMBOLS = {
@@ -41,8 +52,8 @@ SKIN_SYMBOLS = {
 
 # The window frame's top edge carries a jewel ornament that must not be
 # stretched: it is cut out and drawn separately, centred on the title.
-ORNAMENT_BOX = (68, 0, 272, 34)  # left, top, right, bottom in frame pixels
-PLAIN_EDGE_COLUMN = 50  # a column of undecorated top edge to patch the gap with
+ORNAMENT_BOX = (68, 0, 272, 34)  # left, top, right, bottom in 1x frame pixels
+PLAIN_EDGE_COLUMN = 50  # a 1x column of undecorated top edge to patch the gap with
 
 # Bottom menu buttons (DefineButton2 ids; the file has no class names).
 # Identified by rendering them: each has up/over/down frames 1-3.
@@ -71,7 +82,7 @@ NPC_FILES = {'pharmacy': 'n11004'}
 def render_symbols(java: str, ffdec: Path, swf_path: Path, ids: list[int], out: Path) -> None:
     subprocess.run(
         [
-            java, '-Djava.awt.headless=true', '-jar', str(ffdec),
+            java, '-Djava.awt.headless=true', '-jar', str(ffdec), '-zoom', str(UI_ZOOM),
             '-selectid', ','.join(map(str, ids)),
             '-format', 'sprite:png', '-export', 'sprite', str(out), str(swf_path),
         ],
@@ -85,7 +96,7 @@ def render_menu_buttons(java: str, ffdec: Path, swf_path: Path, menu_dir: Path) 
         out = Path(tmp)
         subprocess.run(
             [
-                java, '-Djava.awt.headless=true', '-jar', str(ffdec),
+                java, '-Djava.awt.headless=true', '-jar', str(ffdec), '-zoom', str(UI_ZOOM),
                 '-selectid', ','.join(map(str, MENU_BUTTONS.values())),
                 '-format', 'button:png', '-export', 'button', str(out), str(swf_path),
             ],
@@ -107,7 +118,7 @@ def render_fight_hud(java: str, ffdec: Path, swf_path: Path, out_dir: Path) -> N
         ids = [*FIGHT_SHAPES.values(), *(sprite for sprite, _ in FIGHT_SPRITES.values())]
         subprocess.run(
             [
-                java, '-Djava.awt.headless=true', '-jar', str(ffdec),
+                java, '-Djava.awt.headless=true', '-jar', str(ffdec), '-zoom', str(UI_ZOOM),
                 '-selectid', ','.join(map(str, ids)),
                 '-format', 'shape:png,sprite:png', '-export', 'shape,sprite', str(out), str(swf_path),
             ],
@@ -139,10 +150,12 @@ def split_frame(frame_png: Path, ui_dir: Path) -> None:
     from PIL import Image
 
     frame = Image.open(frame_png).convert('RGBA')
-    frame.crop(ORNAMENT_BOX).save(ui_dir / 'frame-ornament.png')
+    box = tuple(value * UI_ZOOM for value in ORNAMENT_BOX)
+    frame.crop(box).save(ui_dir / 'frame-ornament.png')
 
-    left, top, right, bottom = ORNAMENT_BOX
-    plain = frame.crop((PLAIN_EDGE_COLUMN, top, PLAIN_EDGE_COLUMN + 1, bottom))
+    left, top, right, bottom = box
+    column = PLAIN_EDGE_COLUMN * UI_ZOOM
+    plain = frame.crop((column, top, column + 1, bottom))
     body = frame.copy()
     for x in range(left, right):
         body.paste(plain, (x, top))
@@ -150,8 +163,11 @@ def split_frame(frame_png: Path, ui_dir: Path) -> None:
 
 
 def main() -> None:
-    if len(sys.argv) != 2:
+    if len(sys.argv) not in (2, 3) or sys.argv[2:] not in ([], ['--hd']):
         sys.exit(__doc__)
+    hd = '--hd' in sys.argv
+    if hd and not upscaler_available():
+        sys.exit('Real-ESRGAN not found; see tools/upscale.py.')
     backup = Path(sys.argv[1]).expanduser()
     java = os.environ.get('JAVA', '/opt/homebrew/opt/openjdk/bin/java')
     ffdec = Path(os.environ.get('FFDEC_JAR', '~/.local/opt/jpexs/ffdec.jar')).expanduser()
@@ -179,6 +195,8 @@ def main() -> None:
     for name, npc_id in NPC_FILES.items():
         portrait = sorted((backup / NPC_PORTRAITS).glob(f'{npc_id}.s*.png'))[0]
         shutil.copyfile(portrait, npc_dir / f'{name}.png')
+        if hd:
+            upscale_file(npc_dir / f'{name}.png', HD_SCALE)
 
     menu_dir = ui_dir / 'menu'
     menu_dir.mkdir(exist_ok=True)

@@ -145,18 +145,20 @@
 /*
  * Window skin of the original client, rendered by tools/extract_ui_assets.py.
  * Image URLs are --ui-* variables declared in app.blade.php.
+ * Skin images are rendered at 2x (tools/extract_ui_assets.py UI_ZOOM), so slice
+ * values are in 2x image pixels while border widths stay at the original size.
  * frame.png is a 9-slice: 34px top band, 32px sides and bottom.
  */
 .game-window {
     border-style: solid;
     border-width: 34px 32px 32px 32px;
-    border-image: var(--ui-frame) 34 32 32 32 fill stretch;
+    border-image: var(--ui-frame) 68 64 64 64 fill stretch;
 }
 
 .game-button {
     border-style: solid;
     border-width: 6px;
-    border-image: var(--ui-button) 6 fill stretch;
+    border-image: var(--ui-button) 12 fill stretch;
     color: #fff4d6;
     font-weight: 700;
     text-shadow: 0 1px 0 #3b1d0a;
@@ -182,7 +184,7 @@
 }
 
 .game-close {
-    background: var(--ui-close) no-repeat;
+    background: var(--ui-close) center / 100% 100% no-repeat;
 }
 
 .game-close:hover {

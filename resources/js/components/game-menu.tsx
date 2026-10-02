@@ -25,17 +25,17 @@ function MenuIcon({ button }: { button: MenuButton }) {
             <img
                 src={icon(button.key, 'up')}
                 alt=""
-                className="block group-hover:hidden group-active:hidden"
+                className="block h-[28px] w-auto group-hover:hidden group-active:hidden"
             />
             <img
                 src={icon(button.key, 'over')}
                 alt=""
-                className="hidden group-hover:block group-active:hidden"
+                className="hidden h-[28px] w-auto group-hover:block group-active:hidden"
             />
             <img
                 src={icon(button.key, 'down')}
                 alt=""
-                className="hidden group-active:block"
+                className="hidden h-[28px] w-auto group-active:block"
             />
         </>
     );

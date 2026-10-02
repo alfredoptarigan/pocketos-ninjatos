@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Extract the pharmacy items from the Pockie Ninja backup.
 
-Usage: python3 tools/extract_item_assets.py <path-to-game-pockieninja>
+Usage: python3 tools/extract_item_assets.py <path-to-game-pockieninja> [--hd]
+--hd AI-upscales the ~40px icons 4x into PNGs (see tools/upscale.py).
 
 Writes item icons to public/game-assets/items/<code>.<gif|png> and the item data
 to database/data/pharmacy_items.json, which ItemSeeder loads.
@@ -16,6 +17,8 @@ import sys
 from pathlib import Path
 
 from amf3 import load_compressed
+from upscale import available as upscaler_available
+from upscale import upscale_all
 
 ROOT = Path(__file__).resolve().parent.parent
 ICON_OUT = ROOT / 'public' / 'game-assets' / 'items'
@@ -23,6 +26,7 @@ DATA_OUT = ROOT / 'database' / 'data' / 'pharmacy_items.json'
 DATATABLE_DIR = 'apache/source/binary/datatable'
 ICON_DIR = 'apache/source/bitmap/icon'
 HEADER_ROW = 1  # row 0 holds Chinese column descriptions
+HD_ICON_SCALE = 4  # icons are tiny; 4x keeps them crisp in detail panels on HiDPI screens
 
 # English names for the original item name keys (source names are Chinese).
 NAMES = {
@@ -78,14 +82,18 @@ def number(value) -> int:
 
 
 def main() -> None:
-    if len(sys.argv) != 2:
+    if len(sys.argv) not in (2, 3) or sys.argv[2:] not in ([], ['--hd']):
         sys.exit(__doc__)
+    hd = '--hd' in sys.argv
+    if hd and not upscaler_available():
+        sys.exit('Real-ESRGAN not found; see tools/upscale.py.')
     backup = Path(sys.argv[1]).expanduser()
     table = load_compressed(latest_table(backup / DATATABLE_DIR, 'pharmacyitem'))
 
     ICON_OUT.mkdir(parents=True, exist_ok=True)
     DATA_OUT.parent.mkdir(parents=True, exist_ok=True)
     items = []
+    originals: dict[str, Path] = {}
     for row in rows(table):
         key = row['Name'].removesuffix('_itemname')
         price = number(row['Price'])
@@ -93,8 +101,12 @@ def main() -> None:
             continue  # portable containers are quest rewards, not shop stock
         code = row['ID']
         icon = find_icon(backup / ICON_DIR, row['ResourceID'])
-        icon_name = f'{code}{icon.suffix}'
-        shutil.copyfile(icon, ICON_OUT / icon_name)
+        # HD icons are always PNG (GIF has no smooth alpha).
+        icon_name = f'{code}.png' if hd else f'{code}{icon.suffix}'
+        if hd:
+            originals[icon_name] = icon
+        else:
+            shutil.copyfile(icon, ICON_OUT / icon_name)
         items.append({
             'code': code,
             'name': NAMES[key],
@@ -105,6 +117,13 @@ def main() -> None:
             'restore_energy': number(row['SP']),
             'max_stack': number(row['ItemMaxFoldNum']) or 1,
         })
+
+    if originals:
+        from PIL import Image
+
+        images = {name: Image.open(path).convert('RGBA') for name, path in originals.items()}
+        for name, image in upscale_all(images, HD_ICON_SCALE).items():
+            image.save(ICON_OUT / name)
 
     DATA_OUT.write_text(json.dumps(items, indent=2, ensure_ascii=False))
     print(f'Wrote {len(items)} pharmacy items to {DATA_OUT.relative_to(ROOT)}')
