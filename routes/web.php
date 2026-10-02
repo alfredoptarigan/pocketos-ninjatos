@@ -27,6 +27,9 @@ Route::middleware(['auth'])->group(function () {
         Route::post('tower/{floor}/fight', [TowerController::class, 'fight'])->name('tower.fight');
         Route::get('battles/{battle}', [BattleController::class, 'show'])->name('battles.show');
 
+        // Art experiments: original HD sprites next to the vector remake.
+        Route::inertia('lab/characters', 'lab/characters')->name('lab.characters');
+
         Route::get('pharmacy', [PharmacyController::class, 'show'])->name('pharmacy.show');
         Route::post('pharmacy/buy', [PharmacyController::class, 'buy'])->name('pharmacy.buy');
     });

@@ -77,13 +77,13 @@ Full combat findings: `docs/combat-research.md`.
 
 ## 4. Tooling
 
-| Tool                               | Where                                                                  | Needed by                                |
-| ---------------------------------- | ---------------------------------------------------------------------- | ---------------------------------------- |
-| Python 3.9+ (stdlib)               | system `python3`                                                       | all extractors                           |
-| Pillow                             | `python3 -m pip install --user pillow`                                 | village, character, tower, UI extractors |
-| Java (OpenJDK)                     | `brew install openjdk` → `/opt/homebrew/opt/openjdk/bin/java`          | UI extractor only                        |
-| JPEXS Free Flash Decompiler 26.3.0 | zip from the GitHub release unpacked to `~/.local/opt/jpexs/ffdec.jar` | UI extractor only                        |
-| Real-ESRGAN (ncnn-vulkan, 2022-04-24 macOS build) | zip from the xinntao/Real-ESRGAN v0.2.5.0 release unpacked to `~/.local/opt/realesrgan/` | `--hd` option only |
+| Tool                                              | Where                                                                                    | Needed by                                |
+| ------------------------------------------------- | ---------------------------------------------------------------------------------------- | ---------------------------------------- |
+| Python 3.9+ (stdlib)                              | system `python3`                                                                         | all extractors                           |
+| Pillow                                            | `python3 -m pip install --user pillow`                                                   | village, character, tower, UI extractors |
+| Java (OpenJDK)                                    | `brew install openjdk` → `/opt/homebrew/opt/openjdk/bin/java`                            | UI extractor only                        |
+| JPEXS Free Flash Decompiler 26.3.0                | zip from the GitHub release unpacked to `~/.local/opt/jpexs/ffdec.jar`                   | UI extractor only                        |
+| Real-ESRGAN (ncnn-vulkan, 2022-04-24 macOS build) | zip from the xinntao/Real-ESRGAN v0.2.5.0 release unpacked to `~/.local/opt/realesrgan/` | `--hd` option only                       |
 
 `extract_ui_assets.py` reads `JAVA` and `FFDEC_JAR` env vars to override those paths.
 JPEXS can also be used by hand to explore a SWF:
