@@ -1,6 +1,6 @@
-import { Application } from 'pixi.js';
-import type { Container } from 'pixi.js';
-import { useEffect, useRef, useState } from 'react';
+import type { Application, Container } from 'pixi.js';
+import { useCallback, useEffect, useRef } from 'react';
+import { usePixiApp } from '@/hooks/use-pixi-app';
 import { createVillage, WORLD_HEIGHT, WORLD_WIDTH } from '@/game/village-scene';
 
 type Props = {
@@ -12,69 +12,33 @@ export default function VillageCanvas({ villageId, onBuildingSelect }: Props) {
     const hostRef = useRef<HTMLDivElement>(null);
     // Keep the latest callback without re-creating the Pixi app on every render.
     const onSelectRef = useRef(onBuildingSelect);
-    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         onSelectRef.current = onBuildingSelect;
     }, [onBuildingSelect]);
 
-    useEffect(() => {
-        const host = hostRef.current;
-
-        if (!host) {
-            return;
-        }
-
-        const app = new Application();
-        // init is async; React may unmount (StrictMode) before it resolves.
-        let disposed = false;
-        let ready = false;
-
-        const start = async () => {
-            await app.init({
-                resizeTo: host,
-                background: 0x0a0a0a,
-                antialias: true,
-            });
-
-            if (disposed) {
-                app.destroy(true, { children: true });
-                return;
-            }
-
-            ready = true;
-            host.appendChild(app.canvas);
+    const setup = useCallback(
+        async (app: Application, isDisposed: () => boolean) => {
             const world = await createVillage(villageId, (key) =>
                 onSelectRef.current(key),
             );
 
-            if (!disposed) {
+            if (!isDisposed()) {
                 mountWorld(app, world);
             }
-        };
+        },
+        [villageId],
+    );
 
-        start().catch((cause: unknown) => {
-            console.error('Gagal memuat desa', cause);
-            setError(
-                'Aset desa belum ada. Jalankan: python3 tools/extract_village_assets.py ~/Privates/game-pockieninja',
-            );
-        });
-
-        return () => {
-            disposed = true;
-
-            if (ready) {
-                app.destroy(true, { children: true });
-            }
-        };
-    }, [villageId]);
+    const error = usePixiApp(hostRef, setup, { background: 0x0a0a0a });
 
     return (
         <>
             <div ref={hostRef} className="absolute inset-0" />
-            {error && (
+            {error !== null && (
                 <p className="absolute inset-x-4 top-4 rounded-md bg-red-950/90 p-3 font-mono text-sm text-red-100">
-                    {error}
+                    Aset desa belum ada. Jalankan: python3
+                    tools/extract_village_assets.py ~/Privates/game-pockieninja
                 </p>
             )}
         </>

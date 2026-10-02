@@ -1,5 +1,6 @@
 import { Head, usePage } from '@inertiajs/react';
 import { useState } from 'react';
+import PlayerHud from '@/components/player-hud';
 import VillageCanvas from '@/components/village-canvas';
 import { buildingName } from '@/game/village-scene';
 import { desa } from '@/routes';
@@ -8,7 +9,7 @@ import { desa } from '@/routes';
 const HOME_VILLAGE_ID = '111';
 
 export default function Desa() {
-    const { auth } = usePage().props;
+    const { character } = usePage().props;
     const [selected, setSelected] = useState<string | null>(null);
 
     return (
@@ -17,7 +18,7 @@ export default function Desa() {
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
                 <div>
                     <h1 className="text-2xl font-semibold">
-                        Selamat datang, {auth.user.name}!
+                        Selamat datang, {character?.name}!
                     </h1>
                     <p className="text-muted-foreground">
                         {selected
@@ -30,6 +31,7 @@ export default function Desa() {
                         villageId={HOME_VILLAGE_ID}
                         onBuildingSelect={setSelected}
                     />
+                    {character && <PlayerHud character={character} />}
                 </div>
             </div>
         </>

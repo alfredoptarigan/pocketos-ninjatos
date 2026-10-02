@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Models\User;
+use App\Models\Character;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
@@ -19,8 +19,7 @@ class DesaTest extends TestCase
 
     public function test_authenticated_users_can_visit_the_desa()
     {
-        $user = User::factory()->create();
-        $this->actingAs($user);
+        $this->actingAs(Character::factory()->create()->user);
 
         $response = $this->get(route('desa'));
         $response->assertOk();
@@ -29,8 +28,9 @@ class DesaTest extends TestCase
 
     public function test_unverified_users_can_visit_the_desa()
     {
-        $user = User::factory()->unverified()->create();
-        $this->actingAs($user);
+        $character = Character::factory()->create();
+        $character->user->forceFill(['email_verified_at' => null])->save();
+        $this->actingAs($character->user);
 
         $response = $this->get(route('desa'));
         $response->assertOk();
