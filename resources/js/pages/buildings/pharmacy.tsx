@@ -3,6 +3,7 @@ import { Coins } from 'lucide-react';
 import { useState } from 'react';
 import GameWindow from '@/components/game-window';
 import InputError from '@/components/input-error';
+import ShopKeeper from '@/components/shop-keeper';
 import VillageBackdrop from '@/components/village-backdrop';
 import { cn } from '@/lib/utils';
 import { village as villageRoute } from '@/routes';
@@ -64,7 +65,10 @@ export default function Pharmacy({ items, owned }: Props) {
             <VillageBackdrop>
                 <GameWindow title="Pharmacy" closeHref={villageRoute().url}>
                     <div className="grid gap-6 md:grid-cols-[200px_1fr]">
-                        <Keeper />
+                        <ShopKeeper
+                            line={KEEPER_LINE}
+                            portrait="/game-assets/npcs/pharmacy.png"
+                        />
 
                         <div className="flex flex-col gap-4">
                             <div
@@ -137,26 +141,6 @@ export default function Pharmacy({ items, owned }: Props) {
                 </GameWindow>
             </VillageBackdrop>
         </>
-    );
-}
-
-function Keeper() {
-    return (
-        <div className="flex flex-col items-center gap-3">
-            <div className="relative rounded-lg border-2 border-amber-200/80 bg-amber-50 p-3 text-sm text-amber-950 shadow">
-                {KEEPER_LINE}
-                <span
-                    aria-hidden
-                    className="absolute -bottom-2 left-1/2 size-4 -translate-x-1/2 rotate-45 border-r-2 border-b-2 border-amber-200/80 bg-amber-50"
-                />
-            </div>
-            <img
-                src="/game-assets/npcs/pharmacy.png"
-                alt="Shopkeeper"
-                className="w-40 drop-shadow-lg"
-            />
-            <p className="text-sm font-semibold text-amber-200">Shopkeeper</p>
-        </div>
     );
 }
 

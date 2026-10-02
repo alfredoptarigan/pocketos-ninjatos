@@ -11,6 +11,8 @@ Writes:
   public/game-assets/world.json               {background, width, height, spots: {scene: {image, x, y}}}
   public/game-assets/fields/<scene>.jpg       hunting ground backdrops (scene/outcity)
   public/game-assets/monsters/<id>/           monster motions + face
+  public/game-assets/fields/<scene>/<spot>.png  search spots (a bush or tree to search, a keyed cache)
+  public/game-assets/items/<code>.png         area keys that open the caches
   database/data/fields.json                   areas with their monsters (FieldSeeder)
 Output is gitignored: it is derived from copyrighted game files.
 
@@ -35,9 +37,20 @@ import tempfile
 from pathlib import Path
 
 from amf3 import load_compressed
+from extract_effect_assets import origin_of
+from extract_item_assets import find_icon
 from extract_tower_assets import STATS, extract_art, latest_table, number
 from motion import find_motions, motion_frames
-from swf import all_bitmaps, first_jpeg, placed_bitmaps, read_swf, top_level_placements
+from swf import (
+    TAG_DEFINE_BUTTON2,
+    all_bitmaps,
+    button_up_records,
+    first_jpeg,
+    iter_tags,
+    placed_bitmaps,
+    read_swf,
+    top_level_placements,
+)
 from upscale import available as upscaler_available
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -54,7 +67,15 @@ TIP_TEXT = re.compile(r'^\s*(\S+?)进入等级：\s*(\d+)\s*级场景怪物：(.
 # Each village owns three areas (21xx = 111, 22xx = 121, ...); 26xx and 27xx are shared.
 OWNERS = {'21': '111', '22': '121', '23': '131', '24': '141', '25': '151'}
 HUMAN_HINTS = ('匪', '贼', '寇', '武', '忍', '僧', '盗', '剑士', '徒', '女', '婆', '姥', '魔将', '才藏', '八太', '千与', '汐守')
-ART_OVERRIDES: dict[str, str] = {}  # monster code -> stand-in art id, e.g. {'n33017': 'n10064'}
+ART_OVERRIDES: dict[str, str] = {}
+# roleoutsearch: the first row per scene is the free search spot, the second the keyed cache.
+SPOTS = ('search', 'cache')
+SEARCH_RATES = {
+    'monster': 'GostRate', 'money': 'MoneyRate', 'key': 'KeyFactoryRate',
+    'boss': 'BossFactoryRate', 'baby': 'BabyFactoryRate', 'item': 'ItemFactoryRate',
+}
+CLIP_PREFIX = 'OutCity_'
+FALLBACK_KEY_ICON = 'Icon_Debris46'  # monster code -> stand-in art id, e.g. {'n33017': 'n10064'}
 
 FIELD_NAMES = {
     '熔炉山地': 'Furnace Highlands', '日暮荒原': 'Dusk Wasteland', '烈焰峡': 'Blaze Gorge',
@@ -150,17 +171,22 @@ class StandIns:
         return art
 
 
-def render_map(source: Path, zoom: int) -> None:
+def jpexs() -> tuple[str, Path]:
     java = os.environ.get('JAVA', '/opt/homebrew/opt/openjdk/bin/java')
     ffdec = Path(os.environ.get('FFDEC_JAR', '~/.local/opt/jpexs/ffdec.jar')).expanduser()
     if not ffdec.is_file() or not shutil.which(java):
         sys.exit(f'JPEXS or Java not found (FFDEC_JAR={ffdec}, JAVA={java}).')
+    return java, ffdec
+
+
+def run_jpexs(args: list[str]) -> None:
+    java, ffdec = jpexs()
+    subprocess.run([java, '-Djava.awt.headless=true', '-jar', str(ffdec), *args], check=True, capture_output=True)
+
+
+def render_map(source: Path, zoom: int) -> None:
     with tempfile.TemporaryDirectory() as tmp:
-        subprocess.run(
-            [java, '-Djava.awt.headless=true', '-jar', str(ffdec), '-zoom', str(zoom),
-             '-format', 'frame:png', '-export', 'frame', tmp, str(source / MAP_SWF)],
-            check=True, capture_output=True,
-        )
+        run_jpexs(['-zoom', str(zoom), '-format', 'frame:png', '-export', 'frame', tmp, str(source / MAP_SWF)])
         shutil.copyfile(Path(tmp) / '1.png', ASSETS / 'world' / 'map.png')
 
 
@@ -199,6 +225,81 @@ def field_background(source: Path, scene: str) -> str:
     return f'/game-assets/fields/{scene}.jpg'
 
 
+def search_rows(datatable: Path) -> dict[str, list[dict]]:
+    table = latest_table(datatable, 'roleoutsearch')
+    rows: dict[str, list[dict]] = {}
+    for index in range(1, len(table['ID'])):
+        row = {column: values[index] for column, values in table.items()}
+        rows.setdefault(row['SceneID'], []).append(row)
+    return {scene: sorted(found, key=lambda r: r['ID']) for scene, found in rows.items()}
+
+
+def spot_art(source: Path, scene: str, search_clip: str) -> dict[str, dict]:
+    """Render the scene's two clickable clips; the search spot is named by roleoutsearch, the cache is the other."""
+    from PIL import Image
+
+    # Scene files ship in several versions (name.s<version>.swf); take the newest.
+    element = max((source / FIELD_DIR).glob(f'element_{scene}.*swf'), key=lambda p: int(p.name.split('.s')[1].split('.')[0]))
+    swf = read_swf(element)
+    buttons = {int.from_bytes(tag[:2], 'little'): tag for code, tag in iter_tags(swf.body, swf.first_tag) if code == TAG_DEFINE_BUTTON2}
+    clips = {}
+    for placement in top_level_placements(swf):
+        if (placement.name or '').startswith(CLIP_PREFIX) and placement.character_id in buttons:
+            sprite, dx, dy = button_up_records(buttons[placement.character_id])[0]
+            spot = 'search' if placement.name == search_clip else 'cache'
+            clips[spot] = (sprite, (placement.x or 0) + dx, (placement.y or 0) + dy)
+
+    out = ASSETS / 'fields' / scene
+    out.mkdir(parents=True, exist_ok=True)
+    art = {}
+    with tempfile.TemporaryDirectory() as tmp:
+        ids = ','.join(str(sprite) for sprite, _, _ in clips.values())
+        for fmt in ('png', 'svg'):
+            run_jpexs(['-selectid', ids, '-format', f'sprite:{fmt}', '-export', 'sprite', f'{tmp}/{fmt}', str(element)])
+        for spot, (sprite, x, y) in clips.items():
+            folder = next(Path(tmp, 'png').glob(f'DefineSprite_{sprite}*')).name
+            image = Image.open(Path(tmp, 'png', folder, '1.png'))
+            ox, oy = origin_of(Path(tmp, 'svg', folder, '1.svg'), image.size)
+            image.save(out / f'{spot}.png')
+            art[spot] = {'image': f'/game-assets/fields/{scene}/{spot}.png', 'x': round(x - ox), 'y': round(y - oy)}
+    return art
+
+
+def key_item(source: Path, datatable: Path, code: str, field_name: str) -> dict:
+    """The area key that opens its cache (giftbagitem), copied into the item icons."""
+    table = latest_table(datatable, 'giftbagitem')
+    resource = table['ResourceID'][table['ID'].index(code)]
+    try:
+        icon = find_icon(source / 'bitmap/icon', resource)
+    except FileNotFoundError:
+        # A few key icons are missing from the backup; any area key looks the same.
+        icon = find_icon(source / 'bitmap/icon', FALLBACK_KEY_ICON)
+    out = ASSETS / 'items'
+    out.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(icon, out / f'{code}{icon.suffix}')
+    return {'code': code, 'name': f'{field_name} Key', 'icon': f'/game-assets/items/{code}{icon.suffix}'}
+
+
+def searches(source: Path, datatable: Path, scene: str, rows: list[dict], field_name: str) -> tuple[list[dict], dict | None]:
+    art = spot_art(source, scene, rows[0]['ClipName'])
+    found, key = [], None
+    for spot, row in zip(SPOTS, rows):
+        if spot not in art:
+            continue  # e.g. 2605 has no cache clip
+        needs = row['RequireItem'].split(',')[0] if row['RequireItem'] not in ('', '-1') else None
+        if needs:
+            key = key_item(source, datatable, needs, field_name)
+        found.append({
+            'spot': spot,
+            'key': needs,
+            'cooldown': number(row['TimeSpace']),
+            'exp': number(row['ExpBase']),
+            'rates': {name: number(row[column]) for name, column in SEARCH_RATES.items()},
+            'art': art[spot],
+        })
+    return found, key
+
+
 def monster(row: dict, chinese: str, boss: bool, art_id: str, source: Path, scale: int) -> dict:
     code = row['ID']
     art = ART_OVERRIDES.get(code, art_id)
@@ -228,6 +329,7 @@ def main() -> None:
     (ASSETS / 'world.json').write_text(json.dumps(world))
 
     npcs = npc_rows(datatable, language)
+    search_table = search_rows(datatable)
     stand_ins = StandIns(source / MOB_DIR)
     art_by_name: dict[str, str] = {}
     fields = []
@@ -238,9 +340,13 @@ def main() -> None:
             # The same monster keeps the same stand-in in every area.
             art_by_name.setdefault(chinese, stand_ins.take(chinese, boss))
             monsters.append(monster(npcs[chinese], chinese, boss, art_by_name[chinese], source, 2 if hd else 1))
+        name = FIELD_NAMES[area['name']]
+        spots, key = searches(source, datatable, area['scene'], search_table.get(area['scene'], []), name)
         fields.append({
             'scene': area['scene'],
-            'name': FIELD_NAMES[area['name']],
+            'name': name,
+            'searches': spots,
+            'key_item': key,
             'village': OWNERS.get(area['scene'][:2]),
             'level': area['level'],
             'background': field_background(source, area['scene']),

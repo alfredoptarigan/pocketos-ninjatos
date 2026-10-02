@@ -75,8 +75,8 @@ FIGHT_SHAPES = {
 # Sprite id -> frame: the health bar sprite is a 100-frame gauge; its last frame is full.
 FIGHT_SPRITES = {'hp-fill': (23, 100), 'mp-fill': (21, 1), 'lock-slot': (70, 1)}
 
-# Building keeper portraits (buildnpc table): Leaf Village pharmacy owner.
-NPC_FILES = {'pharmacy': 'n11004'}
+# Building keeper portraits (buildnpc table): Leaf Village pharmacy and equipment shop owners.
+NPC_FILES = {'pharmacy': 'n11004', 'equipment': 'n11005'}
 
 
 def render_symbols(java: str, ffdec: Path, swf_path: Path, ids: list[int], out: Path) -> None:

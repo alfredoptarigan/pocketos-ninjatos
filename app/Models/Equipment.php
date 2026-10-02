@@ -35,6 +35,22 @@ class Equipment extends Model
     protected $table = 'equipment';
 
     /**
+     * What the Equipment Shop charges: the original price, scaled up with the gear's level.
+     */
+    public function buyPrice(): int
+    {
+        return $this->price * (config('game.equipment.buy_multiplier') + $this->level);
+    }
+
+    /**
+     * What the Equipment Shop pays for it.
+     */
+    public function sellPrice(): int
+    {
+        return intdiv($this->buyPrice() * config('game.equipment.sell_percent'), 100);
+    }
+
+    /**
      * @return array<string, int|string>
      */
     public function summary(): array

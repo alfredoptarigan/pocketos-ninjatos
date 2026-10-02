@@ -210,9 +210,26 @@ return [
         'boss_drop_percent' => 25,
     ],
 
+    /*
+    | Searching a spot in a hunting ground (original roleoutsearch): a money
+    | pouch holds (area level + 9) * gold_per_level gold; a found potion costs
+    | at most max(potion_price_floor, area level * 5) in the pharmacy.
+    */
+
+    'search' => [
+        'gold_per_level' => 5,
+        'potion_price_floor' => 20,
+    ],
+
     'equipment' => [
         'slots' => ['weapon', 'hat', 'armor', 'gloves', 'belt', 'shoes', 'amulet', 'ring'],
         'replay_drop_percent' => 15,
+        // The Equipment Shop sells the basic tiers up to stock_levels_ahead
+        // above the ninja's level for price * (buy_multiplier + level) and
+        // buys gear back for sell_percent of that.
+        'stock_levels_ahead' => 10,
+        'buy_multiplier' => 10,
+        'sell_percent' => 25,
     ],
 
 ];

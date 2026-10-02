@@ -31,6 +31,9 @@ class Item extends Model
 
     public const CATEGORY_PHARMACY = 'pharmacy';
 
+    // Area keys that open hunting-ground caches.
+    public const CATEGORY_KEY = 'key';
+
     /**
      * @param  Builder<Item>  $query
      */

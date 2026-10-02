@@ -2,6 +2,7 @@ import { Head, router, usePage } from '@inertiajs/react';
 import { toast } from 'sonner';
 import GameWindow from '@/components/game-window';
 import VillageBackdrop from '@/components/village-backdrop';
+import { bonuses, SLOT_LABELS } from '@/lib/gear';
 import { cn } from '@/lib/utils';
 import { village } from '@/routes';
 import { equip, unequip } from '@/routes/character/gear';
@@ -38,30 +39,6 @@ type Props = {
     worn: Record<string, Piece>;
     bag: Piece[];
 };
-
-const SLOT_LABELS: Record<string, string> = {
-    weapon: 'Weapon',
-    hat: 'Hat',
-    armor: 'Armor',
-    gloves: 'Gloves',
-    belt: 'Belt',
-    shoes: 'Shoes',
-    amulet: 'Amulet',
-    ring: 'Ring',
-};
-
-/** "Attack 14-16 · Defense 24" for a piece's non-zero stats. */
-function bonuses(piece: Piece): string {
-    return [
-        piece.max_attack > 0 &&
-            `Attack ${piece.min_attack}-${piece.max_attack}`,
-        piece.defense > 0 && `Defense ${piece.defense}`,
-        piece.max_hp > 0 && `Health +${piece.max_hp}`,
-        piece.crit > 0 && `Critical +${piece.crit}%`,
-    ]
-        .filter(Boolean)
-        .join(' · ');
-}
 
 function send(url: string) {
     router.post(

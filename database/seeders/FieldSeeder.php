@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Field;
+use App\Models\Item;
 use Illuminate\Database\Seeder;
 use RuntimeException;
 
@@ -24,7 +25,16 @@ class FieldSeeder extends Seeder
         }
 
         foreach (json_decode(file_get_contents($path), true, flags: JSON_THROW_ON_ERROR) as $data) {
-            $field = Field::updateOrCreate(['scene' => $data['scene']], collect($data)->except('monsters')->all());
+            $field = Field::updateOrCreate(['scene' => $data['scene']], collect($data)->except(['monsters', 'key_item'])->all());
+
+            if ($data['key_item']) {
+                Item::updateOrCreate(['code' => $data['key_item']['code']], [
+                    ...$data['key_item'],
+                    'category' => Item::CATEGORY_KEY,
+                    'price' => 0,
+                    'max_stack' => 100,
+                ]);
+            }
 
             foreach ($data['monsters'] as $monster) {
                 $field->monsters()->updateOrCreate(['code' => $monster['code']], $monster);

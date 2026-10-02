@@ -17,10 +17,11 @@ use Illuminate\Support\Carbon;
  * @property string|null $village Owning village id, null for shared areas
  * @property int $level Level needed to enter
  * @property string $background
+ * @property list<array{spot: string, key: string|null, cooldown: int, exp: int, rates: array<string, int>, art: array{image: string, x: int, y: int}}>|null $searches
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['scene', 'name', 'village', 'level', 'background'])]
+#[Fillable(['scene', 'name', 'village', 'level', 'background', 'searches'])]
 class Field extends Model
 {
     /** @use HasFactory<FieldFactory> */
@@ -31,6 +32,14 @@ class Field extends Model
     protected $keyType = 'string';
 
     public $incrementing = false;
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return ['searches' => 'array'];
+    }
 
     /**
      * @return HasMany<FieldMonster, $this>

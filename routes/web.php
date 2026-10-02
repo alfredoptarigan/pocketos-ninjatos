@@ -3,6 +3,7 @@
 use App\Http\Controllers\BagController;
 use App\Http\Controllers\BattleController;
 use App\Http\Controllers\CharacterController;
+use App\Http\Controllers\EquipmentShopController;
 use App\Http\Controllers\FieldController;
 use App\Http\Controllers\GearController;
 use App\Http\Controllers\PharmacyController;
@@ -36,6 +37,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('world', [WorldController::class, 'show'])->name('world.show');
         Route::get('fields/{field}', [FieldController::class, 'show'])->name('fields.show');
         Route::post('fields/monsters/{monster}/fight', [FieldController::class, 'fight'])->name('fields.fight');
+        Route::post('fields/{field}/search/{spot}', [FieldController::class, 'search'])->name('fields.search')->whereIn('spot', ['search', 'cache']);
         Route::get('tower', [TowerController::class, 'show'])->name('tower.show');
         Route::post('tower/{floor}/fight', [TowerController::class, 'fight'])->name('tower.fight');
         Route::get('battles/{battle}', [BattleController::class, 'show'])->name('battles.show');
@@ -43,6 +45,9 @@ Route::middleware(['auth'])->group(function () {
         // Art experiments: original HD sprites next to the vector remake.
         Route::inertia('lab/characters', 'lab/characters')->name('lab.characters');
 
+        Route::get('equipment-shop', [EquipmentShopController::class, 'show'])->name('equipment-shop.show');
+        Route::post('equipment-shop/{equipment}/buy', [EquipmentShopController::class, 'buy'])->name('equipment-shop.buy');
+        Route::post('equipment-shop/gear/{gear}/sell', [EquipmentShopController::class, 'sell'])->name('equipment-shop.sell');
         Route::get('pharmacy', [PharmacyController::class, 'show'])->name('pharmacy.show');
         Route::post('pharmacy/buy', [PharmacyController::class, 'buy'])->name('pharmacy.buy');
     });

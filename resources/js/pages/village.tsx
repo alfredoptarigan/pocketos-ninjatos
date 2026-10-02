@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import VillageCanvas from '@/components/village-canvas';
 import { buildingName } from '@/game/village-scene';
+import { show as equipmentShop } from '@/routes/equipment-shop';
 import { show as pharmacy } from '@/routes/pharmacy';
 import { show as tower } from '@/routes/tower';
 import { travel } from '@/routes/village';
@@ -26,6 +27,7 @@ type Props = {
 // Buildings that already have a screen; the rest say "coming soon".
 const BUILDING_ROUTES: Record<string, () => { url: string }> = {
     salve: pharmacy,
+    equip: equipmentShop,
     // The original single-gate tower is entered from the hall.
     hall: tower,
 };

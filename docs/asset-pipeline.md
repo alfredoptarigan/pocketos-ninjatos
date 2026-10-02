@@ -133,6 +133,15 @@ drops are our own rule (`config('game.equipment')`).
 - Monster stats are the base rows (shortest id) of `normalnpc`/`taskbossnpc`, matched by Chinese
   name. Their levels match the original client (Sunflower 2, Stinger Bee 4, ...).
 - Backdrops are `scene/outcity/background_<scene>.swf` (1920x1080 JPEG).
+- Search spots come from `roleoutsearch`, with two rows per scene. The first row is the free
+  search spot. Its `ClipName` (`OutCity_1110` or `OutCity_1109`) names the clickable tree or bush
+  in `scene/outcity/element_<scene>.swf`. The second row is the cache, opened with the area key
+  (`RequireItem` i1500xx, "<area> Secret Key" in `giftbagitem`, icon `bitmap/icon/debris`; a few
+  icons are missing, so the extractor falls back to `Icon_Debris46`), and uses the other clip.
+  The clip art is a DefineButton2 whose up-state sprite is rendered with JPEXS. The origin is
+  found the same way as for the effects (SVG translate). Rates (`GostRate`, `MoneyRate`,
+  `KeyFactoryRate`, `BossFactoryRate`, `BabyFactoryRate`, `ItemFactoryRate`) are per 10,000
+  searches. `TimeSpace` is the cooldown, read here as seconds. `ExpBase` is paid on every search.
 - The motion art of every field monster (`MapUserFace_N32001..N33043`) is missing from the
   backup. Each monster borrows an unnamed original monster (`motion/mob/{human,inhuman,*boss}/n10xxx`,
   bitmap motions only); pin a better match in `ART_OVERRIDES`.

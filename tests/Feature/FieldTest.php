@@ -7,6 +7,7 @@ use App\Models\Character;
 use App\Models\Equipment;
 use App\Models\Field;
 use App\Models\FieldMonster;
+use App\Models\Item;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Lottery;
@@ -115,5 +116,75 @@ class FieldTest extends TestCase
         $this->get(route('battles.show', Battle::sole()))->assertInertia(fn (Assert $page) => $page
             ->where('battle.field.scene', $monster->field_scene)
             ->where('battle.field.monster', $monster->id));
+    }
+
+    public function test_searching_pays_exp_and_can_find_money()
+    {
+        $character = Character::factory()->create(['gold' => 0]);
+        $field = Field::factory()->searchable('money')->create(['level' => 1]);
+        $this->actingAs($character->user);
+
+        $this->post(route('fields.search', [$field, 'search']))->assertRedirect(route('fields.show', $field));
+
+        $character->refresh();
+        $this->assertSame(105, $character->exp);
+        $this->assertSame(10 * config('game.search.gold_per_level'), $character->gold);
+    }
+
+    public function test_a_spot_needs_time_before_it_can_be_searched_again()
+    {
+        $character = Character::factory()->create();
+        $field = Field::factory()->searchable('money')->create();
+        $this->actingAs($character->user);
+
+        $this->post(route('fields.search', [$field, 'search']));
+        $this->post(route('fields.search', [$field, 'search']))->assertSessionHasErrors('search');
+
+        $this->travel(121)->seconds();
+        $this->post(route('fields.search', [$field, 'search']))->assertSessionHasNoErrors();
+    }
+
+    public function test_a_cache_needs_the_area_key_and_uses_it_up()
+    {
+        $character = Character::factory()->create();
+        $field = Field::factory()->searchable('item')->create();
+        Equipment::factory()->create(['level' => 1]);
+        FieldMonster::factory()->create(['field_scene' => $field->scene]);
+        $key = Item::factory()->create(['code' => 'i150046', 'category' => Item::CATEGORY_KEY]);
+        $this->actingAs($character->user);
+
+        $this->post(route('fields.search', [$field, 'cache']))->assertSessionHasErrors('search');
+
+        $character->inventory()->create(['item_id' => $key->id, 'quantity' => 1]);
+        $this->post(route('fields.search', [$field, 'cache']))->assertSessionHasNoErrors();
+
+        $this->assertSame(0, $character->inventory()->count());
+        $this->assertSame(1, $character->gear()->count());
+    }
+
+    public function test_a_monster_can_jump_out_of_a_bush()
+    {
+        $character = Character::factory()->create();
+        $field = Field::factory()->searchable('monster')->create();
+        $monster = FieldMonster::factory()->create(['field_scene' => $field->scene]);
+        $this->actingAs($character->user);
+
+        $response = $this->post(route('fields.search', [$field, 'search']));
+
+        $battle = Battle::sole();
+        $response->assertRedirect(route('battles.show', $battle));
+        $this->assertSame($monster->id, $battle->field_monster_id);
+    }
+
+    public function test_the_area_page_shows_the_search_spots()
+    {
+        $field = Field::factory()->searchable('money')->create();
+        $this->actingAs(Character::factory()->create()->user);
+
+        $this->get(route('fields.show', $field))->assertInertia(fn (Assert $page) => $page
+            ->has('searches', 2)
+            ->where('searches.0.spot', 'search')
+            ->where('searches.0.readyAt', null)
+            ->where('searches.1.key.owned', 0));
     }
 }
