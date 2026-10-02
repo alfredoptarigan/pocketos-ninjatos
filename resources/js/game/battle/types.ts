@@ -23,24 +23,66 @@ export type FighterInfo = {
     maxMp?: number;
     avatar?: string;
     level?: number;
+    // Learned jutsu ids; missing on battles recorded before jutsu existed.
+    skills?: string[];
     isBoss?: boolean;
     art?: MonsterArt;
 };
 
+type Side = 0 | 1;
+
 export type StrikeEvent = {
-    type: 'attack' | 'counter';
-    actor: 0 | 1;
-    target: 0 | 1;
+    type: 'attack' | 'counter' | 'follow_up' | 'extra';
+    actor: Side;
+    target: Side;
     hit: boolean;
     crit: boolean;
     parried: boolean;
+    blocked?: boolean;
     damage: number;
     targetHp: number;
+    // Present when a jutsu was used.
+    skill?: string;
+    mpCost?: number;
+    actorMp?: number;
+    actorHp?: number;
+    backfire?: boolean;
+};
+
+export type StunnedEvent = { type: 'stunned'; actor: Side };
+export type ReflectEvent = {
+    type: 'reflect';
+    actor: Side;
+    target: Side;
+    skill: string;
+    damage: number;
+    targetHp: number;
+};
+export type HealEvent = {
+    type: 'heal';
+    actor: Side;
+    skill: string;
+    amount: number;
+    hp: number;
+};
+export type ReviveEvent = {
+    type: 'revive';
+    actor: Side;
+    skill: string;
+    hp: number;
 };
 
 export type EndEvent = { type: 'end'; winner: 0 | 1; reason: 'ko' | 'timeout' };
 
-export type BattleEvent = StrikeEvent | EndEvent;
+export type BattleEvent =
+    | StrikeEvent
+    | StunnedEvent
+    | ReflectEvent
+    | HealEvent
+    | ReviveEvent
+    | EndEvent;
+
+export type SkillInfo = { name: string; icon: string };
 
 export type BattleLog = {
     fighters: [FighterInfo, FighterInfo];

@@ -22,13 +22,24 @@ type Props = {
     speed: RefObject<number>;
     onFinished: (end: EndEvent | null) => void;
     onHp: (side: 0 | 1, hp: number) => void;
+    onMp: (side: 0 | 1, mp: number) => void;
+    onSkill: (side: 0 | 1, skillId: string) => void;
+    skillName: (skillId: string) => string;
 };
 
-export default function BattleScene({ log, speed, onFinished, onHp }: Props) {
+export default function BattleScene({
+    log,
+    speed,
+    onFinished,
+    onHp,
+    onMp,
+    onSkill,
+    skillName,
+}: Props) {
     const hostRef = useRef<HTMLDivElement>(null);
     // Keep the latest callbacks without restarting the replay on every render.
-    const callbacks = useRef({ onFinished, onHp });
-    callbacks.current = { onFinished, onHp };
+    const callbacks = useRef({ onFinished, onHp, onMp, onSkill, skillName });
+    callbacks.current = { onFinished, onHp, onMp, onSkill, skillName };
 
     const setup = useCallback(
         async (app: Application, isDisposed: () => boolean) => {
@@ -76,6 +87,9 @@ export default function BattleScene({ log, speed, onFinished, onHp }: Props) {
                     speed: () => speed.current,
                     isDisposed,
                     onHp: (side, hp) => callbacks.current.onHp(side, hp),
+                    onMp: (side, mp) => callbacks.current.onMp(side, mp),
+                    onSkill: (side, id) => callbacks.current.onSkill(side, id),
+                    skillName: (id) => callbacks.current.skillName(id),
                 },
                 log.events,
             );

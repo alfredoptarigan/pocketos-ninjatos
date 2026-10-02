@@ -93,6 +93,11 @@ export class Fighter {
         this.body.alpha = 0.35;
     }
 
+    /** Undo a knock-out (a revive jutsu). */
+    restore(): void {
+        this.body.alpha = 1;
+    }
+
     get height(): number {
         return this.body.height;
     }

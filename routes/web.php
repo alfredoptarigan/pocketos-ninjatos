@@ -4,6 +4,7 @@ use App\Http\Controllers\BagController;
 use App\Http\Controllers\BattleController;
 use App\Http\Controllers\CharacterController;
 use App\Http\Controllers\PharmacyController;
+use App\Http\Controllers\SkillController;
 use App\Http\Controllers\TowerController;
 use App\Http\Controllers\VillageController;
 use App\Http\Middleware\EnsurePlayerHasCharacter;
@@ -22,6 +23,9 @@ Route::middleware(['auth'])->group(function () {
 
         Route::get('bag', [BagController::class, 'show'])->name('bag');
         Route::post('bag/use', [BagController::class, 'use'])->name('bag.use');
+
+        Route::get('skills', [SkillController::class, 'index'])->name('skills.index');
+        Route::post('skills/{skill}/learn', [SkillController::class, 'learn'])->name('skills.learn');
 
         Route::get('tower', [TowerController::class, 'show'])->name('tower.show');
         Route::post('tower/{floor}/fight', [TowerController::class, 'fight'])->name('tower.fight');

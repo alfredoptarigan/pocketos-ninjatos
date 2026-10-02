@@ -1,4 +1,5 @@
-import type { FighterInfo } from '@/game/battle/types';
+import type { FighterInfo, SkillInfo } from '@/game/battle/types';
+import { cn } from '@/lib/utils';
 import { characterAssets } from '@/types/game';
 
 const FIGHT_UI = '/game-assets/ui/fight';
@@ -13,6 +14,10 @@ type Side = 'ally' | 'enemy';
 type Props = {
     fighters: [FighterInfo, FighterInfo];
     hp: [number, number];
+    mp: [number, number];
+    skills: Record<string, SkillInfo>;
+    /** Jutsu just used by the player, lit up in the skill grid. */
+    glowing: string | null;
     floor: number;
 };
 
@@ -26,19 +31,21 @@ function faceOf(fighter: FighterInfo): string {
         : (fighter.art?.face ?? '');
 }
 
-function mpOf(fighter: FighterInfo): [number, number] {
-    const max = fighter.maxMp ?? 0;
-    return [fighter.mp ?? max, max];
-}
-
 /** The original battle HUD: health/chakra bars with VS on top, stat panels on both sides. */
-export default function BattleHud({ fighters, hp, floor }: Props) {
+export default function BattleHud({
+    fighters,
+    hp,
+    mp,
+    skills,
+    glowing,
+    floor,
+}: Props) {
     const [player, opponent] = fighters;
 
     return (
         <div className="pointer-events-none absolute inset-0 z-10 select-none">
             <div className="absolute inset-x-0 top-0 flex items-start justify-between px-1 pt-1">
-                <TopGroup side="ally" fighter={player} hp={hp[0]} />
+                <TopGroup side="ally" fighter={player} hp={hp[0]} mp={mp[0]} />
                 <div className="relative mt-0.5 h-[62px] w-[63px] shrink-0">
                     <img
                         src={`${FIGHT_UI}/vs-diamond.png`}
@@ -51,19 +58,30 @@ export default function BattleHud({ fighters, hp, floor }: Props) {
                         className="absolute top-[20px] left-px h-[22px] w-[62px]"
                     />
                 </div>
-                <TopGroup side="enemy" fighter={opponent} hp={hp[1]} />
+                <TopGroup
+                    side="enemy"
+                    fighter={opponent}
+                    hp={hp[1]}
+                    mp={mp[1]}
+                />
             </div>
 
             <SidePanel
                 side="ally"
                 fighter={player}
                 hp={hp[0]}
+                mp={mp[0]}
+                skills={skills}
+                glowing={glowing}
                 subtitle={`Training Tower · Floor ${floor}`}
             />
             <SidePanel
                 side="enemy"
                 fighter={opponent}
                 hp={hp[1]}
+                mp={mp[1]}
+                skills={skills}
+                glowing={null}
                 subtitle={
                     opponent.isBoss
                         ? `Boss of floor ${floor}`
@@ -78,12 +96,14 @@ function TopGroup({
     side,
     fighter,
     hp,
+    mp,
 }: {
     side: Side;
     fighter: FighterInfo;
     hp: number;
+    mp: number;
 }) {
-    const [mp, maxMp] = mpOf(fighter);
+    const maxMp = fighter.maxMp ?? 0;
     const mirrored = side === 'enemy';
 
     return (
@@ -174,18 +194,27 @@ function Fill({
     );
 }
 
+type SidePanelProps = {
+    side: Side;
+    fighter: FighterInfo;
+    hp: number;
+    mp: number;
+    skills: Record<string, SkillInfo>;
+    glowing: string | null;
+    subtitle: string;
+};
+
 function SidePanel({
     side,
     fighter,
     hp,
+    mp,
+    skills,
+    glowing,
     subtitle,
-}: {
-    side: Side;
-    fighter: FighterInfo;
-    hp: number;
-    subtitle: string;
-}) {
-    const [mp, maxMp] = mpOf(fighter);
+}: SidePanelProps) {
+    const maxMp = fighter.maxMp ?? 0;
+    const learned = (fighter.skills ?? []).filter((id) => skills[id]);
     const stats: [string, string][] = [
         ['Defense', `${fighter.defense}`],
         ['Block', `${fighter.parry}%`],
@@ -261,19 +290,37 @@ function SidePanel({
                 </div>
             </div>
             <Divider />
-            <div
-                aria-label="Skills (none learned yet)"
-                className="grid grid-cols-5 gap-1"
-            >
-                {Array.from({ length: SKILL_SLOTS }, (_, index) => (
-                    <img
-                        key={index}
-                        src={`${FIGHT_UI}/lock-slot.png`}
-                        alt=""
-                        className="size-[26px]"
-                    />
-                ))}
-            </div>
+            <ul aria-label="Jutsu" className="grid grid-cols-5 gap-1">
+                {Array.from({ length: SKILL_SLOTS }, (_, index) => {
+                    const id = learned[index];
+
+                    return (
+                        <li
+                            key={id ?? `locked-${index}`}
+                            className="size-[26px]"
+                        >
+                            {id ? (
+                                <img
+                                    src={skills[id].icon}
+                                    alt={skills[id].name}
+                                    title={skills[id].name}
+                                    className={cn(
+                                        'size-full rounded-sm border border-amber-700/70 transition',
+                                        id === glowing &&
+                                            'scale-125 border-amber-300 shadow-[0_0_10px_rgba(252,211,77,0.9)]',
+                                    )}
+                                />
+                            ) : (
+                                <img
+                                    src={`${FIGHT_UI}/lock-slot.png`}
+                                    alt=""
+                                    className="size-full"
+                                />
+                            )}
+                        </li>
+                    );
+                })}
+            </ul>
         </aside>
     );
 }

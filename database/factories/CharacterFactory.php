@@ -25,6 +25,7 @@ class CharacterFactory extends Factory
             'gold' => config('game.starting_gold'),
             'village' => config('game.home_village'),
             'tower_floor' => 0,
+            'skills' => [],
         ];
     }
 }

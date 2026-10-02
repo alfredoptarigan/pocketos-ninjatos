@@ -21,13 +21,18 @@ final readonly class Combatant
         public int $parry,
         public int $counter,
         public int $priority,
+        public int $mp = 0,
+        public int $maxMp = 0,
+        /** @var list<Skill> */
+        public array $skills = [],
     ) {}
 
     /**
-     * @return array<string, int|string>
+     * @return array<string, mixed>
      */
     public function toArray(): array
     {
-        return get_object_vars($this);
+        // The replay only needs which jutsu were learned, not their rules.
+        return [...get_object_vars($this), 'skills' => array_map(fn (Skill $skill) => $skill->id, $this->skills)];
     }
 }

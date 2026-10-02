@@ -106,6 +106,10 @@ All take the backup path and write into this repo. Run them from the repo root.
 | `tools/extract_ui_assets.py` (JPEXS) | `ui/uilookandfeel`, `ui/sceneui/bottommenu`, `ui/fighting`, `npcbackphoto`, `music`                       | `public/game-assets/ui/*.png`, `ui/menu/*.png`, `ui/fight/*.png`, `npcs/pharmacy.png`, `music/*.mp3`                                             |
 | `tools/extract_tower_assets.py`      | `singlegatenpc`, `sgategetexp`, `language.lg`, `motion/mob`, `npcbackphoto`, `scene/battle`, `ui/fightbg` | `database/data/tower.json`, `public/game-assets/monsters/n<id>/...`, `battle/background.jpg`, `battle/backgrounds/*.jpg`, `music/singlegate.mp3` |
 
+`tools/extract_skill_assets.py [--hd]` copies the skill-panel icons (`clientskill` Type 1,
+`bitmap/icon/skill/`) to `public/game-assets/skills/<skill id>.png` (`--hd`: 4x). Skill rules
+themselves live in `config/game.php` (`skills`), translated from `lg_SkillDes_<id>`.
+
 Shared modules: `swf.py` (SWF parsing), `motion.py` (motion → Pixi spritesheet),
 `amf3.py` (tables). Unit tests: `python3 -m unittest discover tools`.
 

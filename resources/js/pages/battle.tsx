@@ -4,7 +4,7 @@ import { useRef, useState } from 'react';
 import BattleHud from '@/components/battle-hud';
 import BattleScene from '@/components/battle-scene';
 import GameWindow from '@/components/game-window';
-import type { BattleRecord } from '@/game/battle/types';
+import type { BattleRecord, SkillInfo } from '@/game/battle/types';
 import { bag } from '@/routes';
 import { show as tower, fight } from '@/routes/tower';
 
@@ -12,17 +12,46 @@ const TOP_FLOOR = 170;
 const FAST_SPEED = 2;
 const SKIP_SPEED = 25;
 
-export default function Battle({ battle }: { battle: BattleRecord }) {
+type Props = { battle: BattleRecord; skills: Record<string, SkillInfo> };
+
+export default function Battle({ battle, skills }: Props) {
     // "Next floor" lands on this same page component; a new key resets the replay state.
-    return <BattleView key={battle.id} battle={battle} />;
+    return <BattleView key={battle.id} battle={battle} skills={skills} />;
 }
 
-function BattleView({ battle }: { battle: BattleRecord }) {
+// How long a used jutsu's icon stays lit in the HUD.
+const SKILL_GLOW_MS = 900;
+
+function BattleView({ battle, skills }: Props) {
     const speed = useRef(1);
     const [fast, setFast] = useState(false);
     const [finished, setFinished] = useState(false);
     const [player, opponent] = battle.log.fighters;
     const [hp, setHp] = useState<[number, number]>([player.hp, opponent.hp]);
+    const [mp, setMp] = useState<[number, number]>([
+        player.mp ?? player.maxMp ?? 0,
+        opponent.mp ?? opponent.maxMp ?? 0,
+    ]);
+    const [glowing, setGlowing] = useState<string | null>(null);
+
+    const updateMp = (side: 0 | 1, value: number) => {
+        setMp((current) =>
+            side === 0 ? [value, current[1]] : [current[0], value],
+        );
+    };
+
+    const lightSkill = (side: 0 | 1, skillId: string) => {
+        if (side === 0) {
+            setGlowing(skillId);
+            setTimeout(
+                () =>
+                    setGlowing((current) =>
+                        current === skillId ? null : current,
+                    ),
+                SKILL_GLOW_MS,
+            );
+        }
+    };
 
     const updateHp = (side: 0 | 1, value: number) => {
         setHp((current) =>
@@ -43,10 +72,16 @@ function BattleView({ battle }: { battle: BattleRecord }) {
                 speed={speed}
                 onFinished={() => setFinished(true)}
                 onHp={updateHp}
+                onMp={updateMp}
+                onSkill={lightSkill}
+                skillName={(id) => skills[id]?.name ?? 'Jutsu'}
             />
             <BattleHud
                 fighters={battle.log.fighters}
                 hp={hp}
+                mp={mp}
+                skills={skills}
+                glowing={glowing}
                 floor={battle.floor}
             />
 

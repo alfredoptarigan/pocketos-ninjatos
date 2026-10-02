@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Game\Combatant;
 use App\Game\CombatStats;
 use App\Game\Leveling;
+use App\Game\Skill;
 use App\Game\Vitals;
 use Database\Factories\CharacterFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -27,6 +28,7 @@ use Illuminate\Support\Carbon;
  * @property int $gold
  * @property string $village Key of config('game.villages')
  * @property int $tower_floor Highest Training Tower floor cleared
+ * @property list<string> $skills Learned jutsu ids (config('game.skills'))
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
@@ -40,6 +42,7 @@ class Character extends Model
         'level' => 1,
         'exp' => 0,
         'tower_floor' => 0,
+        'skills' => '[]',
     ];
 
     /**
@@ -47,7 +50,7 @@ class Character extends Model
      */
     protected function casts(): array
     {
-        return ['vitals_at' => 'datetime'];
+        return ['vitals_at' => 'datetime', 'skills' => 'array'];
     }
 
     /**
@@ -118,7 +121,25 @@ class Character extends Model
             parry: $stats->parry,
             counter: 0,
             priority: 0,
+            mp: $this->currentMp(),
+            maxMp: $stats->maxMp,
+            skills: $this->learnedSkills(),
         );
+    }
+
+    /**
+     * Learned jutsu in config order, so their trigger order is stable.
+     *
+     * @return list<Skill>
+     */
+    public function learnedSkills(): array
+    {
+        return collect(array_keys(config('game.skills')))
+            ->map(fn (string|int $id) => (string) $id)
+            ->filter(fn (string $id) => in_array($id, $this->skills, true))
+            ->map(fn (string $id) => Skill::find($id))
+            ->values()
+            ->all();
     }
 
     /**

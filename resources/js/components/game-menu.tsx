@@ -1,6 +1,7 @@
 import { Link } from '@inertiajs/react';
 import { toast } from 'sonner';
 import { bag } from '@/routes';
+import { index as skills } from '@/routes/skills';
 
 type MenuButton = { key: string; label: string; href?: string };
 
@@ -8,7 +9,7 @@ type MenuButton = { key: string; label: string; href?: string };
 const BUTTONS: MenuButton[] = [
     { key: 'bag', label: 'Bag', href: bag().url },
     { key: 'character', label: 'Character' },
-    { key: 'tools', label: 'Ninja Tools' },
+    { key: 'tools', label: 'Jutsu', href: skills().url },
     { key: 'forge', label: 'Forge' },
     { key: 'friends', label: 'Friends' },
     { key: 'missions', label: 'Missions' },

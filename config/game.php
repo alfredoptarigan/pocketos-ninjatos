@@ -73,6 +73,67 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Skills
+    |--------------------------------------------------------------------------
+    |
+    | Skill-panel jutsu from the original clientskill table, keyed by their
+    | original id (icons: public/game-assets/skills/<id>.png). Chance, power and
+    | effects come from the original descriptions; 'chakra' is the original
+    | MPCostMul, turned into a cost by combat.skill_chakra_divisor. Seconds in
+    | the originals become turns (about two seconds each).
+    |
+    | kind: strike     replaces the normal attack (power % of base attack)
+    |       follow_up  extra hit after a landed normal attack
+    |       extra      extra hit before the ninja's own action
+    |       counter    hits back after being attacked
+    |       block      cancels an incoming attack
+    |       reflect    returns a share of damage taken
+    |       heal       heals a share of lost health after being hurt
+    |       revive     comes back with a share of max health on knock-out
+    |
+    | 'requires' is the previous jutsu of the same school, as in the original.
+    |
+    */
+
+    'skills' => [
+        '1808' => ['name' => 'Fireball', 'school' => 'Fire', 'kind' => 'strike', 'chance' => 33, 'power' => 130, 'chakra' => 100, 'level' => 1, 'requires' => null,
+            'description' => 'Gathers chakra in the mouth and breathes out a ball of fire. 130% damage.'],
+        '1802' => ['name' => 'Falling Thunder', 'school' => 'Lightning', 'kind' => 'follow_up', 'chance' => 24, 'power' => 80, 'chakra' => 100, 'level' => 1, 'requires' => null,
+            'description' => 'Adds a bolt of lightning to a normal attack. 80% extra damage.'],
+        '1825' => ['name' => 'Chidori', 'school' => 'Lightning', 'kind' => 'strike', 'chance' => 17, 'power' => 160, 'chakra' => 200, 'level' => 8, 'requires' => '1802',
+            'description' => 'Condensed chakra turned into lightning in the hand. 160% damage.'],
+        '1826' => ['name' => 'Flash Step', 'school' => 'Wind', 'kind' => 'extra', 'chance' => 20, 'power' => 65, 'chakra' => 110, 'level' => 1, 'requires' => null,
+            'description' => 'A burst of speed that lands an extra attack at 65% power before acting.'],
+        '3811' => ['name' => 'Sand Storm', 'school' => 'Wind', 'kind' => 'counter', 'chance' => 22, 'power' => 144, 'chakra' => 110, 'level' => 5, 'requires' => '1826',
+            'description' => 'Swirling sand strikes back when attacked. 144% damage.'],
+        '1813' => ['name' => 'Gale Palm', 'school' => 'Wind', 'kind' => 'follow_up', 'chance' => 27, 'power' => 108, 'chakra' => 80, 'level' => 10, 'requires' => '3811',
+            'description' => 'A palm strike wrapped in a cutting gale after a normal attack. 108% extra damage.'],
+        '1810' => ['name' => 'Rasengan', 'school' => 'Wind', 'kind' => 'strike', 'chance' => 26, 'power' => 180, 'chakra' => 140, 'level' => 15, 'requires' => '1813', 'self_damage' => 30,
+            'description' => 'A spinning sphere of chakra. 180% damage, but 30% of it recoils on the user.'],
+        '1828' => ['name' => 'Bomb', 'school' => 'Ninja Tools', 'kind' => 'strike', 'chance' => 33, 'power' => 210, 'chakra' => 0, 'level' => 6, 'requires' => null, 'backfire' => true,
+            'description' => 'Throws a powerful bomb. 210% damage, but the longer the fight, the likelier it is thrown back.'],
+        '1807' => ['name' => 'Lotus', 'school' => 'Taijutsu', 'kind' => 'strike', 'chance' => 23, 'power' => 250, 'chakra' => 0, 'level' => 3, 'requires' => null, 'self_stun' => 4,
+            'description' => 'A flurry of blows at 250% damage that leaves the user exhausted for 4 turns.'],
+        '1822' => ['name' => 'Monstrous Strength', 'school' => 'Taijutsu', 'kind' => 'strike', 'chance' => 15, 'power' => 100, 'chakra' => 0, 'level' => 12, 'requires' => '1807', 'max_hp_damage' => 7, 'stun' => 3, 'max_uses' => 3,
+            'description' => 'A crushing leap: 100% damage plus 7% of the target\'s max health, stunning it for 3 turns. Up to 3 times a fight.'],
+        '1827' => ['name' => 'Assassination', 'school' => 'Genjutsu', 'kind' => 'strike', 'chance' => 28, 'power' => 100, 'chakra' => 70, 'level' => 2, 'requires' => null, 'lifesteal' => 50,
+            'description' => 'Strikes a vital point and drains life: 100% damage, half of it healed.'],
+        '3826' => ['name' => 'Substitution', 'school' => 'Genjutsu', 'kind' => 'block', 'chance' => 17, 'power' => 0, 'chakra' => 0, 'level' => 9, 'requires' => '1827',
+            'description' => 'Swaps places with a decoy and takes no damage from an attack.'],
+        '3806' => ['name' => 'Earth Wall', 'school' => 'Earth', 'kind' => 'reflect', 'chance' => 19, 'power' => 60, 'chakra' => 0, 'level' => 7, 'requires' => null,
+            'description' => 'Raises a wall of earth that returns 60% of the damage taken.'],
+        '1829' => ['name' => 'Mystical Palm', 'school' => 'Medical', 'kind' => 'heal', 'chance' => 22, 'power' => 11, 'chakra' => 120, 'level' => 4, 'requires' => null, 'max_uses' => 3,
+            'description' => 'Heals 11% of lost health after being hurt. Up to 3 times a fight.'],
+        '3803' => ['name' => 'Creation Rebirth', 'school' => 'Medical', 'kind' => 'revive', 'chance' => 100, 'power' => 25, 'chakra' => 400, 'level' => 20, 'requires' => '1829', 'max_uses' => 1,
+            'description' => 'Comes back from a knock-out with 25% health. Less likely the longer the fight lasts.'],
+    ],
+
+    // Gold to learn a jutsu: skill_gold_base + required level * skill_gold_per_level.
+    'skill_gold_base' => 50,
+    'skill_gold_per_level' => 50,
+
+    /*
+    |--------------------------------------------------------------------------
     | Combat
     |--------------------------------------------------------------------------
     |
@@ -95,6 +156,14 @@ return [
         // Damage taken is multiplied by 1 - def / (def + defense_scale).
         'defense_scale' => 500,
         'max_turns' => 60,
+        // A jutsu costs ceil(chakra * max chakra / skill_chakra_divisor).
+        'skill_chakra_divisor' => 1000,
+        // Bomb is thrown back with this % chance per turn played (capped).
+        'bomb_backfire_per_turn' => 1,
+        'bomb_backfire_cap' => 40,
+        // Creation Rebirth's chance drops by this % per turn played (floor 10).
+        'revive_decay_per_turn' => 2,
+        'revive_min_chance' => 10,
         // Health and chakra recover by this % of the maximum per minute.
         'regen_percent_per_minute' => 5,
         'max_level' => 100,
