@@ -95,7 +95,7 @@ class TowerTest extends TestCase
         $this->assertDatabaseCount('battles', 0);
     }
 
-    public function test_losing_leaves_the_ninja_on_one_health_without_progress()
+    public function test_losing_gives_no_progress_or_rewards()
     {
         $character = Character::factory()->create();
         $this->deadlyFloor(1);
@@ -105,12 +105,24 @@ class TowerTest extends TestCase
 
         $character->refresh();
         $this->assertFalse(Battle::sole()->won);
-        $this->assertSame(1, $character->hp);
         $this->assertSame(0, $character->tower_floor);
         $this->assertSame(0, $character->exp);
     }
 
-    public function test_health_carries_over_between_fights_and_recovers_with_rest()
+    public function test_health_and_chakra_are_fully_restored_after_a_battle()
+    {
+        $character = Character::factory()->create(['hp' => 5, 'mp' => 5, 'vitals_at' => now()]);
+        $this->deadlyFloor(1);
+        $this->actingAs($character->user);
+
+        $this->post(route('tower.fight', 1));
+
+        $character->refresh();
+        $this->assertSame($character->stats()->maxHp, $character->currentHp());
+        $this->assertSame($character->stats()->maxMp, $character->currentMp());
+    }
+
+    public function test_health_recovers_with_rest()
     {
         Carbon::setTestNow('2026-10-02 12:00:00');
         $character = Character::factory()->create(['hp' => 30, 'vitals_at' => now()]);

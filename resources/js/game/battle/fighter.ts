@@ -33,6 +33,10 @@ export class Fighter {
     ) {
         this.hp = info.hp;
         body.scale.set(sheet ? MOTION_SCALE : PORTRAIT_SCALE);
+        // Original motions are drawn facing left; mirror opponents so they face the player.
+        if (sheet && !info.avatar) {
+            body.scale.x *= -1;
+        }
         this.view.addChild(body, this.hpBar, this.nameLabel());
         this.drawHp();
     }

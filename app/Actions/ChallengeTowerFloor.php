@@ -36,8 +36,8 @@ class ChallengeTowerFloor
                 'gold' => $ninja->gold + $rewards['gold'],
                 'tower_floor' => $firstClear ? $floor->floor : $ninja->tower_floor,
             ]);
-            // A knocked-out ninja limps home on 1 health; levelling up does not heal.
-            $ninja->setVitals(max(1, $result['hp'][0]), $ninja->currentMp());
+            // Win or lose, the ninja walks out of the tower fully recovered.
+            $ninja->forceFill(['hp' => null, 'mp' => null, 'vitals_at' => null]);
             $ninja->save();
 
             return $ninja->battles()->create([

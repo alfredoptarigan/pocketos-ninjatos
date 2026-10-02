@@ -89,8 +89,8 @@ function BattleView({ battle }: { battle: BattleRecord }) {
                                 </ul>
                             ) : (
                                 <p className="text-slate-300">
-                                    You were knocked out. Rest or drink a potion
-                                    before trying again.
+                                    You were knocked out. Train up and try
+                                    again.
                                 </p>
                             )}
                             <div className="mt-2 flex flex-wrap justify-center gap-2">
