@@ -35,4 +35,49 @@ class VillageTest extends TestCase
         $response = $this->get(route('village'));
         $response->assertOk();
     }
+
+    public function test_page_shows_the_current_village_and_travel_options()
+    {
+        $this->actingAs(Character::factory()->create(['village' => '121'])->user);
+
+        $this->get(route('village'))->assertInertia(fn (Assert $page) => $page
+            ->where('village.id', '121')
+            ->where('village.name', config('game.villages.121'))
+            ->has('villages', count(config('game.villages'))));
+    }
+
+    public function test_new_characters_start_in_the_leaf_village()
+    {
+        $user = Character::factory()->create()->user;
+        $user->character->delete();
+        $this->actingAs($user);
+
+        $this->post(route('character.store'), ['name' => 'Rookie', 'avatar' => '0_12']);
+
+        $this->assertSame(config('game.home_village'), $user->character()->first()->village);
+    }
+
+    public function test_players_can_travel_to_another_village()
+    {
+        $character = Character::factory()->create(['village' => '111']);
+        $this->actingAs($character->user);
+
+        $this->post(route('village.travel'), ['village' => '131'])
+            ->assertRedirect(route('village'))
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame('131', $character->fresh()->village);
+    }
+
+    public function test_travel_rejects_unknown_villages()
+    {
+        $character = Character::factory()->create(['village' => '111']);
+        $this->actingAs($character->user);
+
+        foreach (['999', '', 'leaf'] as $village) {
+            $this->post(route('village.travel'), ['village' => $village])->assertSessionHasErrors('village');
+        }
+
+        $this->assertSame('111', $character->fresh()->village);
+    }
 }

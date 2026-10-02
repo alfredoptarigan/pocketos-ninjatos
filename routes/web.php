@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\CharacterController;
 use App\Http\Controllers\PharmacyController;
+use App\Http\Controllers\VillageController;
 use App\Http\Middleware\EnsurePlayerHasCharacter;
 use Illuminate\Support\Facades\Route;
 
@@ -13,7 +14,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('character', [CharacterController::class, 'store'])->name('character.store');
 
     Route::middleware(EnsurePlayerHasCharacter::class)->group(function () {
-        Route::inertia('village', 'village')->name('village');
+        Route::get('village', [VillageController::class, 'show'])->name('village');
+        Route::post('village/travel', [VillageController::class, 'travel'])->name('village.travel');
 
         Route::get('pharmacy', [PharmacyController::class, 'show'])->name('pharmacy.show');
         Route::post('pharmacy/buy', [PharmacyController::class, 'buy'])->name('pharmacy.buy');

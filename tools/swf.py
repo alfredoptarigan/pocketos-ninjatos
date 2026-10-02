@@ -18,7 +18,9 @@ TAG_DEFINE_BITS_JPEG2 = 21
 TAG_DEFINE_SHAPE2 = 22
 TAG_PLACE_OBJECT2 = 26
 TAG_DEFINE_SHAPE3 = 32
+TAG_DEFINE_BUTTON2 = 34
 TAG_DEFINE_BITS_JPEG3 = 35
+TAG_DEFINE_BITS_LOSSLESS2 = 36
 TAG_DEFINE_SPRITE = 39
 SHAPE_TAGS = (TAG_DEFINE_SHAPE, TAG_DEFINE_SHAPE2, TAG_DEFINE_SHAPE3)
 
@@ -32,6 +34,18 @@ PLACE_HAS_MATRIX = 0x04
 PLACE_HAS_COLOR_TRANSFORM = 0x08
 PLACE_HAS_RATIO = 0x10
 PLACE_HAS_NAME = 0x20
+
+BUTTON_STATE_UP = 0x01
+BUTTON_HAS_FILTERS = 0x10
+BUTTON_HAS_BLEND_MODE = 0x20
+
+LOSSLESS_COLORMAPPED = 3
+LOSSLESS_ARGB = 5
+
+# Byte sizes of fixed-length FILTER records, by filter id.
+FIXED_FILTER_SIZES = {0: 23, 1: 9, 2: 15, 3: 27, 6: 80}
+GRADIENT_FILTERS = (4, 7)
+CONVOLUTION_FILTER = 5
 
 # Flash tolerates a bogus EOI+SOI prefix before the real JPEG stream.
 BOGUS_JPEG_PREFIX = b'\xff\xd9\xff\xd8'
@@ -163,7 +177,7 @@ def first_jpeg(swf: Swf) -> bytes:
 
 def jpeg3_bitmaps(swf: Swf) -> dict:
     """Map character id -> RGBA PIL image for every DefineBitsJPEG3 tag."""
-    from PIL import Image  # only the character extractor needs Pillow
+    from PIL import Image  # only the image extractors need Pillow
 
     bitmaps = {}
     for code, tag in iter_tags(swf.body, swf.first_tag):
@@ -176,6 +190,52 @@ def jpeg3_bitmaps(swf: Swf) -> dict:
         image.putalpha(Image.frombytes('L', image.size, alpha))
         bitmaps[character_id] = image
     return bitmaps
+
+
+def lossless2_bitmaps(swf: Swf) -> dict:
+    """Map character id -> RGBA PIL image for every DefineBitsLossless2 tag."""
+    from PIL import Image
+
+    bitmaps = {}
+    for code, tag in iter_tags(swf.body, swf.first_tag):
+        if code != TAG_DEFINE_BITS_LOSSLESS2:
+            continue
+        character_id, fmt, width, height = struct.unpack_from('<HBHH', tag)
+        if fmt == LOSSLESS_ARGB:
+            pixels = zlib.decompress(tag[7:])
+            image = Image.frombytes('RGBA', (width, height), pixels, 'raw', 'ARGB')
+        elif fmt == LOSSLESS_COLORMAPPED:
+            colors = tag[7] + 1
+            data = zlib.decompress(tag[8:])
+            palette, indexes = data[:colors * 4], data[colors * 4:]
+            row = (width + 3) & ~3  # rows are padded to 32 bits
+            rgba = bytearray()
+            for y in range(height):
+                for index in indexes[y * row:y * row + width]:
+                    rgba += palette[index * 4:index * 4 + 4]
+            image = Image.frombytes('RGBA', (width, height), bytes(rgba))
+        else:
+            continue  # 15-bit lossless is not used by the game files
+        # Lossless2 colours are premultiplied by alpha.
+        bitmaps[character_id] = unpremultiply(image)
+    return bitmaps
+
+
+def unpremultiply(image):
+    """Lossless2 colours are stored premultiplied by alpha; undo that."""
+    from PIL import Image
+
+    data = bytearray(image.tobytes())
+    for i in range(0, len(data), 4):
+        alpha = data[i + 3]
+        if 0 < alpha < 255:
+            for channel in range(i, i + 3):
+                data[channel] = min(255, data[channel] * 255 // alpha)
+    return Image.frombytes('RGBA', image.size, bytes(data))
+
+
+def all_bitmaps(swf: Swf) -> dict:
+    return {**jpeg3_bitmaps(swf), **lossless2_bitmaps(swf)}
 
 
 def first_bitmap_fill(tag: bytes, offset: int, has_alpha: bool) -> tuple[int, float, float] | None:
@@ -237,3 +297,76 @@ def sprite_timelines(swf: Swf) -> dict[int, list[dict[int, int]]]:
                 frames.append(stage)
         timelines[sprite_id] = frames
     return timelines
+
+
+def skip_filter_list(data: bytes) -> int:
+    count, offset = data[0], 1
+    for _ in range(count):
+        filter_id = data[offset]
+        offset += 1
+        if filter_id in FIXED_FILTER_SIZES:
+            offset += FIXED_FILTER_SIZES[filter_id]
+        elif filter_id in GRADIENT_FILTERS:
+            colors = data[offset]
+            offset += 1 + colors * 5 + 19
+        elif filter_id == CONVOLUTION_FILTER:
+            width, height = data[offset], data[offset + 1]
+            offset += 2 + 8 + 4 * width * height + 4 + 1
+        else:
+            raise ValueError(f'unknown filter id {filter_id}')
+    return offset
+
+
+def button_up_records(tag: bytes) -> list[tuple[int, float, float]]:
+    """(character id, x, y) of every record shown in a DefineButton2's up state."""
+    offset = 2 + 1 + 2  # button id, menu flag, action offset
+    records = []
+    while tag[offset] != 0:
+        flags = tag[offset]
+        (character_id,) = struct.unpack_from('<H', tag, offset + 1)
+        offset += 5  # flags, character id, depth
+        tx, ty, size = read_matrix(tag[offset:])
+        offset += size
+        offset += skip_color_transform(tag[offset:])
+        if flags & BUTTON_HAS_FILTERS:
+            offset += skip_filter_list(tag[offset:])
+        if flags & BUTTON_HAS_BLEND_MODE:
+            offset += 1
+        if flags & BUTTON_STATE_UP:
+            records.append((character_id, tx / TWIPS_PER_PIXEL, ty / TWIPS_PER_PIXEL))
+    return records
+
+
+def placed_bitmaps(swf: Swf, character_id: int, x: float = 0, y: float = 0) -> list[tuple[int, float, float]]:
+    """Flatten what a character shows (first frame / up state) into (bitmap id, x, y).
+
+    Only translations are followed: the game's scene clips are never scaled.
+    """
+    definitions = {
+        struct.unpack_from('<H', tag)[0]: (code, tag)
+        for code, tag in iter_tags(swf.body, swf.first_tag)
+        if code in (TAG_DEFINE_BUTTON2, TAG_DEFINE_SPRITE)
+    }
+    fills = shape_bitmap_fills(swf)
+
+    def walk(cid: int, ox: float, oy: float) -> list[tuple[int, float, float]]:
+        if cid in fills:
+            bitmap_id, bx, by = fills[cid]
+            return [(bitmap_id, ox + bx, oy + by)]
+        if cid not in definitions:
+            return []
+        code, tag = definitions[cid]
+        if code == TAG_DEFINE_BUTTON2:
+            children = button_up_records(tag)
+        else:
+            children = []
+            for inner_code, inner in iter_tags(tag, 4):
+                if inner_code == TAG_SHOW_FRAME:
+                    break
+                if inner_code == TAG_PLACE_OBJECT2:
+                    placement = read_place_object2(inner)
+                    if placement.character_id is not None:
+                        children.append((placement.character_id, placement.x or 0, placement.y or 0))
+        return [found for child, cx, cy in children for found in walk(child, ox + cx, oy + cy)]
+
+    return walk(character_id, x, y)

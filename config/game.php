@@ -29,4 +29,27 @@ return [
 
     'starting_gold' => 1000,
 
+    /*
+    |--------------------------------------------------------------------------
+    | Villages
+    |--------------------------------------------------------------------------
+    |
+    | Main-city scenes from the original game, keyed by their scene id.
+    | Art is produced by tools/extract_village_assets.py. Names are ours:
+    | the backup only ships Chinese text.
+    |
+    */
+
+    'home_village' => '111',
+
+    'villages' => [
+        '111' => 'Leaf Village',
+        '121' => 'Mist Village',
+        '131' => 'Cloud Village',
+        '141' => 'Wind Village',
+        '151' => 'Sound Village',
+        '161' => 'Waterfall Village',
+        '171' => 'Shadow Village',
+    ],
+
 ];

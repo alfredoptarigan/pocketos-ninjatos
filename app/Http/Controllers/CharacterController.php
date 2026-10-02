@@ -33,9 +33,12 @@ class CharacterController extends Controller
             return to_route('village');
         }
 
-        // gold is not mass assignable: it only changes through game actions.
+        // gold and village are not mass assignable: only game actions change them.
         $request->user()->character()->make($request->validated())
-            ->forceFill(['gold' => config('game.starting_gold')])
+            ->forceFill([
+                'gold' => config('game.starting_gold'),
+                'village' => config('game.home_village'),
+            ])
             ->save();
 
         return to_route('village');

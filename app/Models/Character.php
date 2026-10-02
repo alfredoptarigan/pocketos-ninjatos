@@ -17,6 +17,7 @@ use Illuminate\Support\Carbon;
  * @property string $avatar Asset key "<sex>_<id>" from config('game.avatars')
  * @property int $level
  * @property int $gold
+ * @property string $village Key of config('game.villages')
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
