@@ -18,7 +18,7 @@ ACTIONS = {
 }
 # Some monsters ship without these; the client falls back to 'stance'.
 OPTIONAL_ACTIONS = {'idle', 'dodge'}
-SHEET_COLUMNS = 10  # keeps the atlas well under WebGL texture size limits
+MAX_SHEET_WIDTH = 4096  # stay within WebGL texture limits on every GPU
 
 
 def motion_frames(motion_swf: Path):
@@ -47,14 +47,18 @@ def motion_frames(motion_swf: Path):
     return frames, ticks, swf.frame_rate
 
 
-def write_motion_sheet(key: str, motions: dict[str, Path], out: Path) -> None:
+def write_motion_sheet(key: str, motions: dict[str, Path], out: Path, scale: int = 1) -> None:
     """Pack every action into motions.png + motions.json (one shared anchor).
 
     Frame names carry `key` because Pixi caches textures globally by name.
+    With scale > 1 frames are AI-upscaled (tools/upscale.py) and the sheet's
+    meta.scale tells Pixi to draw them at their original size, only sharper.
     """
     from PIL import Image
 
     actions = {name: motion_frames(path) for name, path in motions.items()}
+    if scale > 1:
+        actions = upscale_actions(actions, scale)
     every = [frame for frames, _, _ in actions.values() for frame in frames]
     left = min(x for _, x, _ in every)
     top = min(y for _, _, y in every)
@@ -62,13 +66,14 @@ def write_motion_sheet(key: str, motions: dict[str, Path], out: Path) -> None:
     height = round(max(y + image.height for image, _, y in every) - top)
     anchor = {'x': -left / width, 'y': -top / height}  # SWF origin = character ground point
 
-    rows = (len(every) + SHEET_COLUMNS - 1) // SHEET_COLUMNS
-    sheet = Image.new('RGBA', (width * min(len(every), SHEET_COLUMNS), height * rows))
+    columns = max(1, min(len(every), MAX_SHEET_WIDTH // width))
+    rows = (len(every) + columns - 1) // columns
+    sheet = Image.new('RGBA', (width * columns, height * rows))
     frame_data, animations, fps, slot = {}, {}, {}, 0
     for action, (frames, ticks, rate) in actions.items():
         names = []
         for index, (image, x, y) in enumerate(frames):
-            cx, cy = (slot % SHEET_COLUMNS) * width, (slot // SHEET_COLUMNS) * height
+            cx, cy = (slot % columns) * width, (slot // columns) * height
             sheet.alpha_composite(image, (cx + round(x - left), cy + round(y - top)))
             name = f'{key}_{action}_{index}'
             frame_data[name] = {
@@ -86,8 +91,20 @@ def write_motion_sheet(key: str, motions: dict[str, Path], out: Path) -> None:
     (out / 'motions.json').write_text(json.dumps({
         'frames': frame_data,
         'animations': animations,
-        'meta': {'image': 'motions.png', 'size': {'w': sheet.width, 'h': sheet.height}, 'scale': 1, 'fps': fps},
+        'meta': {'image': 'motions.png', 'size': {'w': sheet.width, 'h': sheet.height}, 'scale': scale, 'fps': fps},
     }))
+
+
+def upscale_actions(actions: dict, scale: int) -> dict:
+    """Upscale every frame in one model run; offsets scale with the bitmaps."""
+    from upscale import upscale_all
+
+    flat = {(name, index): image for name, (frames, _, _) in actions.items() for index, (image, _, _) in enumerate(frames)}
+    bigger = upscale_all(flat, scale)
+    return {
+        name: ([(bigger[(name, index)], x * scale, y * scale) for index, (_, x, y) in enumerate(frames)], ticks, rate)
+        for name, (frames, ticks, rate) in actions.items()
+    }
 
 
 def find_motions(folder: Path, pattern: str) -> dict[str, Path]:

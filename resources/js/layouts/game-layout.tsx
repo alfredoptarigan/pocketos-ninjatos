@@ -29,12 +29,19 @@ export default function GameLayout({ children }: { children: ReactNode }) {
         <div className="dark relative h-dvh w-full overflow-hidden bg-black text-foreground">
             <main className="absolute inset-0">{children}</main>
 
+            {showHud && (
+                <div className="absolute top-3 left-3 z-20">
+                    <PlayerHud character={character} />
+                </div>
+            )}
+
             {character && (
-                <div className="pointer-events-none absolute inset-x-3 top-3 z-20 flex items-start justify-between">
-                    <div className="pointer-events-auto">
-                        {showHud && <PlayerHud character={character} />}
-                    </div>
-                    <div className="pointer-events-auto flex gap-2">
+                // Same element on every page so the music keeps playing; on the
+                // battle screen it moves out of the way of the battle HUD.
+                <div
+                    className={`absolute right-3 z-20 ${showHud ? 'top-3' : 'bottom-3'}`}
+                >
+                    <div className="flex gap-2">
                         <BackgroundMusic src={music} />
                         <Link
                             href={settings()}

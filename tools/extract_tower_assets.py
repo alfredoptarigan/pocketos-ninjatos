@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Extract the Training Tower (original "single gate") from the Pockie Ninja backup.
 
-Usage: python3 tools/extract_tower_assets.py <path-to-game-pockieninja>
+Usage: python3 tools/extract_tower_assets.py <path-to-game-pockieninja> [--hd]
+--hd upscales opponent art 2x with Real-ESRGAN (see tools/upscale.py).
 Requires Pillow.
 
 Writes:
@@ -22,6 +23,8 @@ from pathlib import Path
 
 from amf3 import load_compressed
 from motion import find_motions, write_motion_sheet
+from upscale import available as upscaler_available
+from upscale import upscale_file
 from swf import first_jpeg, read_swf
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -47,10 +50,12 @@ STATS = {
 }
 # Animated opponents use map monster art; everything else is a boss with a portrait.
 ANIMATED_PREFIX = 'MapUserFace_'
+BUILT: set[str] = set()
 BACKGROUNDS_DIR = 'movieclip/ui/fightbg'
 # arena.jpg carries red guide lines; 103001 and 4001 belong to special events.
 SKIPPED_BACKGROUNDS = {'arena', 'fightbg_103001', 'fightbg_4001'}
 FLOORS_PER_BACKGROUND = 10
+HD_SCALE = 2
 
 
 def latest_table(datatable: Path, name: str) -> dict:
@@ -67,7 +72,7 @@ def art_id(resource_id: str) -> str:
     return 'n' + re.sub(r'\D', '', resource_id.split('_')[-1])
 
 
-def extract_art(source: Path, resource_id: str) -> dict:
+def extract_art(source: Path, resource_id: str, scale: int) -> dict:
     key = art_id(resource_id)
     out = ASSETS / 'monsters' / key
     out.mkdir(parents=True, exist_ok=True)
@@ -76,15 +81,21 @@ def extract_art(source: Path, resource_id: str) -> dict:
     if resource_id.startswith(ANIMATED_PREFIX):
         folder = next((source / 'movieclip/motion/mob').glob(f'*/{key}'))
         number_id = key[1:]
-        if not (out / 'motions.json').exists():
-            write_motion_sheet(key, find_motions(folder, f'motion_{number_id}_{{action}}*.swf'), out)
-        face = sorted((source / 'bitmap/userfaceavatar/mob').glob(f'userface_{key}.*png'))
-        if face:
-            shutil.copyfile(face[0], out / 'face.png')
+        # Several floors share an opponent; build its art once per run.
+        if key not in BUILT:
+            BUILT.add(key)
+            write_motion_sheet(key, find_motions(folder, f'motion_{number_id}_{{action}}*.swf'), out, scale)
+            face = sorted((source / 'bitmap/userfaceavatar/mob').glob(f'userface_{key}.*png'))
+            if face:
+                shutil.copyfile(face[0], out / 'face.png')
+                if scale > 1:
+                    upscale_file(out / 'face.png', scale)
         return {'type': 'motion', 'motions': f'{url}/motions.json', 'face': f'{url}/face.png'}
 
     portrait = sorted((source / 'bitmap/npcbackphoto').glob(f'{key}.*png'))[0]
     shutil.copyfile(portrait, out / 'portrait.png')
+    if scale > 1:
+        upscale_file(out / 'portrait.png', scale)
     return {'type': 'portrait', 'portrait': f'{url}/portrait.png', 'face': f'{url}/portrait.png'}
 
 
@@ -102,8 +113,11 @@ def copy_backgrounds(source: Path) -> list[str]:
 
 
 def main() -> None:
-    if len(sys.argv) != 2:
+    if len(sys.argv) not in (2, 3) or sys.argv[2:] not in ([], ['--hd']):
         sys.exit(__doc__)
+    scale = HD_SCALE if '--hd' in sys.argv else 1
+    if scale > 1 and not upscaler_available():
+        sys.exit('Real-ESRGAN not found; see tools/upscale.py.')
     source = Path(sys.argv[1]).expanduser() / SOURCE
     datatable = source / 'binary/datatable'
     npcs = latest_table(datatable, 'singlegatenpc')
@@ -126,7 +140,7 @@ def main() -> None:
             # The last floor has no exp row; it reuses the previous floor's reward.
             'exp': exp_by_floor.get(floor) or exp_by_floor[max(exp_by_floor)],
             'art': {
-                **extract_art(source, resource_id),
+                **extract_art(source, resource_id, scale),
                 # Every ten floors move to the next original battlefield.
                 'background': backgrounds[(floor - 1) // FLOORS_PER_BACKGROUND % len(backgrounds)],
             },

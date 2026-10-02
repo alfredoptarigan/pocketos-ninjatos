@@ -19,39 +19,39 @@ Written for humans and AI agents picking up the work.
 
 Important folders inside `apache/source/`:
 
-| Folder | Contents |
-|---|---|
-| `movieclip/scene/maincity/` | Village scenes: `background_<id>.swf` (1920x1080 JPEG), `element_<id>*.swf` (clickable building cut-outs), `buildname_<id>.swf` (label positions, do not match the elements, unused) |
-| `movieclip/motion/people/people_<id>/` | Player motions `motion_<sex>_<id>_<action>_role.swf` |
-| `movieclip/motion/mob/{human,humanboss,inhuman,inhumanboss,searchboss}/n<id>/` | Monster motions `motion_<id>_<action>.swf` |
-| `movieclip/ui/` | Client UI: `uilookandfeel*.swf` (AsWing window skin), `uiresource*.swf`, `sceneui/bottommenu*.swf` (bottom menu), `fighting*.swf` (battle HUD), `fightbg/*.jpg` (battle backdrops) |
-| `movieclip/scene/battle/` | Old 500x300 battle backdrop |
-| `movieclip/fighteffect/`, `dazhao/` | Skill/hit effects, ultimates (not used yet) |
-| `bitmap/peoplecreate/` | Create-screen portraits `avatars_<sex>_<id>_clothing_create.swf` |
-| `bitmap/userfaceavatar/{people,mob,mapmob}/` | Face icons |
-| `bitmap/npcbackphoto/` | NPC and boss portraits `n<id>.s*.png` |
-| `bitmap/icon/**/` | Item icons `icon_<resource>.s*.gif|png` |
-| `binary/datatable/*.tab` | Game data tables (see section 3) |
-| `binary/lg/language.lg` | All display text (Chinese) |
-| `fighttxt/*.fight` | 36 recorded battles (JSON) |
-| `music/*.mp3` | Background music |
+| Folder                                                                         | Contents                                                                                                                                                                             |
+| ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `movieclip/scene/maincity/`                                                    | Village scenes: `background_<id>.swf` (1920x1080 JPEG), `element_<id>*.swf` (clickable building cut-outs), `buildname_<id>.swf` (label positions, do not match the elements, unused) |
+| `movieclip/motion/people/people_<id>/`                                         | Player motions `motion_<sex>_<id>_<action>_role.swf`                                                                                                                                 |
+| `movieclip/motion/mob/{human,humanboss,inhuman,inhumanboss,searchboss}/n<id>/` | Monster motions `motion_<id>_<action>.swf`                                                                                                                                           |
+| `movieclip/ui/`                                                                | Client UI: `uilookandfeel*.swf` (AsWing window skin), `uiresource*.swf`, `sceneui/bottommenu*.swf` (bottom menu), `fighting*.swf` (battle HUD), `fightbg/*.jpg` (battle backdrops)   |
+| `movieclip/scene/battle/`                                                      | Old 500x300 battle backdrop                                                                                                                                                          |
+| `movieclip/fighteffect/`, `dazhao/`                                            | Skill/hit effects, ultimates (not used yet)                                                                                                                                          |
+| `bitmap/peoplecreate/`                                                         | Create-screen portraits `avatars_<sex>_<id>_clothing_create.swf`                                                                                                                     |
+| `bitmap/userfaceavatar/{people,mob,mapmob}/`                                   | Face icons                                                                                                                                                                           |
+| `bitmap/npcbackphoto/`                                                         | NPC and boss portraits `n<id>.s*.png`                                                                                                                                                |
+| `bitmap/icon/**/`                                                              | Item icons `icon_<resource>.s*.gif                                                                                                                                                   | png` |
+| `binary/datatable/*.tab`                                                       | Game data tables (see section 3)                                                                                                                                                     |
+| `binary/lg/language.lg`                                                        | All display text (Chinese)                                                                                                                                                           |
+| `fighttxt/*.fight`                                                             | 36 recorded battles (JSON)                                                                                                                                                           |
+| `music/*.mp3`                                                                  | Background music                                                                                                                                                                     |
 
 Versioned files: many names carry a version suffix, `name.s<version>.ext`
 (e.g. `pharmacyitem.s36042.tab`). Always take the **highest** version.
 
 ## 2. File formats
 
-| Format | How to read it | Code |
-|---|---|---|
-| `.swf` | `CWS` = zlib-compressed after an 8-byte header, `FWS` = raw. Tags parsed in Python. | `tools/swf.py` |
-| JPEG bitmaps | `DefineBitsJPEG2` (plain) and `DefineBitsJPEG3` (JPEG + zlib alpha plane, merged with Pillow) | `swf.jpeg3_bitmaps` |
-| Lossless bitmaps | `DefineBitsLossless2`, ARGB **premultiplied** (un-premultiply!) or colour-mapped | `swf.lossless2_bitmaps` |
-| Motions | One sprite whose timeline swaps bitmap-filled shapes per frame | `tools/motion.py` |
-| Buttons | `DefineButton2`; the up-state records give the cut-out | `swf.button_up_records`, `swf.placed_bitmaps` |
-| Vector art (skins, HUD) | Not parsed in Python: rendered to PNG with **JPEXS** | `tools/extract_ui_assets.py` |
-| `.tab` tables | zlib + **AMF3**, column-oriented: `{column: [values...]}`; row 0 is often a Chinese header (not always: `tollgate` has none) | `tools/amf3.py` |
-| `language.lg` | zlib + AMF3 dictionary, keys like `lg_name_n900001`, `lg_SkillName_1828`, `lg_SkillDes_1828`, `lg_HP1_itemname` | `amf3.load_compressed` |
-| `.fight` | Plain JSON battle logs | see `docs/combat-research.md` |
+| Format                  | How to read it                                                                                                               | Code                                          |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
+| `.swf`                  | `CWS` = zlib-compressed after an 8-byte header, `FWS` = raw. Tags parsed in Python.                                          | `tools/swf.py`                                |
+| JPEG bitmaps            | `DefineBitsJPEG2` (plain) and `DefineBitsJPEG3` (JPEG + zlib alpha plane, merged with Pillow)                                | `swf.jpeg3_bitmaps`                           |
+| Lossless bitmaps        | `DefineBitsLossless2`, ARGB **premultiplied** (un-premultiply!) or colour-mapped                                             | `swf.lossless2_bitmaps`                       |
+| Motions                 | One sprite whose timeline swaps bitmap-filled shapes per frame                                                               | `tools/motion.py`                             |
+| Buttons                 | `DefineButton2`; the up-state records give the cut-out                                                                       | `swf.button_up_records`, `swf.placed_bitmaps` |
+| Vector art (skins, HUD) | Not parsed in Python: rendered to PNG with **JPEXS**                                                                         | `tools/extract_ui_assets.py`                  |
+| `.tab` tables           | zlib + **AMF3**, column-oriented: `{column: [values...]}`; row 0 is often a Chinese header (not always: `tollgate` has none) | `tools/amf3.py`                               |
+| `language.lg`           | zlib + AMF3 dictionary, keys like `lg_name_n900001`, `lg_SkillName_1828`, `lg_SkillDes_1828`, `lg_HP1_itemname`              | `amf3.load_compressed`                        |
+| `.fight`                | Plain JSON battle logs                                                                                                       | see `docs/combat-research.md`                 |
 
 ## 3. Data tables that matter
 
@@ -63,26 +63,27 @@ from amf3 import load_compressed          # run from tools/
 table = load_compressed(Path('.../binary/datatable/pharmacyitem.s36042.tab'))
 ```
 
-| Table | Used for |
-|---|---|
-| `pharmacyitem` | Pharmacy items (price, HP/MP/SP restore, stack, icon resource) |
-| `singlegatenpc`, `sgategetexp`, `stollgatebossinfo` | Training Tower: 170 opponents, exp per floor, boss floors |
-| `rolebase` | Base stats and aptitudes per avatar id (our growth numbers in `config/game.php`) |
-| `buildnpc` | Building keeper NPC per village (`n11004` = Leaf Village pharmacy) |
-| `tollgate` → `subtollgate` → `fightmonsterpoint` → `monstergroup`, `normalnpc` | Story stages (level 11+), not built yet |
-| `clientskill`, `clientskillid`, `serverskillconfig`, `fightskill`, `fightingbuffconfig`, `effectconfig` | Skills and buffs, not built yet; mechanics are in `lg_SkillDes_<id>` |
-| `equipitem`, `equipsuit`, `equipconsolidate`, `task`, `compete*`, `petitem`, `card_*`, `home*`, `crop*` | Future features |
+| Table                                                                                                   | Used for                                                                         |
+| ------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `pharmacyitem`                                                                                          | Pharmacy items (price, HP/MP/SP restore, stack, icon resource)                   |
+| `singlegatenpc`, `sgategetexp`, `stollgatebossinfo`                                                     | Training Tower: 170 opponents, exp per floor, boss floors                        |
+| `rolebase`                                                                                              | Base stats and aptitudes per avatar id (our growth numbers in `config/game.php`) |
+| `buildnpc`                                                                                              | Building keeper NPC per village (`n11004` = Leaf Village pharmacy)               |
+| `tollgate` → `subtollgate` → `fightmonsterpoint` → `monstergroup`, `normalnpc`                          | Story stages (level 11+), not built yet                                          |
+| `clientskill`, `clientskillid`, `serverskillconfig`, `fightskill`, `fightingbuffconfig`, `effectconfig` | Skills and buffs, not built yet; mechanics are in `lg_SkillDes_<id>`             |
+| `equipitem`, `equipsuit`, `equipconsolidate`, `task`, `compete*`, `petitem`, `card_*`, `home*`, `crop*` | Future features                                                                  |
 
 Full combat findings: `docs/combat-research.md`.
 
 ## 4. Tooling
 
-| Tool | Where | Needed by |
-|---|---|---|
-| Python 3.9+ (stdlib) | system `python3` | all extractors |
-| Pillow | `python3 -m pip install --user pillow` | village, character, tower, UI extractors |
-| Java (OpenJDK) | `brew install openjdk` → `/opt/homebrew/opt/openjdk/bin/java` | UI extractor only |
-| JPEXS Free Flash Decompiler 26.3.0 | zip from the GitHub release unpacked to `~/.local/opt/jpexs/ffdec.jar` | UI extractor only |
+| Tool                               | Where                                                                  | Needed by                                |
+| ---------------------------------- | ---------------------------------------------------------------------- | ---------------------------------------- |
+| Python 3.9+ (stdlib)               | system `python3`                                                       | all extractors                           |
+| Pillow                             | `python3 -m pip install --user pillow`                                 | village, character, tower, UI extractors |
+| Java (OpenJDK)                     | `brew install openjdk` → `/opt/homebrew/opt/openjdk/bin/java`          | UI extractor only                        |
+| JPEXS Free Flash Decompiler 26.3.0 | zip from the GitHub release unpacked to `~/.local/opt/jpexs/ffdec.jar` | UI extractor only                        |
+| Real-ESRGAN (ncnn-vulkan, 2022-04-24 macOS build) | zip from the xinntao/Real-ESRGAN v0.2.5.0 release unpacked to `~/.local/opt/realesrgan/` | `--hd` option only |
 
 `extract_ui_assets.py` reads `JAVA` and `FFDEC_JAR` env vars to override those paths.
 JPEXS can also be used by hand to explore a SWF:
@@ -97,13 +98,13 @@ java -Djava.awt.headless=true -jar ~/.local/opt/jpexs/ffdec.jar \
 
 All take the backup path and write into this repo. Run them from the repo root.
 
-| Script | Reads | Writes |
-|---|---|---|
-| `tools/extract_village_assets.py` | `scene/maincity/background_*.swf`, `element_*.swf` | `public/game-assets/villages/<id>.jpg`, `villages/<id>/<building>.png`, `villages.json` |
-| `tools/extract_character_assets.py` | `bitmap/peoplecreate`, `userfaceavatar/people`, `motion/people` | `public/game-assets/characters/<sex>_<id>/{portrait.png, face.png, motions.png, motions.json}` |
-| `tools/extract_item_assets.py` | `datatable/pharmacyitem`, `bitmap/icon` | `public/game-assets/items/<code>.<gif|png>`, `database/data/pharmacy_items.json` |
-| `tools/extract_ui_assets.py` (JPEXS) | `ui/uilookandfeel`, `ui/sceneui/bottommenu`, `ui/fighting`, `npcbackphoto`, `music` | `public/game-assets/ui/*.png`, `ui/menu/*.png`, `ui/fight/*.png`, `npcs/pharmacy.png`, `music/*.mp3` |
-| `tools/extract_tower_assets.py` | `singlegatenpc`, `sgategetexp`, `language.lg`, `motion/mob`, `npcbackphoto`, `scene/battle`, `ui/fightbg` | `database/data/tower.json`, `public/game-assets/monsters/n<id>/...`, `battle/background.jpg`, `battle/backgrounds/*.jpg`, `music/singlegate.mp3` |
+| Script                               | Reads                                                                                                     | Writes                                                                                                                                           |
+| ------------------------------------ | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `tools/extract_village_assets.py`    | `scene/maincity/background_*.swf`, `element_*.swf`                                                        | `public/game-assets/villages/<id>.jpg`, `villages/<id>/<building>.png`, `villages.json`                                                          |
+| `tools/extract_character_assets.py`  | `bitmap/peoplecreate`, `userfaceavatar/people`, `motion/people`                                           | `public/game-assets/characters/<sex>_<id>/{portrait.png, face.png, motions.png, motions.json}`                                                   |
+| `tools/extract_item_assets.py`       | `datatable/pharmacyitem`, `bitmap/icon`                                                                   | `public/game-assets/items/<code>.<gif                                                                                                            | png>`, `database/data/pharmacy_items.json` |
+| `tools/extract_ui_assets.py` (JPEXS) | `ui/uilookandfeel`, `ui/sceneui/bottommenu`, `ui/fighting`, `npcbackphoto`, `music`                       | `public/game-assets/ui/*.png`, `ui/menu/*.png`, `ui/fight/*.png`, `npcs/pharmacy.png`, `music/*.mp3`                                             |
+| `tools/extract_tower_assets.py`      | `singlegatenpc`, `sgategetexp`, `language.lg`, `motion/mob`, `npcbackphoto`, `scene/battle`, `ui/fightbg` | `database/data/tower.json`, `public/game-assets/monsters/n<id>/...`, `battle/background.jpg`, `battle/backgrounds/*.jpg`, `music/singlegate.mp3` |
 
 Shared modules: `swf.py` (SWF parsing), `motion.py` (motion → Pixi spritesheet),
 `amf3.py` (tables). Unit tests: `python3 -m unittest discover tools`.
@@ -149,6 +150,27 @@ music/maincity1-4.mp3, blackcity.mp3, singlegate.mp3
 
 `database/data/pharmacy_items.json` and `database/data/tower.json` feed `ItemSeeder`
 and `TowerSeeder`.
+
+## 6a. HD (AI-upscaled) character and opponent art
+
+`extract_character_assets.py` and `extract_tower_assets.py` accept `--hd`:
+
+```bash
+python3 tools/extract_character_assets.py ~/Privates/game-pockieninja --hd   # ~5 min
+python3 tools/extract_tower_assets.py ~/Privates/game-pockieninja --hd       # ~4 min
+```
+
+- `tools/upscale.py` runs Real-ESRGAN with the `realesrgan-x4plus-anime` model at 4x and
+  scales down to 2x (smoother edges). Binary path: `REALESRGAN` env var, default
+  `~/.local/opt/realesrgan/realesrgan-ncnn-vulkan`; needs numpy + Pillow.
+- **Alpha-safe:** colour and alpha are upscaled separately, and colours are first bled
+  into the transparent margin. Without this the model turns the black transparent
+  pixels into thick dark outlines.
+- Motion frames are upscaled in one model run per character; `motions.json` gets
+  `meta.scale: 2` so Pixi draws them at the original size, only sharper (no game code
+  change). Atlas columns are chosen to keep sheets ≤ 4096 px wide.
+- Faces, create-screen portraits and boss portraits are upscaled in place.
+- Without `--hd` the extractors write the original 1x art; both work with the game.
 
 ## 7. Id cheat sheet
 

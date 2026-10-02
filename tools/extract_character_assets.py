@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Extract the creatable ninja avatars from the Pockie Ninja backup.
 
-Usage: python3 tools/extract_character_assets.py <path-to-game-pockieninja>
+Usage: python3 tools/extract_character_assets.py <path-to-game-pockieninja> [--hd]
+--hd upscales everything 2x with Real-ESRGAN (see tools/upscale.py).
 Requires Pillow (pip install pillow) to merge JPEG colour with its alpha mask.
 
 For every avatar offered on the original create screen it writes, under
@@ -21,10 +22,13 @@ import sys
 from pathlib import Path
 
 from motion import find_motions, write_motion_sheet
+from upscale import available as upscaler_available
+from upscale import upscale_file
 from swf import jpeg3_bitmaps, read_swf
 
 SOURCE = 'apache/source'
 OUT_DIR = Path(__file__).resolve().parent.parent / 'public' / 'game-assets' / 'characters'
+HD_SCALE = 2
 
 
 def find_one(folder: Path, pattern: str) -> Path:
@@ -34,7 +38,7 @@ def find_one(folder: Path, pattern: str) -> Path:
     return matches[0]
 
 
-def extract_avatar(source: Path, create_swf: Path) -> str:
+def extract_avatar(source: Path, create_swf: Path, scale: int) -> str:
     # avatars_<sex>_<id>_clothing_create.s110.swf
     _, sex, avatar_id, *_ = create_swf.name.split('_')
     key = f'{sex}_{avatar_id}'
@@ -48,20 +52,26 @@ def extract_avatar(source: Path, create_swf: Path) -> str:
     shutil.copyfile(face, out / 'face.png')
 
     motions = find_motions(source / f'movieclip/motion/people/people_{avatar_id}', f'motion_{key}_{{action}}_role*.swf')
-    write_motion_sheet(key, motions, out)
+    write_motion_sheet(key, motions, out, scale)
+    if scale > 1:
+        upscale_file(out / 'portrait.png', scale)
+        upscale_file(out / 'face.png', scale)
     return f'{key}: {len(motions)} motions'
 
 
 def main() -> None:
-    if len(sys.argv) != 2:
+    if len(sys.argv) not in (2, 3) or sys.argv[2:] not in ([], ['--hd']):
         sys.exit(__doc__)
+    scale = HD_SCALE if '--hd' in sys.argv else 1
+    if scale > 1 and not upscaler_available():
+        sys.exit('Real-ESRGAN not found; see tools/upscale.py.')
     source = Path(sys.argv[1]).expanduser() / SOURCE
     create_dir = source / 'bitmap/peoplecreate'
     if not create_dir.is_dir():
         sys.exit(f'peoplecreate folder not found: {create_dir}')
 
     for create_swf in sorted(create_dir.glob('avatars_*_clothing_create*.swf')):
-        print(extract_avatar(source, create_swf))
+        print(extract_avatar(source, create_swf, scale))
 
 
 if __name__ == '__main__':
