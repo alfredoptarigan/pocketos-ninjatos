@@ -61,6 +61,7 @@ After adding or changing routes: `php artisan wayfinder:generate --with-form`.
 | Original-skin components               | `game-window.tsx`, `game-menu.tsx`, `battle-hud.tsx`, `player-hud.tsx`, `village-backdrop.tsx`; CSS `.game-window/.game-button/.game-pill` in `resources/css/app.css`, skin URLs in `resources/views/app.blade.php` |
 | Pixi                                   | `hooks/use-pixi-app.ts` (StrictMode-safe lifecycle), `components/village-canvas.tsx`, `game/village-scene.ts`, `components/battle-scene.tsx`, `game/battle/{fighter,replay,tween,types}.ts`                         |
 | Asset extractors                       | `tools/` (see `docs/asset-pipeline.md`)                                                                                                                                                                             |
+| Vector remake pilot                    | `resources/js/game/vector/` (SVG parts of the original "Kaze" ninja, keyframe animations, rig with the same `play()` API as `Fighter`); compare at `/lab/characters`                                                |
 
 ## How the game works today
 
