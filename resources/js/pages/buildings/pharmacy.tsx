@@ -3,6 +3,7 @@ import { Coins } from 'lucide-react';
 import { useState } from 'react';
 import GameWindow from '@/components/game-window';
 import InputError from '@/components/input-error';
+import VillageBackdrop from '@/components/village-backdrop';
 import { cn } from '@/lib/utils';
 import { village as villageRoute } from '@/routes';
 import { buy } from '@/routes/pharmacy';
@@ -11,7 +12,6 @@ import type { ShopItem } from '@/types/game';
 type Props = {
     items: ShopItem[];
     owned: Record<number, number>;
-    village: string;
 };
 
 const TABS: { title: string; matches: (item: ShopItem) => boolean }[] = [
@@ -44,7 +44,7 @@ function effectText(item: ShopItem): string {
         .join(' · ');
 }
 
-export default function Pharmacy({ items, owned, village }: Props) {
+export default function Pharmacy({ items, owned }: Props) {
     const { character } = usePage().props;
     const [tab, setTab] = useState(0);
     const stock = items.filter(TABS[tab].matches);
@@ -61,13 +61,7 @@ export default function Pharmacy({ items, owned, village }: Props) {
     return (
         <>
             <Head title="Pharmacy" />
-            <div
-                className="relative flex flex-1 items-center justify-center overflow-hidden rounded-xl bg-cover bg-center px-4 py-14"
-                style={{
-                    backgroundImage: `url(/game-assets/villages/${village}.jpg)`,
-                }}
-            >
-                <div className="absolute inset-0 bg-black/55" aria-hidden />
+            <VillageBackdrop>
                 <GameWindow title="Pharmacy" closeHref={villageRoute().url}>
                     <div className="grid gap-6 md:grid-cols-[200px_1fr]">
                         <Keeper />
@@ -141,7 +135,7 @@ export default function Pharmacy({ items, owned, village }: Props) {
                         </div>
                     </div>
                 </GameWindow>
-            </div>
+            </VillageBackdrop>
         </>
     );
 }

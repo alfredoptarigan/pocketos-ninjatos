@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\BagController;
 use App\Http\Controllers\CharacterController;
 use App\Http\Controllers\PharmacyController;
 use App\Http\Controllers\VillageController;
@@ -16,6 +17,8 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware(EnsurePlayerHasCharacter::class)->group(function () {
         Route::get('village', [VillageController::class, 'show'])->name('village');
         Route::post('village/travel', [VillageController::class, 'travel'])->name('village.travel');
+
+        Route::get('bag', [BagController::class, 'show'])->name('bag');
 
         Route::get('pharmacy', [PharmacyController::class, 'show'])->name('pharmacy.show');
         Route::post('pharmacy/buy', [PharmacyController::class, 'buy'])->name('pharmacy.buy');

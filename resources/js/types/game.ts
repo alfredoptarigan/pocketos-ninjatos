@@ -4,6 +4,8 @@ export type Character = {
     avatar: string;
     level: number;
     gold: number;
+    /** Key of config('game.villages'), e.g. "111". */
+    village: string;
 };
 
 export type ShopItem = {

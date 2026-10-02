@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 type Props = {
     title: string;
     /** Where the close (X) button leads, usually back to the village. */
-    closeHref: string;
+    closeHref?: string;
     children: ReactNode;
 };
 
@@ -20,11 +20,13 @@ export default function GameWindow({ title, closeHref, children }: Props) {
                 alt=""
                 className="pointer-events-none absolute -top-[34px] left-1/2 -translate-x-1/2"
             />
-            <Link
-                href={closeHref}
-                aria-label="Close"
-                className="game-close absolute -top-[22px] -right-[18px] block size-[22px]"
-            />
+            {closeHref && (
+                <Link
+                    href={closeHref}
+                    aria-label="Close"
+                    className="game-close absolute -top-[22px] -right-[18px] block size-[22px]"
+                />
+            )}
             <h1 className="mb-4 text-center text-xl font-bold tracking-wide text-amber-300 drop-shadow">
                 {title}
             </h1>
