@@ -1,9 +1,15 @@
 import { Head, usePage } from '@inertiajs/react';
+import { useState } from 'react';
 import VillageCanvas from '@/components/village-canvas';
+import { buildingName } from '@/game/village-scene';
 import { desa } from '@/routes';
+
+// Main city of the original game; other villages come with travel later.
+const HOME_VILLAGE_ID = '111';
 
 export default function Desa() {
     const { auth } = usePage().props;
+    const [selected, setSelected] = useState<string | null>(null);
 
     return (
         <>
@@ -14,11 +20,16 @@ export default function Desa() {
                         Selamat datang, {auth.user.name}!
                     </h1>
                     <p className="text-muted-foreground">
-                        Klik di mana saja pada peta untuk menggerakkan ninjamu.
+                        {selected
+                            ? `${buildingName(selected)} segera hadir.`
+                            : 'Klik bangunan di desa untuk mengunjunginya.'}
                     </p>
                 </div>
-                <div className="relative min-h-[60vh] flex-1 overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
-                    <VillageCanvas playerName={auth.user.name} />
+                <div className="relative aspect-video w-full overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
+                    <VillageCanvas
+                        villageId={HOME_VILLAGE_ID}
+                        onBuildingSelect={setSelected}
+                    />
                 </div>
             </div>
         </>

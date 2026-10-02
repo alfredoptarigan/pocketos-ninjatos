@@ -1,23 +1,22 @@
-import { Application, Container } from 'pixi.js';
-import { useEffect, useRef } from 'react';
-import { stepToward } from '@/game/movement';
-import type { Point } from '@/game/movement';
-import {
-    createNinja,
-    createTargetMarker,
-    createVillage,
-    NINJA_SPAWN,
-    WORLD_HEIGHT,
-    WORLD_WIDTH,
-} from '@/game/village-scene';
+import { Application } from 'pixi.js';
+import type { Container } from 'pixi.js';
+import { useEffect, useRef, useState } from 'react';
+import { createVillage, WORLD_HEIGHT, WORLD_WIDTH } from '@/game/village-scene';
 
-// World pixels per frame at 60fps.
-const NINJA_SPEED = 4;
+type Props = {
+    villageId: string;
+    onBuildingSelect: (key: string) => void;
+};
 
-type Props = { playerName: string };
-
-export default function VillageCanvas({ playerName }: Props) {
+export default function VillageCanvas({ villageId, onBuildingSelect }: Props) {
     const hostRef = useRef<HTMLDivElement>(null);
+    // Keep the latest callback without re-creating the Pixi app on every render.
+    const onSelectRef = useRef(onBuildingSelect);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        onSelectRef.current = onBuildingSelect;
+    }, [onBuildingSelect]);
 
     useEffect(() => {
         const host = hostRef.current;
@@ -31,20 +30,35 @@ export default function VillageCanvas({ playerName }: Props) {
         let disposed = false;
         let ready = false;
 
-        app.init({ resizeTo: host, background: 0x0a0a0a, antialias: true })
-            .then(() => {
-                if (disposed) {
-                    app.destroy(true, { children: true });
-                    return;
-                }
-
-                ready = true;
-                host.appendChild(app.canvas);
-                mountScene(app, playerName);
-            })
-            .catch((error: unknown) => {
-                console.error('Gagal memuat canvas desa', error);
+        const start = async () => {
+            await app.init({
+                resizeTo: host,
+                background: 0x0a0a0a,
+                antialias: true,
             });
+
+            if (disposed) {
+                app.destroy(true, { children: true });
+                return;
+            }
+
+            ready = true;
+            host.appendChild(app.canvas);
+            const world = await createVillage(villageId, (key) =>
+                onSelectRef.current(key),
+            );
+
+            if (!disposed) {
+                mountWorld(app, world);
+            }
+        };
+
+        start().catch((cause: unknown) => {
+            console.error('Gagal memuat desa', cause);
+            setError(
+                'Aset desa belum ada. Jalankan: python3 tools/extract_village_assets.py ~/Privates/game-pockieninja',
+            );
+        });
 
         return () => {
             disposed = true;
@@ -53,45 +67,36 @@ export default function VillageCanvas({ playerName }: Props) {
                 app.destroy(true, { children: true });
             }
         };
-    }, [playerName]);
+    }, [villageId]);
 
-    return <div ref={hostRef} className="absolute inset-0" />;
+    return (
+        <>
+            <div ref={hostRef} className="absolute inset-0" />
+            {error && (
+                <p className="absolute inset-x-4 top-4 rounded-md bg-red-950/90 p-3 font-mono text-sm text-red-100">
+                    {error}
+                </p>
+            )}
+        </>
+    );
 }
 
-function mountScene(app: Application, playerName: string): void {
-    const stage = new Container();
-    const world = createVillage();
-    const marker = createTargetMarker();
-    const ninja = createNinja(playerName);
+function mountWorld(app: Application, world: Container): void {
+    app.stage.addChild(world);
 
-    let position: Point = NINJA_SPAWN;
-    let target: Point = NINJA_SPAWN;
-    ninja.position.set(position.x, position.y);
-
-    world.on('pointertap', (event) => {
-        const local = event.getLocalPosition(world);
-        target = { x: local.x, y: local.y };
-        marker.position.set(target.x, target.y);
-        marker.visible = true;
-    });
-
-    stage.addChild(world, marker, ninja);
-    app.stage.addChild(stage);
-
-    app.ticker.add((ticker) => {
-        // Letterbox the fixed-size world into the current canvas size.
+    // Letterbox the fixed-size world into whatever size the canvas has.
+    const fit = () => {
         const scale = Math.min(
             app.screen.width / WORLD_WIDTH,
             app.screen.height / WORLD_HEIGHT,
         );
-        stage.scale.set(scale);
-        stage.position.set(
+        world.scale.set(scale);
+        world.position.set(
             (app.screen.width - WORLD_WIDTH * scale) / 2,
             (app.screen.height - WORLD_HEIGHT * scale) / 2,
         );
+    };
 
-        position = stepToward(position, target, NINJA_SPEED * ticker.deltaTime);
-        ninja.position.set(position.x, position.y);
-        marker.visible = position.x !== target.x || position.y !== target.y;
-    });
+    fit();
+    app.renderer.on('resize', fit);
 }
