@@ -188,3 +188,21 @@
 .game-close:hover {
     background-image: var(--ui-close-hover);
 }
+
+/* Yellow pill buttons from the original battle screen (77x25). */
+.game-pill {
+    width: 110px;
+    height: 34px;
+    background: var(--ui-pill) center / 100% 100% no-repeat;
+    color: #5a2e0a;
+    font-weight: 700;
+}
+
+.game-pill:hover {
+    background-image: var(--ui-pill-hover);
+}
+
+.game-pill:active,
+.game-pill[aria-pressed='true'] {
+    background-image: var(--ui-pill-pressed);
+}

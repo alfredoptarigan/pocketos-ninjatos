@@ -10,6 +10,7 @@ export type ReplayContext = {
     fighters: [Fighter, Fighter];
     speed: () => number;
     isDisposed: () => boolean;
+    onHp: (side: 0 | 1, hp: number) => void;
 };
 
 // Milliseconds at 1x speed.
@@ -79,7 +80,7 @@ function impact(ctx: ReplayContext, target: Fighter, event: StrikeEvent): void {
     }
 
     target.flash();
-    target.setHp(event.targetHp);
+    ctx.onHp(event.target, event.targetHp);
     const label = event.crit
         ? `CRIT ${event.damage}`
         : event.parried

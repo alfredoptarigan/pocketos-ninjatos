@@ -1,8 +1,10 @@
 // Mirrors the log written by App\Actions\ChallengeTowerFloor.
 
+type Backdrop = { background?: string };
+
 export type MonsterArt =
-    | { type: 'motion'; motions: string; face: string }
-    | { type: 'portrait'; portrait: string; face: string };
+    | ({ type: 'motion'; motions: string; face: string } & Backdrop)
+    | ({ type: 'portrait'; portrait: string; face: string } & Backdrop);
 
 export type FighterInfo = {
     name: string;
@@ -11,6 +13,14 @@ export type FighterInfo = {
     minAttack: number;
     maxAttack: number;
     defense: number;
+    dodge: number;
+    crit: number;
+    parry: number;
+    counter: number;
+    priority: number;
+    // Older battles were recorded before chakra was logged.
+    mp?: number;
+    maxMp?: number;
     avatar?: string;
     level?: number;
     isBoss?: boolean;

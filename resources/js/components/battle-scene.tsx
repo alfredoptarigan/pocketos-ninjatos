@@ -7,33 +7,35 @@ import { replay } from '@/game/battle/replay';
 import type { BattleLog, EndEvent } from '@/game/battle/types';
 import { usePixiApp } from '@/hooks/use-pixi-app';
 
-// The original 500x300 battle backdrop, drawn at twice its size.
+// Battles are staged on a 1000x600 world like the original client.
 const WORLD_WIDTH = 1000;
 const WORLD_HEIGHT = 600;
 const GROUND_Y = 500;
 // The player stands on the right facing left, as in the original client.
 const PLAYER_X = 700;
 const OPPONENT_X = 300;
+// Battles recorded before per-floor backdrops existed.
+const FALLBACK_BACKGROUND = '/game-assets/battle/background.jpg';
 
 type Props = {
     log: BattleLog;
     speed: RefObject<number>;
     onFinished: (end: EndEvent | null) => void;
+    onHp: (side: 0 | 1, hp: number) => void;
 };
 
-export default function BattleScene({ log, speed, onFinished }: Props) {
+export default function BattleScene({ log, speed, onFinished, onHp }: Props) {
     const hostRef = useRef<HTMLDivElement>(null);
-    const onFinishedRef = useRef(onFinished);
-    onFinishedRef.current = onFinished;
+    // Keep the latest callbacks without restarting the replay on every render.
+    const callbacks = useRef({ onFinished, onHp });
+    callbacks.current = { onFinished, onHp };
 
     const setup = useCallback(
         async (app: Application, isDisposed: () => boolean) => {
             const world = new Container();
-            const background = new Sprite(
-                await Assets.load<Texture>(
-                    '/game-assets/battle/background.jpg',
-                ),
-            );
+            const backdrop =
+                log.fighters[1].art?.background ?? FALLBACK_BACKGROUND;
+            const background = new Sprite(await Assets.load<Texture>(backdrop));
             background.setSize(WORLD_WIDTH, WORLD_HEIGHT);
             const fighters = (await Promise.all(
                 log.fighters.map((info) => Fighter.create(info)),
@@ -73,12 +75,13 @@ export default function BattleScene({ log, speed, onFinished }: Props) {
                     fighters,
                     speed: () => speed.current,
                     isDisposed,
+                    onHp: (side, hp) => callbacks.current.onHp(side, hp),
                 },
                 log.events,
             );
 
             if (!isDisposed()) {
-                onFinishedRef.current(end);
+                callbacks.current.onFinished(end);
             }
         },
         [log, speed],

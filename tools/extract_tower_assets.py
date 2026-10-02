@@ -47,6 +47,10 @@ STATS = {
 }
 # Animated opponents use map monster art; everything else is a boss with a portrait.
 ANIMATED_PREFIX = 'MapUserFace_'
+BACKGROUNDS_DIR = 'movieclip/ui/fightbg'
+# arena.jpg carries red guide lines; 103001 and 4001 belong to special events.
+SKIPPED_BACKGROUNDS = {'arena', 'fightbg_103001', 'fightbg_4001'}
+FLOORS_PER_BACKGROUND = 10
 
 
 def latest_table(datatable: Path, name: str) -> dict:
@@ -84,6 +88,19 @@ def extract_art(source: Path, resource_id: str) -> dict:
     return {'type': 'portrait', 'portrait': f'{url}/portrait.png', 'face': f'{url}/portrait.png'}
 
 
+def copy_backgrounds(source: Path) -> list[str]:
+    """Copy the original battle backdrops; returns their URLs in a stable order."""
+    out = ASSETS / 'battle' / 'backgrounds'
+    out.mkdir(parents=True, exist_ok=True)
+    urls = []
+    for image in sorted((source / BACKGROUNDS_DIR).glob('*.jpg')):
+        if image.stem in SKIPPED_BACKGROUNDS:
+            continue
+        shutil.copyfile(image, out / image.name)
+        urls.append(f'/game-assets/battle/backgrounds/{image.name}')
+    return urls
+
+
 def main() -> None:
     if len(sys.argv) != 2:
         sys.exit(__doc__)
@@ -94,6 +111,7 @@ def main() -> None:
     language = load_compressed(source / 'binary/lg/language.lg')
     exp_by_floor = {int(order): number(exp) for order, exp in zip(floor_exp['Order'], floor_exp['Exp'])}
 
+    backgrounds = copy_backgrounds(source)
     floors = []
     for index in range(1, len(npcs['ID'])):  # row 0 holds column descriptions
         floor = index
@@ -107,7 +125,11 @@ def main() -> None:
             **{field: number(npcs[column][index]) for field, column in STATS.items()},
             # The last floor has no exp row; it reuses the previous floor's reward.
             'exp': exp_by_floor.get(floor) or exp_by_floor[max(exp_by_floor)],
-            'art': extract_art(source, resource_id),
+            'art': {
+                **extract_art(source, resource_id),
+                # Every ten floors move to the next original battlefield.
+                'background': backgrounds[(floor - 1) // FLOORS_PER_BACKGROUND % len(backgrounds)],
+            },
         })
 
     DATA_OUT.parent.mkdir(parents=True, exist_ok=True)

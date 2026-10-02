@@ -1,11 +1,4 @@
-import {
-    AnimatedSprite,
-    Assets,
-    Container,
-    Graphics,
-    Sprite,
-    Text,
-} from 'pixi.js';
+import { AnimatedSprite, Assets, Container, Sprite } from 'pixi.js';
 import type { Spritesheet, Texture } from 'pixi.js';
 import { characterAssets } from '@/types/game';
 import type { FighterInfo } from './types';
@@ -15,30 +8,24 @@ const TICKER_FPS = 60;
 const DEFAULT_FPS = 12;
 const MOTION_SCALE = 1.7;
 const PORTRAIT_SCALE = 1.15;
-const HP_BAR_WIDTH = 130;
-const HP_BAR_HEIGHT = 10;
 
 export type Action = 'idle' | 'stance' | 'run' | 'attack' | 'dodge' | 'dead';
 
-/** One fighter on the battle stage: its body, name and health bar. */
+/** One fighter on the battle stage. Names and health live in the battle HUD, as in the original. */
 export class Fighter {
     readonly view = new Container();
-    private readonly hpBar = new Graphics();
-    private hp: number;
 
     private constructor(
         readonly info: FighterInfo,
         private readonly body: AnimatedSprite | Sprite,
         private readonly sheet: Spritesheet | null,
     ) {
-        this.hp = info.hp;
         body.scale.set(sheet ? MOTION_SCALE : PORTRAIT_SCALE);
         // Original motions are drawn facing left; mirror opponents so they face the player.
         if (sheet && !info.avatar) {
             body.scale.x *= -1;
         }
-        this.view.addChild(body, this.hpBar, this.nameLabel());
-        this.drawHp();
+        this.view.addChild(body);
     }
 
     /** The player uses their avatar's motions; opponents use monster motions or a boss portrait. */
@@ -96,11 +83,6 @@ export class Fighter {
         });
     }
 
-    setHp(hp: number): void {
-        this.hp = hp;
-        this.drawHp();
-    }
-
     /** Brief red flash when hit. */
     flash(): void {
         this.body.tint = 0xff6b6b;
@@ -113,42 +95,5 @@ export class Fighter {
 
     get height(): number {
         return this.body.height;
-    }
-
-    private nameLabel(): Text {
-        const level = this.info.level ? ` Lv${this.info.level}` : '';
-        const label = new Text({
-            text: `${this.info.name}${level}`,
-            style: {
-                fontSize: 16,
-                fill: this.info.isBoss ? 0xffd166 : 0xffffff,
-                fontWeight: 'bold',
-                stroke: { color: 0x000000, width: 4 },
-            },
-        });
-        label.anchor.set(0.5, 1);
-        label.y = -this.barTop() - 4;
-        return label;
-    }
-
-    private barTop(): number {
-        return this.body.height + 18;
-    }
-
-    private drawHp(): void {
-        const share = Math.max(0, this.hp) / Math.max(1, this.info.maxHp);
-        const y = -this.barTop() + 4;
-        this.hpBar
-            .clear()
-            .roundRect(-HP_BAR_WIDTH / 2, y, HP_BAR_WIDTH, HP_BAR_HEIGHT, 4)
-            .fill({ color: 0x000000, alpha: 0.6 })
-            .roundRect(
-                -HP_BAR_WIDTH / 2 + 1,
-                y + 1,
-                (HP_BAR_WIDTH - 2) * share,
-                HP_BAR_HEIGHT - 2,
-                3,
-            )
-            .fill(share > 0.3 ? 0x4ade80 : 0xef4444);
     }
 }

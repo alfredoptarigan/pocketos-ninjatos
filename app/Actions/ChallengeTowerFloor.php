@@ -23,6 +23,9 @@ class ChallengeTowerFloor
         return DB::transaction(function () use ($character, $floor) {
             $ninja = Character::query()->lockForUpdate()->findOrFail($character->id);
             $player = $ninja->combatant();
+            // Snapshot before rewards: levelling up changes the stats.
+            $playerMp = $ninja->currentMp();
+            $playerMaxMp = $ninja->stats()->maxMp;
             $opponent = $floor->combatant();
             $result = $this->simulator->simulate($player, $opponent);
             $won = $result['winner'] === 0;
@@ -45,8 +48,21 @@ class ChallengeTowerFloor
                 'won' => $won,
                 'log' => [
                     'fighters' => [
-                        [...$player->toArray(), 'avatar' => $ninja->avatar],
-                        [...$opponent->toArray(), 'level' => $floor->level, 'isBoss' => $floor->is_boss, 'art' => $floor->art],
+                        [
+                            ...$player->toArray(),
+                            'avatar' => $ninja->avatar,
+                            'level' => $character->level,
+                            'mp' => $playerMp,
+                            'maxMp' => $playerMaxMp,
+                        ],
+                        [
+                            ...$opponent->toArray(),
+                            'level' => $floor->level,
+                            'mp' => $floor->max_mp,
+                            'maxMp' => $floor->max_mp,
+                            'isBoss' => $floor->is_boss,
+                            'art' => $floor->art,
+                        ],
                     ],
                     'events' => $result['events'],
                 ],

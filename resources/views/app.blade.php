@@ -40,6 +40,9 @@
                 --ui-button-pressed: url('{{ url('game-assets/ui/button-pressed.png') }}');
                 --ui-close: url('{{ url('game-assets/ui/close.png') }}');
                 --ui-close-hover: url('{{ url('game-assets/ui/close-hover.png') }}');
+                --ui-pill: url('{{ url('game-assets/ui/fight/pill.png') }}');
+                --ui-pill-hover: url('{{ url('game-assets/ui/fight/pill-hover.png') }}');
+                --ui-pill-pressed: url('{{ url('game-assets/ui/fight/pill-pressed.png') }}');
             }
         </style>
 

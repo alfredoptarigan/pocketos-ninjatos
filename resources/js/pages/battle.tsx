@@ -1,6 +1,7 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { FastForward, SkipForward } from 'lucide-react';
 import { useRef, useState } from 'react';
+import BattleHud from '@/components/battle-hud';
 import BattleScene from '@/components/battle-scene';
 import GameWindow from '@/components/game-window';
 import type { BattleRecord } from '@/game/battle/types';
@@ -20,7 +21,14 @@ function BattleView({ battle }: { battle: BattleRecord }) {
     const speed = useRef(1);
     const [fast, setFast] = useState(false);
     const [finished, setFinished] = useState(false);
-    const opponent = battle.log.fighters[1];
+    const [player, opponent] = battle.log.fighters;
+    const [hp, setHp] = useState<[number, number]>([player.hp, opponent.hp]);
+
+    const updateHp = (side: 0 | 1, value: number) => {
+        setHp((current) =>
+            side === 0 ? [value, current[1]] : [current[0], value],
+        );
+    };
 
     const toggleFast = () => {
         speed.current = fast ? 1 : FAST_SPEED;
@@ -34,22 +42,28 @@ function BattleView({ battle }: { battle: BattleRecord }) {
                 log={battle.log}
                 speed={speed}
                 onFinished={() => setFinished(true)}
+                onHp={updateHp}
+            />
+            <BattleHud
+                fighters={battle.log.fighters}
+                hp={hp}
+                floor={battle.floor}
             />
 
             {!finished && (
-                <div className="absolute bottom-3 left-3 z-10 flex gap-2">
+                <div className="absolute bottom-3 left-1/2 z-10 flex -translate-x-1/2 gap-3">
                     <button
                         type="button"
                         onClick={toggleFast}
                         aria-pressed={fast}
-                        className="game-button flex items-center gap-1 px-3 py-1"
+                        className="game-pill flex items-center justify-center gap-1"
                     >
                         <FastForward className="size-4" /> {fast ? '2x' : '1x'}
                     </button>
                     <button
                         type="button"
                         onClick={() => (speed.current = SKIP_SPEED)}
-                        className="game-button flex items-center gap-1 px-3 py-1"
+                        className="game-pill flex items-center justify-center gap-1"
                     >
                         <SkipForward className="size-4" /> Skip
                     </button>

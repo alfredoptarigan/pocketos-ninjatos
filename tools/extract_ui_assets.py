@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Render the original game's window skin, menu buttons, NPC portraits and music.
+"""Render the original game's window skin, menu buttons, battle HUD, NPC portraits and music.
 
 Usage: python3 tools/extract_ui_assets.py <path-to-game-pockieninja>
 
@@ -27,6 +27,7 @@ SKIN_SWF = 'apache/source/movieclip/ui/uilookandfeel.s12755.swf'
 NPC_PORTRAITS = 'apache/source/bitmap/npcbackphoto'
 MENU_SWF = 'apache/source/movieclip/ui/sceneui/bottommenu.s14661.swf'
 MUSIC_DIR = 'apache/source/music'
+FIGHT_SWF = 'apache/source/movieclip/ui/fighting.s53608.swf'
 
 # Output file -> AsWing look-and-feel symbol used by the original client.
 SKIN_SYMBOLS = {
@@ -53,6 +54,15 @@ BUTTON_STATES = {1: 'up', 2: 'over', 3: 'down'}
 
 # Original background music; login.mp3 in the backup is a broken 209-byte stub.
 MUSIC_TRACKS = ('maincity1', 'maincity2', 'maincity3', 'maincity4', 'blackcity')
+
+# Battle HUD pieces from the original fight screen, identified by rendering them.
+FIGHT_SHAPES = {
+    'bar-frame-left': 29, 'bar-frame-right': 19, 'vs-diamond': 32, 'vs-text': 33,
+    'portrait-frame': 14, 'pet-empty': 72,
+    'pill': 111, 'pill-hover': 115, 'pill-pressed': 117,
+}
+# Sprite id -> frame: the health bar sprite is a 100-frame gauge; its last frame is full.
+FIGHT_SPRITES = {'hp-fill': (23, 100), 'mp-fill': (21, 1), 'lock-slot': (70, 1)}
 
 # Building keeper portraits (buildnpc table): Leaf Village pharmacy owner.
 NPC_FILES = {'pharmacy': 'n11004'}
@@ -89,6 +99,26 @@ def render_menu_buttons(java: str, ffdec: Path, swf_path: Path, menu_dir: Path) 
                     out / f'DefineButton2_{character_id}' / f'{frame}_{state}.png',
                     menu_dir / f'{name}-{state}.png',
                 )
+
+
+def render_fight_hud(java: str, ffdec: Path, swf_path: Path, out_dir: Path) -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        out = Path(tmp)
+        ids = [*FIGHT_SHAPES.values(), *(sprite for sprite, _ in FIGHT_SPRITES.values())]
+        subprocess.run(
+            [
+                java, '-Djava.awt.headless=true', '-jar', str(ffdec),
+                '-selectid', ','.join(map(str, ids)),
+                '-format', 'shape:png,sprite:png', '-export', 'shape,sprite', str(out), str(swf_path),
+            ],
+            check=True,
+            capture_output=True,
+        )
+        for name, shape_id in FIGHT_SHAPES.items():
+            shutil.copyfile(out / 'shapes' / f'{shape_id}.png', out_dir / f'{name}.png')
+        for name, (sprite_id, frame) in FIGHT_SPRITES.items():
+            source = next((out / 'sprites').glob(f'DefineSprite_{sprite_id}*')) / f'{frame}.png'
+            shutil.copyfile(source, out_dir / f'{name}.png')
 
 
 def copy_music(music_dir: Path, out_dir: Path) -> None:
@@ -154,12 +184,17 @@ def main() -> None:
     menu_dir.mkdir(exist_ok=True)
     render_menu_buttons(java, ffdec, backup / MENU_SWF, menu_dir)
 
+    fight_dir = ui_dir / 'fight'
+    fight_dir.mkdir(exist_ok=True)
+    render_fight_hud(java, ffdec, backup / FIGHT_SWF, fight_dir)
+
     music_dir = OUT_DIR / 'music'
     music_dir.mkdir(exist_ok=True)
     copy_music(backup / MUSIC_DIR, music_dir)
 
     print(
         f'Wrote {len(ids) + 1} UI images, {len(MENU_BUTTONS)} menu buttons, '
+        f'{len(FIGHT_SHAPES) + len(FIGHT_SPRITES)} battle HUD pieces, '
         f'{len(NPC_FILES)} NPC portraits and {len(MUSIC_TRACKS)} music tracks'
     )
 

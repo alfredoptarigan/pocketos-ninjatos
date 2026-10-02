@@ -61,6 +61,10 @@ class TowerTest extends TestCase
         $this->assertTrue($battle->won);
         $this->assertSame(1, $battle->floor);
         $this->assertSame('end', last($battle->log['events'])['type']);
+        // The battle HUD shows both sides' level and chakra.
+        $this->assertSame(1, $battle->log['fighters'][0]['level']);
+        $this->assertSame(56, $battle->log['fighters'][0]['maxMp']);
+        $this->assertSame(110, $battle->log['fighters'][1]['maxMp']);
 
         $character->refresh();
         $this->assertSame(1, $character->tower_floor);
