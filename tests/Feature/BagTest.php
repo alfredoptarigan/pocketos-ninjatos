@@ -49,4 +49,30 @@ class BagTest extends TestCase
 
         $this->get(route('bag'))->assertInertia(fn (Assert $page) => $page->where('character.village', '141'));
     }
+
+    public function test_using_a_potion_restores_health_and_uses_it_up()
+    {
+        $character = Character::factory()->create(['hp' => 10, 'vitals_at' => now()]);
+        $potion = Item::factory()->create(['restore_hp' => 150, 'restore_chakra' => 0]);
+        $character->inventory()->create(['item_id' => $potion->id, 'quantity' => 1]);
+        $this->actingAs($character->user);
+
+        $this->post(route('bag.use'), ['item_id' => $potion->id])->assertRedirect(route('bag'));
+
+        $this->assertSame(110, $character->fresh()->hp); // capped at level 1 max health
+        $this->assertDatabaseCount('inventory_items', 0);
+    }
+
+    public function test_items_must_be_in_the_bag_and_usable()
+    {
+        $character = Character::factory()->create();
+        $notOwned = Item::factory()->create();
+        $energy = Item::factory()->create(['restore_hp' => 0, 'restore_chakra' => 0, 'restore_energy' => 20]);
+        $character->inventory()->create(['item_id' => $energy->id, 'quantity' => 1]);
+        $this->actingAs($character->user);
+
+        $this->post(route('bag.use'), ['item_id' => $notOwned->id])->assertSessionHasErrors('item_id');
+        $this->post(route('bag.use'), ['item_id' => $energy->id])->assertSessionHasErrors('item_id');
+        $this->assertDatabaseHas('inventory_items', ['item_id' => $energy->id, 'quantity' => 1]);
+    }
 }

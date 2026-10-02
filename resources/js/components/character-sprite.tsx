@@ -23,7 +23,7 @@ export default function CharacterSprite({ avatar, className }: Props) {
     const setup = useCallback(
         async (app: Application, isDisposed: () => boolean) => {
             const sheet = await Assets.load<Spritesheet>(
-                characterAssets(avatar).idle,
+                characterAssets(avatar).motions,
             );
 
             if (isDisposed()) {
@@ -34,9 +34,9 @@ export default function CharacterSprite({ avatar, className }: Props) {
                 .ellipse(0, 0, 30, 9)
                 .fill({ color: 0x000000, alpha: 0.3 });
             const ninja = new AnimatedSprite(sheet.animations.idle);
-            // tools/extract_character_assets.py stores the SWF frame rate in meta.fps.
-            const meta = sheet.data.meta as { fps?: number };
-            const fps = meta.fps ?? DEFAULT_FPS;
+            // tools/motion.py stores each action's SWF frame rate in meta.fps.
+            const meta = sheet.data.meta as { fps?: Record<string, number> };
+            const fps = meta.fps?.idle ?? DEFAULT_FPS;
             ninja.animationSpeed = fps / TICKER_FPS;
             ninja.play();
             app.stage.addChild(shadow, ninja);

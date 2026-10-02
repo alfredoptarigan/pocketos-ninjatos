@@ -1,0 +1,141 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Models\Battle;
+use App\Models\Character;
+use App\Models\TowerFloor;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
+use Inertia\Testing\AssertableInertia as Assert;
+use Tests\TestCase;
+
+class TowerTest extends TestCase
+{
+    use RefreshDatabase;
+
+    private function weakFloor(int $floor, array $overrides = []): TowerFloor
+    {
+        return TowerFloor::factory()->create(['floor' => $floor, 'max_hp' => 1, 'dodge' => 0, 'priority' => 0, 'exp' => 100, ...$overrides]);
+    }
+
+    private function deadlyFloor(int $floor): TowerFloor
+    {
+        return TowerFloor::factory()->create([
+            'floor' => $floor, 'max_hp' => 100000, 'min_atk' => 100000, 'max_atk' => 100000, 'priority' => 100, 'dodge' => 0,
+        ]);
+    }
+
+    public function test_players_need_a_character_first()
+    {
+        $this->actingAs(User::factory()->create());
+
+        $this->get(route('tower.show'))->assertRedirect(route('character.create'));
+    }
+
+    public function test_tower_lists_the_floors_and_the_players_progress()
+    {
+        $character = Character::factory()->create(['tower_floor' => 1]);
+        $this->weakFloor(1);
+        $this->weakFloor(2);
+        $this->actingAs($character->user);
+
+        $this->get(route('tower.show'))->assertInertia(fn (Assert $page) => $page
+            ->component('tower')
+            ->has('floors', 2)
+            ->where('cleared', 1)
+            ->where('stats.minAttack', 20));
+    }
+
+    public function test_winning_a_new_floor_records_the_battle_and_pays_out()
+    {
+        $character = Character::factory()->create(['gold' => 0]);
+        $this->weakFloor(1, ['exp' => 130]);
+        $this->actingAs($character->user);
+
+        $response = $this->post(route('tower.fight', 1));
+
+        $battle = Battle::sole();
+        $response->assertRedirect(route('battles.show', $battle));
+        $this->assertTrue($battle->won);
+        $this->assertSame(1, $battle->floor);
+        $this->assertSame('end', last($battle->log['events'])['type']);
+
+        $character->refresh();
+        $this->assertSame(1, $character->tower_floor);
+        $this->assertSame(2, $character->level); // 130 exp > 120 needed for level 2
+        $this->assertSame(10, $character->exp);
+        $this->assertSame(config('game.tower.gold_base') + config('game.tower.gold_per_floor'), $character->gold);
+        $this->assertEquals(['exp' => 130, 'gold' => 25, 'levelUp' => true, 'firstClear' => true], $battle->rewards);
+    }
+
+    public function test_replaying_a_cleared_floor_pays_reduced_exp_and_no_gold()
+    {
+        $character = Character::factory()->create(['tower_floor' => 1, 'gold' => 0]);
+        $this->weakFloor(1, ['exp' => 100]);
+        $this->actingAs($character->user);
+
+        $this->post(route('tower.fight', 1));
+
+        $character->refresh();
+        $this->assertSame(25, $character->exp);
+        $this->assertSame(0, $character->gold);
+        $this->assertSame(1, $character->tower_floor);
+    }
+
+    public function test_floors_beyond_the_next_one_are_locked()
+    {
+        $character = Character::factory()->create(['tower_floor' => 0]);
+        $this->weakFloor(1);
+        $this->weakFloor(2);
+        $this->actingAs($character->user);
+
+        $this->post(route('tower.fight', 2))->assertForbidden();
+        $this->assertDatabaseCount('battles', 0);
+    }
+
+    public function test_losing_leaves_the_ninja_on_one_health_without_progress()
+    {
+        $character = Character::factory()->create();
+        $this->deadlyFloor(1);
+        $this->actingAs($character->user);
+
+        $this->post(route('tower.fight', 1));
+
+        $character->refresh();
+        $this->assertFalse(Battle::sole()->won);
+        $this->assertSame(1, $character->hp);
+        $this->assertSame(0, $character->tower_floor);
+        $this->assertSame(0, $character->exp);
+    }
+
+    public function test_health_carries_over_between_fights_and_recovers_with_rest()
+    {
+        Carbon::setTestNow('2026-10-02 12:00:00');
+        $character = Character::factory()->create(['hp' => 30, 'vitals_at' => now()]);
+        $this->actingAs($character->user);
+
+        $this->get(route('tower.show'))->assertInertia(fn (Assert $page) => $page->where('character.hp', 30));
+
+        Carbon::setTestNow(now()->addMinutes(2)); // +5.5 per minute of 110 max
+        $this->get(route('tower.show'))->assertInertia(fn (Assert $page) => $page->where('character.hp', 41));
+    }
+
+    public function test_players_can_only_watch_their_own_battles()
+    {
+        $character = Character::factory()->create();
+        $this->weakFloor(1);
+        $this->actingAs($character->user);
+        $this->post(route('tower.fight', 1));
+        $battle = Battle::sole();
+
+        $this->get(route('battles.show', $battle))->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->component('battle')
+            ->where('battle.won', true)
+            ->has('battle.log.fighters', 2));
+
+        $this->actingAs(Character::factory()->create()->user);
+        $this->get(route('battles.show', $battle))->assertNotFound();
+    }
+}

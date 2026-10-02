@@ -27,7 +27,7 @@ export function characterAssets(avatar: string) {
     return {
         portrait: `${base}/portrait.png`,
         face: `${base}/face.png`,
-        idle: `${base}/idle.json`,
+        motions: `${base}/motions.json`,
     };
 }
 

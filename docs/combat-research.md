@@ -11,32 +11,61 @@ client only replays it with animations. The `.fight` files are such logs:
 
 ```json
 {
-  "reason": 2,
-  "role": {
-    "0": {"Name": "...", "Level": 1, "Clothing": 12, "HP": 110, "MaxHP": 110, "MP": 56,
-          "MinAtk": 20, "MaxAtk": 25, "Defense": 0, "DodgeMul": 5, "CritMul": 5,
-          "HitMul": 0, "AtkTime": 50, "Offense": 1, "Weapon": "Icon_Weapon_Gloves1", "Skill": {}},
-    "1": {"...": "opponent"}
-  },
-  "value": {
-    "0": {"RoleIndex": 0, "Event": 1, "IsHit": 1},
-    "1": {"RoleIndex": 0, "Event": 14, "SkillId": 1, "Damage": 24, "IsHit": 1, "TargetLastDamage": 24},
-    "5": {"RoleIndex": 1, "Event": 14, "SkillId": 1816, "DecMP": 15, "addbuff": {"0": 11810}, "addbuffroleindex": {"0": 0}}
-  }
+    "reason": 2,
+    "role": {
+        "0": {
+            "Name": "...",
+            "Level": 1,
+            "Clothing": 12,
+            "HP": 110,
+            "MaxHP": 110,
+            "MP": 56,
+            "MinAtk": 20,
+            "MaxAtk": 25,
+            "Defense": 0,
+            "DodgeMul": 5,
+            "CritMul": 5,
+            "HitMul": 0,
+            "AtkTime": 50,
+            "Offense": 1,
+            "Weapon": "Icon_Weapon_Gloves1",
+            "Skill": {}
+        },
+        "1": { "...": "opponent" }
+    },
+    "value": {
+        "0": { "RoleIndex": 0, "Event": 1, "IsHit": 1 },
+        "1": {
+            "RoleIndex": 0,
+            "Event": 14,
+            "SkillId": 1,
+            "Damage": 24,
+            "IsHit": 1,
+            "TargetLastDamage": 24
+        },
+        "5": {
+            "RoleIndex": 1,
+            "Event": 14,
+            "SkillId": 1816,
+            "DecMP": 15,
+            "addbuff": { "0": 11810 },
+            "addbuffroleindex": { "0": 0 }
+        }
+    }
 }
 ```
 
 Event codes seen across the 36 recordings (meaning inferred from their fields):
 
-| Event | Fields | Likely meaning |
-|---|---|---|
-| 1 | — | actor's turn starts |
-| 2 | — | actor's turn ends |
-| 14 | SkillId, Damage, IsCrit, DecMP, IncHP, addbuff | own-action attack or skill (SkillId 1 = normal attack) |
-| 7 | SkillId, Damage | reaction skill (fires when attacked, e.g. 3811 Sand Storm) |
-| 6 | SkillId, Damage, IsCrit, TargetDecMP | skill that also drains target chakra |
-| 3 | — | rare (2×), unknown |
-| 20 | — | end of battle (once per recording) |
+| Event | Fields                                         | Likely meaning                                             |
+| ----- | ---------------------------------------------- | ---------------------------------------------------------- |
+| 1     | —                                              | actor's turn starts                                        |
+| 2     | —                                              | actor's turn ends                                          |
+| 14    | SkillId, Damage, IsCrit, DecMP, IncHP, addbuff | own-action attack or skill (SkillId 1 = normal attack)     |
+| 7     | SkillId, Damage                                | reaction skill (fires when attacked, e.g. 3811 Sand Storm) |
+| 6     | SkillId, Damage, IsCrit, TargetDecMP           | skill that also drains target chakra                       |
+| 3     | —                                              | rare (2×), unknown                                         |
+| 20    | —                                              | end of battle (once per recording)                         |
 
 So the battle is **turn based and automatic**: attacker and defender alternate,
 skills fire by chance at fixed moments, and the player only watches.
@@ -84,13 +113,13 @@ the backup; the recordings anchor level 1: HP 110, MP 56, Atk 20-25, Dodge 5, Cr
 - `clientskill` (339 skill lines) / `clientskillid` (676 levels): name/description keys,
   icon, max level, prerequisite, MPCostMul, Type (1 panel skill, 2 ultimate, 3 pet, 4 stage).
 - **Mechanics are in the descriptions** (`language.lg`, `lg_SkillDes_<id>`), e.g.:
-  - 1828 Bomb: 210% base attack; on own action; 33%; may be thrown back, more likely the
-    longer the fight lasts.
-  - 1822 Monstrous Strength: 100% base attack + 7% of target max HP; stuns 6 s; 15%.
-  - 3811 Sand Storm: 144% base attack; when attacked; 22%.
-  - 1816 Earth Flow River: enemy speed -50% for 12 s; before enemy acts; 32%; once per fight.
-  - 3803 Creation Rebirth: revive with 25% max HP on death; 100%, falling as the fight goes on.
-  - 19xx Ultimate (one per outfit): may instantly kill an opponent at low HP.
+    - 1828 Bomb: 210% base attack; on own action; 33%; may be thrown back, more likely the
+      longer the fight lasts.
+    - 1822 Monstrous Strength: 100% base attack + 7% of target max HP; stuns 6 s; 15%.
+    - 3811 Sand Storm: 144% base attack; when attacked; 22%.
+    - 1816 Earth Flow River: enemy speed -50% for 12 s; before enemy acts; 32%; once per fight.
+    - 3803 Creation Rebirth: revive with 25% max HP on death; 100%, falling as the fight goes on.
+    - 19xx Ultimate (one per outfit): may instantly kill an opponent at low HP.
 - `fightskill`, `serverskillconfig`, `clientskillconfig`: which motion/effect each skill
   plays (Action/BeAction motion ids, Splite).
 - `fightingbuffconfig` (104) + `bufftips` + `effectconfig` (485): buffs/debuffs

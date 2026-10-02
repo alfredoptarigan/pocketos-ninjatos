@@ -21,9 +21,10 @@ class CharacterFactory extends Factory
         return [
             'user_id' => User::factory(),
             'name' => fake()->unique()->lexify('ninja????'),
-            'avatar' => fake()->randomElement(config('game.avatars')),
+            'avatar' => fake()->randomElement(array_keys(config('game.avatars'))),
             'gold' => config('game.starting_gold'),
             'village' => config('game.home_village'),
+            'tower_floor' => 0,
         ];
     }
 }

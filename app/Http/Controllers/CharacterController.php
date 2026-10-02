@@ -20,7 +20,7 @@ class CharacterController extends Controller
         }
 
         return Inertia::render('character/create', [
-            'avatars' => config('game.avatars'),
+            'avatars' => array_keys(config('game.avatars')),
         ]);
     }
 

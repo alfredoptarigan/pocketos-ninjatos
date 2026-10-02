@@ -25,7 +25,7 @@ class StoreCharacterRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'min:3', 'max:16', 'regex:/^[\pL\pN _-]+$/u', 'unique:characters,name'],
-            'avatar' => ['required', 'string', Rule::in(config('game.avatars'))],
+            'avatar' => ['required', 'string', Rule::in(array_keys(config('game.avatars')))],
         ];
     }
 
