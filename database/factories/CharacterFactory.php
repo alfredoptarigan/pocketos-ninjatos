@@ -23,6 +23,7 @@ class CharacterFactory extends Factory
             'name' => fake()->unique()->lexify('ninja????'),
             'avatar' => fake()->randomElement(config('game.avatars')),
             'gold' => config('game.starting_gold'),
+            'village' => config('game.home_village'),
         ];
     }
 }

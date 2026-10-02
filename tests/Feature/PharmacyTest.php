@@ -40,7 +40,8 @@ class PharmacyTest extends TestCase
                 ->has('items', 1)
                 ->where('items.0.name', 'Bubuk Penyembuh')
                 ->where('owned.'.$potion->id, 3)
-                ->where('character.gold', 500));
+                ->where('character.gold', 500)
+                ->where('village', $character->village));
     }
 
     public function test_players_can_buy_items()

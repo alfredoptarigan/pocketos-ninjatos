@@ -24,6 +24,8 @@ class PharmacyController extends Controller
                 'id', 'name', 'icon', 'price', 'restore_hp', 'restore_chakra', 'restore_energy', 'max_stack',
             ]),
             'owned' => $character->inventory()->pluck('quantity', 'item_id'),
+            // The shop window opens over the village the player is standing in.
+            'village' => $character->village,
         ]);
     }
 

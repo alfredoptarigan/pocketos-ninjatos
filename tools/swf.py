@@ -22,6 +22,7 @@ TAG_DEFINE_BUTTON2 = 34
 TAG_DEFINE_BITS_JPEG3 = 35
 TAG_DEFINE_BITS_LOSSLESS2 = 36
 TAG_DEFINE_SPRITE = 39
+TAG_SYMBOL_CLASS = 76
 SHAPE_TAGS = (TAG_DEFINE_SHAPE, TAG_DEFINE_SHAPE2, TAG_DEFINE_SHAPE3)
 
 TWIPS_PER_PIXEL = 20
@@ -370,3 +371,19 @@ def placed_bitmaps(swf: Swf, character_id: int, x: float = 0, y: float = 0) -> l
         return [found for child, cx, cy in children for found in walk(child, ox + cx, oy + cy)]
 
     return walk(character_id, x, y)
+
+
+def symbol_classes(swf: Swf) -> dict[str, int]:
+    """Map exported AS3 class name -> character id (SymbolClass tags)."""
+    classes = {}
+    for code, tag in iter_tags(swf.body, swf.first_tag):
+        if code != TAG_SYMBOL_CLASS:
+            continue
+        (count,) = struct.unpack_from('<H', tag)
+        offset = 2
+        for _ in range(count):
+            (character_id,) = struct.unpack_from('<H', tag, offset)
+            end = tag.index(b'\0', offset + 2)
+            classes[tag[offset + 2:end].decode('latin1')] = character_id
+            offset = end + 1
+    return classes

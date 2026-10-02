@@ -28,6 +28,19 @@
             html.dark {
                 background-color: oklch(0.145 0 0);
             }
+
+            /*
+             * Game skin images live in public/. Absolute URLs keep them on this host
+             * even when app.css is served by the Vite dev server.
+             */
+            :root {
+                --ui-frame: url('{{ url('game-assets/ui/frame.png') }}');
+                --ui-button: url('{{ url('game-assets/ui/button.png') }}');
+                --ui-button-hover: url('{{ url('game-assets/ui/button-hover.png') }}');
+                --ui-button-pressed: url('{{ url('game-assets/ui/button-pressed.png') }}');
+                --ui-close: url('{{ url('game-assets/ui/close.png') }}');
+                --ui-close-hover: url('{{ url('game-assets/ui/close-hover.png') }}');
+            }
         </style>
 
         <link rel="icon" href="/favicon.ico" sizes="any">
