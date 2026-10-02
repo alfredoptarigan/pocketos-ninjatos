@@ -1,9 +1,10 @@
-import { Head } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
 import GameWindow from '@/components/game-window';
 import VillageBackdrop from '@/components/village-backdrop';
 import { cn } from '@/lib/utils';
 import { village } from '@/routes';
+import { use } from '@/routes/bag';
 
 type BagItem = {
     id: number;
@@ -18,6 +19,10 @@ type BagItem = {
 
 // Matches the original bag grid; empty slots show how much room is left.
 const BAG_SLOTS = 40;
+
+function isUsable(item: BagItem): boolean {
+    return item.restore_hp > 0 || item.restore_chakra > 0;
+}
 
 function effectText(item: BagItem): string {
     return [
@@ -86,7 +91,7 @@ export default function Bag({ items }: { items: BagItem[] }) {
                                     alt=""
                                     className="size-12 object-contain"
                                 />
-                                <div>
+                                <div className="flex-1">
                                     <p className="font-semibold text-amber-200">
                                         {selected.name}
                                     </p>
@@ -95,9 +100,31 @@ export default function Bag({ items }: { items: BagItem[] }) {
                                     </p>
                                     <p className="text-xs text-slate-400">
                                         {selected.quantity}/{selected.max_stack}{' '}
-                                        carried · usable in battle (coming soon)
+                                        carried
                                     </p>
                                 </div>
+                                {isUsable(selected) ? (
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            router.post(
+                                                use().url,
+                                                { item_id: selected.id },
+                                                {
+                                                    preserveScroll: true,
+                                                    preserveState: true,
+                                                },
+                                            )
+                                        }
+                                        className="game-button px-5 py-1"
+                                    >
+                                        Use
+                                    </button>
+                                ) : (
+                                    <p className="text-xs text-slate-400">
+                                        Energy items are not needed yet.
+                                    </p>
+                                )}
                             </div>
                         ) : (
                             <p className="text-sm text-slate-300">

@@ -10,7 +10,14 @@ import SettingsLayout from '@/layouts/settings/layout';
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
 // Pages (or page folders) that render inside the full-screen game shell.
-const GAME_PAGES = ['village', 'bag', 'buildings', 'character'];
+const GAME_PAGES = [
+    'village',
+    'bag',
+    'buildings',
+    'character',
+    'tower',
+    'battle',
+];
 
 void createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),

@@ -8,6 +8,9 @@ import { villageMusic } from '@/game/music';
 import { logout } from '@/routes';
 import { edit as settings } from '@/routes/profile';
 
+const TOWER_PAGES = ['tower', 'battle'];
+const TOWER_MUSIC = '/game-assets/music/singlegate.mp3';
+
 /**
  * Full-screen game shell: the page fills the screen, with the player HUD,
  * the original bottom menu and background music layered on top. Used as a
@@ -15,6 +18,12 @@ import { edit as settings } from '@/routes/profile';
  */
 export default function GameLayout({ children }: { children: ReactNode }) {
     const { character } = usePage().props;
+    const { component } = usePage();
+    // The battle screen hides the HUD so it does not spoil the outcome.
+    const showHud = character && component !== 'battle';
+    const music = TOWER_PAGES.includes(component)
+        ? TOWER_MUSIC
+        : villageMusic(character?.village);
 
     return (
         <div className="dark relative h-dvh w-full overflow-hidden bg-black text-foreground">
@@ -23,12 +32,10 @@ export default function GameLayout({ children }: { children: ReactNode }) {
             {character && (
                 <div className="pointer-events-none absolute inset-x-3 top-3 z-20 flex items-start justify-between">
                     <div className="pointer-events-auto">
-                        <PlayerHud character={character} />
+                        {showHud && <PlayerHud character={character} />}
                     </div>
                     <div className="pointer-events-auto flex gap-2">
-                        <BackgroundMusic
-                            src={villageMusic(character.village)}
-                        />
+                        <BackgroundMusic src={music} />
                         <Link
                             href={settings()}
                             aria-label="Settings"
@@ -50,7 +57,7 @@ export default function GameLayout({ children }: { children: ReactNode }) {
                 </div>
             )}
 
-            {character && (
+            {showHud && (
                 <div className="absolute right-3 bottom-3 z-20">
                     <GameMenu />
                 </div>

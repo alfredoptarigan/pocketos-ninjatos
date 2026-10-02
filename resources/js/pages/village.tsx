@@ -12,6 +12,7 @@ import {
 import VillageCanvas from '@/components/village-canvas';
 import { buildingName } from '@/game/village-scene';
 import { show as pharmacy } from '@/routes/pharmacy';
+import { show as tower } from '@/routes/tower';
 import { travel } from '@/routes/village';
 
 type VillageSummary = { id: string; name: string };
@@ -24,6 +25,8 @@ type Props = {
 // Buildings that already have a screen; the rest say "coming soon".
 const BUILDING_ROUTES: Record<string, () => { url: string }> = {
     salve: pharmacy,
+    // The original single-gate tower is entered from the hall.
+    hall: tower,
 };
 
 export default function Village({ village, villages }: Props) {

@@ -3,6 +3,12 @@ export type Character = {
     /** Asset key "<sex>_<id>" from config('game.avatars'). */
     avatar: string;
     level: number;
+    exp: number;
+    exp_to_next: number;
+    hp: number;
+    max_hp: number;
+    mp: number;
+    max_mp: number;
     gold: number;
     /** Key of config('game.villages'), e.g. "111". */
     village: string;
