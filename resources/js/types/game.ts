@@ -3,6 +3,18 @@ export type Character = {
     /** Asset key "<sex>_<id>" from config('game.avatars'). */
     avatar: string;
     level: number;
+    gold: number;
+};
+
+export type ShopItem = {
+    id: number;
+    name: string;
+    icon: string;
+    price: number;
+    restore_hp: number;
+    restore_chakra: number;
+    restore_energy: number;
+    max_stack: number;
 };
 
 const CHARACTER_ASSETS = '/game-assets/characters';

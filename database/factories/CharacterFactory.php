@@ -22,6 +22,7 @@ class CharacterFactory extends Factory
             'user_id' => User::factory(),
             'name' => fake()->unique()->lexify('ninja????'),
             'avatar' => fake()->randomElement(config('game.avatars')),
+            'gold' => config('game.starting_gold'),
         ];
     }
 }

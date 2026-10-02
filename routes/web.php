@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ApotekController;
 use App\Http\Controllers\CharacterController;
 use App\Http\Middleware\EnsurePlayerHasCharacter;
 use Illuminate\Support\Facades\Route;
@@ -13,6 +14,9 @@ Route::middleware(['auth'])->group(function () {
 
     Route::middleware(EnsurePlayerHasCharacter::class)->group(function () {
         Route::inertia('desa', 'desa')->name('desa');
+
+        Route::get('apotek', [ApotekController::class, 'show'])->name('apotek.show');
+        Route::post('apotek/beli', [ApotekController::class, 'buy'])->name('apotek.buy');
     });
 });
 

@@ -33,7 +33,10 @@ class CharacterController extends Controller
             return to_route('desa');
         }
 
-        $request->user()->character()->create($request->validated());
+        // gold is not mass assignable: it only changes through game actions.
+        $request->user()->character()->make($request->validated())
+            ->forceFill(['gold' => config('game.starting_gold')])
+            ->save();
 
         return to_route('desa');
     }

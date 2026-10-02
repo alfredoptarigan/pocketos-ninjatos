@@ -41,7 +41,7 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
             ],
-            'character' => fn () => $request->user()?->character?->only(['name', 'avatar', 'level']),
+            'character' => fn () => $request->user()?->character?->only(['name', 'avatar', 'level', 'gold']),
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
     }

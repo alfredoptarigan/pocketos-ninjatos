@@ -46,3 +46,4 @@ yarn-error.log
 # Extracted Pockie Ninja art (copyrighted, regenerate with tools/extract_village_assets.py)
 /public/game-assets
 __pycache__/
+/database/data

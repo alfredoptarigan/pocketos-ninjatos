@@ -51,6 +51,7 @@ class CharacterTest extends TestCase
             'name' => 'Naruto',
             'avatar' => '0_12',
             'level' => 1,
+            'gold' => config('game.starting_gold'),
         ]);
     }
 
