@@ -181,4 +181,20 @@ return [
         'replay_exp_percent' => 25,
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Equipment
+    |--------------------------------------------------------------------------
+    |
+    | The catalogue comes from tools/extract_equipment_assets.py. Tower wins
+    | drop a piece of the best tier at or below the opponent's level: always
+    | on a first clear, replay_drop_percent of the time on replays.
+    |
+    */
+
+    'equipment' => [
+        'slots' => ['weapon', 'hat', 'armor', 'gloves', 'belt', 'shoes', 'amulet', 'ring'],
+        'replay_drop_percent' => 15,
+    ],
+
 ];

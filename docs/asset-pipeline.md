@@ -110,6 +110,16 @@ All take the backup path and write into this repo. Run them from the repo root.
 `bitmap/icon/skill/`) to `public/game-assets/skills/<skill id>.png` (`--hd`: 4x). Skill rules
 themselves live in `config/game.php` (`skills`), translated from `lg_SkillDes_<id>`.
 
+`tools/extract_equipment_assets.py [--hd]` reads `equipitem` and writes the 126 plain
+equipment tiers (listed with English names in its `NAMES`; set pieces and event gear are
+skipped) to `database/data/equipment.json` (`EquipmentSeeder`) and icons to
+`public/game-assets/equipment/<code>.png`. Weapons, hats, armor, gloves, belts and shoes
+use the table's `AttackMin`/`AttackMax`/`Defense`. Rings and amulets have no fixed stats in
+the table (the original rolled them on identification, see `equipidentifypro`), so the
+extractor gives amulets `level * 5 + 20` health and rings `1 + level / 20` % critical
+chance. The client tables hold no drop lists (`singlegatenpc.DropLibID` is empty), so tower
+drops are our own rule (`config('game.equipment')`).
+
 `tools/extract_effect_assets.py [--hd]` (JPEXS) renders the jutsu battle effects. For each
 `FightEffect_<skill id>[_part]` row of `effectconfig` it finds the SWF in
 `movieclip/fighteffect/` (`EffectSourceID` `FightEffect_18071` lives in `fighteffect_1807_1`,
@@ -141,10 +151,12 @@ python3 tools/extract_item_assets.py $B
 python3 tools/extract_ui_assets.py $B        # needs Java + JPEXS
 python3 tools/extract_tower_assets.py $B
 python3 tools/extract_skill_assets.py $B
+python3 tools/extract_equipment_assets.py $B
 python3 tools/extract_effect_assets.py $B    # needs Java + JPEXS
 php artisan migrate
 php artisan db:seed --class=ItemSeeder
 php artisan db:seed --class=TowerSeeder
+php artisan db:seed --class=EquipmentSeeder
 ```
 
 Re-running is safe: files are overwritten, seeders use `updateOrCreate`.
@@ -171,6 +183,7 @@ battle/background.jpg                 old 500x300 fallback backdrop
 battle/backgrounds/fightbg_*.jpg      25 battle backdrops (one per 10 tower floors)
 music/maincity1-4.mp3, blackcity.mp3, singlegate.mp3
 skills/<skill id>.png                 jutsu icons
+equipment/<code>.png                  equipment icons
 effects/<effect>.{png,json}           jutsu battle effects (Pixi spritesheet, animation 'effect')
 effects/index.json                    skill id -> effects to play
 ```

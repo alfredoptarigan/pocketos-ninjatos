@@ -70,6 +70,24 @@ class Character extends Model
     }
 
     /**
+     * Every piece of gear the ninja owns.
+     *
+     * @return HasMany<CharacterEquipment, $this>
+     */
+    public function gear(): HasMany
+    {
+        return $this->hasMany(CharacterEquipment::class);
+    }
+
+    /**
+     * @return HasMany<CharacterEquipment, $this>
+     */
+    public function wornGear(): HasMany
+    {
+        return $this->gear()->whereNotNull('equipped_slot');
+    }
+
+    /**
      * @return HasMany<Battle, $this>
      */
     public function battles(): HasMany

@@ -91,11 +91,15 @@ export type BattleLog = {
     events: BattleEvent[];
 };
 
+export type GearDrop = { name: string; icon: string; level: number };
+
 export type BattleRewards = {
     exp: number;
     gold: number;
     levelUp: boolean;
     firstClear: boolean;
+    // Missing on battles recorded before gear existed.
+    drop?: GearDrop | null;
 };
 
 export type BattleRecord = {

@@ -3,6 +3,7 @@
 use App\Http\Controllers\BagController;
 use App\Http\Controllers\BattleController;
 use App\Http\Controllers\CharacterController;
+use App\Http\Controllers\GearController;
 use App\Http\Controllers\PharmacyController;
 use App\Http\Controllers\SkillController;
 use App\Http\Controllers\TowerController;
@@ -21,6 +22,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('village', [VillageController::class, 'show'])->name('village');
         Route::post('village/travel', [VillageController::class, 'travel'])->name('village.travel');
 
+        Route::get('character', [GearController::class, 'show'])->name('character.show');
+        Route::post('character/gear/{gear}/equip', [GearController::class, 'equip'])->name('character.gear.equip');
+        Route::post('character/gear/{gear}/unequip', [GearController::class, 'unequip'])->name('character.gear.unequip');
         Route::get('bag', [BagController::class, 'show'])->name('bag');
         Route::post('bag/use', [BagController::class, 'use'])->name('bag.use');
 

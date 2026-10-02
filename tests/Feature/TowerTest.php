@@ -4,10 +4,12 @@ namespace Tests\Feature;
 
 use App\Models\Battle;
 use App\Models\Character;
+use App\Models\Equipment;
 use App\Models\TowerFloor;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Lottery;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -71,7 +73,38 @@ class TowerTest extends TestCase
         $this->assertSame(2, $character->level); // 130 exp > 120 needed for level 2
         $this->assertSame(10, $character->exp);
         $this->assertSame(config('game.tower.gold_base') + config('game.tower.gold_per_floor'), $character->gold);
-        $this->assertEquals(['exp' => 130, 'gold' => 25, 'levelUp' => true, 'firstClear' => true], $battle->rewards);
+        $this->assertEquals(['exp' => 130, 'gold' => 25, 'levelUp' => true, 'firstClear' => true, 'drop' => null], $battle->rewards);
+    }
+
+    public function test_a_first_clear_drops_the_best_gear_the_opponent_level_allows()
+    {
+        $character = Character::factory()->create();
+        Equipment::factory()->slot('hat', 3, ['defense' => 24])->create();
+        $best = Equipment::factory()->slot('hat', 13, ['defense' => 34])->create();
+        Equipment::factory()->slot('hat', 23, ['defense' => 44])->create();
+        $this->weakFloor(1, ['level' => 20]);
+        $this->actingAs($character->user);
+
+        $this->post(route('tower.fight', 1));
+
+        $this->assertSame($best->code, Battle::sole()->rewards['drop']['code']);
+        $piece = $character->gear()->sole();
+        $this->assertSame($best->id, $piece->equipment_id);
+        $this->assertNull($piece->equipped_slot);
+    }
+
+    public function test_replays_drop_gear_only_when_lucky()
+    {
+        $character = Character::factory()->create(['tower_floor' => 1]);
+        Equipment::factory()->create();
+        $this->weakFloor(1);
+        $this->actingAs($character->user);
+
+        Lottery::alwaysLose(fn () => $this->post(route('tower.fight', 1)));
+        $this->assertSame(0, $character->gear()->count());
+
+        Lottery::alwaysWin(fn () => $this->post(route('tower.fight', 1)));
+        $this->assertSame(1, $character->gear()->count());
     }
 
     public function test_replaying_a_cleared_floor_pays_reduced_exp_and_no_gold()

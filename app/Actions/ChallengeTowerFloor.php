@@ -6,8 +6,10 @@ use App\Game\BattleSimulator;
 use App\Game\Leveling;
 use App\Models\Battle;
 use App\Models\Character;
+use App\Models\Equipment;
 use App\Models\TowerFloor;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Lottery;
 
 class ChallengeTowerFloor
 {
@@ -31,6 +33,7 @@ class ChallengeTowerFloor
             $won = $result['winner'] === 0;
             $firstClear = $won && $floor->floor > $ninja->tower_floor;
             $rewards = $this->rewards($ninja, $floor, $won, $firstClear);
+            $drop = $won ? $this->drop($ninja, $floor, $firstClear) : null;
 
             [$level, $exp] = Leveling::gain($ninja->level, $ninja->exp, $rewards['exp']);
             $ninja->forceFill([
@@ -66,9 +69,30 @@ class ChallengeTowerFloor
                     ],
                     'events' => $result['events'],
                 ],
-                'rewards' => [...$rewards, 'levelUp' => $level > $character->level],
+                'rewards' => [...$rewards, 'levelUp' => $level > $character->level, 'drop' => $drop?->summary()],
             ]);
         });
+    }
+
+    /**
+     * A first clear always drops gear, a replay sometimes: a random piece of the
+     * best tier the opponent's level allows, straight into the ninja's bag.
+     */
+    private function drop(Character $ninja, TowerFloor $floor, bool $firstClear): ?Equipment
+    {
+        $lucky = $firstClear || Lottery::odds(config('game.equipment.replay_drop_percent'), 100)->choose();
+        $candidates = Equipment::query()->where('level', '<=', max(1, $floor->level))->get()
+            ->groupBy('slot')
+            ->flatMap(fn ($pieces) => $pieces->where('level', $pieces->max('level')));
+
+        if (! $lucky || $candidates->isEmpty()) {
+            return null;
+        }
+
+        $piece = $candidates->random();
+        $ninja->gear()->forceCreate(['equipment_id' => $piece->id]);
+
+        return $piece;
     }
 
     /**

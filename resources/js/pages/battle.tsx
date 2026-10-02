@@ -127,6 +127,17 @@ function BattleView({ battle, skills }: Props) {
                                             +{battle.rewards.gold} gold
                                         </li>
                                     )}
+                                    {battle.rewards.drop && (
+                                        <li className="flex items-center justify-center gap-2 text-sky-300">
+                                            <img
+                                                src={battle.rewards.drop.icon}
+                                                alt=""
+                                                className="size-8"
+                                            />
+                                            Found {battle.rewards.drop.name} (Lv{' '}
+                                            {battle.rewards.drop.level})
+                                        </li>
+                                    )}
                                     {battle.rewards.levelUp && (
                                         <li className="font-bold text-yellow-300">
                                             Level up!
