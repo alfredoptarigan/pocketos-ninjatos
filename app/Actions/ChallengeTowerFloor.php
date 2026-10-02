@@ -2,18 +2,21 @@
 
 namespace App\Actions;
 
+use App\Game\BattleLog;
 use App\Game\BattleSimulator;
 use App\Game\Leveling;
 use App\Models\Battle;
 use App\Models\Character;
-use App\Models\Equipment;
 use App\Models\TowerFloor;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Lottery;
 
 class ChallengeTowerFloor
 {
-    public function __construct(private readonly BattleSimulator $simulator) {}
+    public function __construct(
+        private readonly BattleSimulator $simulator,
+        private readonly DropGear $dropGear,
+    ) {}
 
     /**
      * Fight the floor's opponent, apply the outcome and keep the log for replay.
@@ -33,7 +36,9 @@ class ChallengeTowerFloor
             $won = $result['winner'] === 0;
             $firstClear = $won && $floor->floor > $ninja->tower_floor;
             $rewards = $this->rewards($ninja, $floor, $won, $firstClear);
-            $drop = $won ? $this->drop($ninja, $floor, $firstClear) : null;
+            // A first clear always drops gear, a replay only sometimes.
+            $lucky = $firstClear || Lottery::odds(config('game.equipment.replay_drop_percent'), 100)->choose();
+            $drop = $won && $lucky ? $this->dropGear->handle($ninja, $floor->level) : null;
 
             [$level, $exp] = Leveling::gain($ninja->level, $ninja->exp, $rewards['exp']);
             $ninja->forceFill([
@@ -50,49 +55,18 @@ class ChallengeTowerFloor
                 'floor' => $floor->floor,
                 'won' => $won,
                 'log' => [
-                    'fighters' => [
-                        [
-                            ...$player->toArray(),
-                            'avatar' => $ninja->avatar,
-                            'level' => $character->level,
-                            'mp' => $playerMp,
-                            'maxMp' => $playerMaxMp,
-                        ],
-                        [
-                            ...$opponent->toArray(),
-                            'level' => $floor->level,
-                            'mp' => $floor->max_mp,
-                            'maxMp' => $floor->max_mp,
-                            'isBoss' => $floor->is_boss,
-                            'art' => $floor->art,
-                        ],
-                    ],
+                    'fighters' => BattleLog::fighters(
+                        $ninja,
+                        $player,
+                        ['level' => $character->level, 'mp' => $playerMp, 'maxMp' => $playerMaxMp],
+                        $floor,
+                        $opponent,
+                    ),
                     'events' => $result['events'],
                 ],
                 'rewards' => [...$rewards, 'levelUp' => $level > $character->level, 'drop' => $drop?->summary()],
             ]);
         });
-    }
-
-    /**
-     * A first clear always drops gear, a replay sometimes: a random piece of the
-     * best tier the opponent's level allows, straight into the ninja's bag.
-     */
-    private function drop(Character $ninja, TowerFloor $floor, bool $firstClear): ?Equipment
-    {
-        $lucky = $firstClear || Lottery::odds(config('game.equipment.replay_drop_percent'), 100)->choose();
-        $candidates = Equipment::query()->where('level', '<=', max(1, $floor->level))->get()
-            ->groupBy('slot')
-            ->flatMap(fn ($pieces) => $pieces->where('level', $pieces->max('level')));
-
-        if (! $lucky || $candidates->isEmpty()) {
-            return null;
-        }
-
-        $piece = $candidates->random();
-        $ninja->gear()->forceCreate(['equipment_id' => $piece->id]);
-
-        return $piece;
     }
 
     /**

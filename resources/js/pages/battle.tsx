@@ -7,6 +7,7 @@ import GameWindow from '@/components/game-window';
 import type { BattleRecord, SkillInfo } from '@/game/battle/types';
 import { schoolSound } from '@/game/sfx';
 import { bag } from '@/routes';
+import { fight as hunt, show as showField } from '@/routes/fields';
 import { show as tower, fight } from '@/routes/tower';
 
 const TOP_FLOOR = 170;
@@ -60,6 +61,10 @@ function BattleView({ battle, skills }: Props) {
         );
     };
 
+    const place = battle.field
+        ? battle.field.name
+        : `Training Tower · Floor ${battle.floor}`;
+
     const toggleFast = () => {
         speed.current = fast ? 1 : FAST_SPEED;
         setFast(!fast);
@@ -67,7 +72,7 @@ function BattleView({ battle, skills }: Props) {
 
     return (
         <>
-            <Head title={`Floor ${battle.floor} — ${opponent.name}`} />
+            <Head title={`${place} — ${opponent.name}`} />
             <BattleScene
                 log={battle.log}
                 speed={speed}
@@ -84,7 +89,7 @@ function BattleView({ battle, skills }: Props) {
                 mp={mp}
                 skills={skills}
                 glowing={glowing}
-                floor={battle.floor}
+                place={place}
             />
 
             {!finished && (
@@ -108,96 +113,111 @@ function BattleView({ battle, skills }: Props) {
             )}
 
             {finished && (
-                <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/50 px-4">
-                    <GameWindow
-                        title={battle.won ? 'Victory!' : 'Defeat'}
-                        closeHref={tower().url}
-                    >
-                        <div className="flex min-w-72 flex-col items-center gap-3 text-center">
-                            <p className="text-slate-300">
-                                Floor {battle.floor}: {opponent.name}
-                            </p>
-                            {battle.won ? (
-                                <ul className="space-y-1 text-lg">
-                                    <li className="text-emerald-300">
-                                        +{battle.rewards.exp} EXP
-                                    </li>
-                                    {battle.rewards.gold > 0 && (
-                                        <li className="text-amber-300">
-                                            +{battle.rewards.gold} gold
-                                        </li>
-                                    )}
-                                    {battle.rewards.drop && (
-                                        <li className="flex items-center justify-center gap-2 text-sky-300">
-                                            <img
-                                                src={battle.rewards.drop.icon}
-                                                alt=""
-                                                className="size-8"
-                                            />
-                                            Found {battle.rewards.drop.name} (Lv{' '}
-                                            {battle.rewards.drop.level})
-                                        </li>
-                                    )}
-                                    {battle.rewards.levelUp && (
-                                        <li className="font-bold text-yellow-300">
-                                            Level up!
-                                        </li>
-                                    )}
-                                    {!battle.rewards.firstClear && (
-                                        <li className="text-sm text-slate-400">
-                                            Replays pay reduced EXP and no gold.
-                                        </li>
-                                    )}
-                                </ul>
-                            ) : (
-                                <p className="text-slate-300">
-                                    You were knocked out. Train up and try
-                                    again.
-                                </p>
+                <BattleResult
+                    battle={battle}
+                    opponent={opponent.name}
+                    place={place}
+                />
+            )}
+        </>
+    );
+}
+
+type ResultProps = { battle: BattleRecord; opponent: string; place: string };
+
+/** Victory/defeat window with the rewards and where to go next. */
+function BattleResult({ battle, opponent, place }: ResultProps) {
+    const { field, floor, rewards, won } = battle;
+    const home = field ? showField(field.scene) : tower();
+
+    return (
+        <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/50 px-4">
+            <GameWindow
+                title={won ? 'Victory!' : 'Defeat'}
+                closeHref={home.url}
+            >
+                <div className="flex min-w-72 flex-col items-center gap-3 text-center">
+                    <p className="text-slate-300">
+                        {place}: {opponent}
+                    </p>
+                    {won ? (
+                        <ul className="space-y-1 text-lg">
+                            <li className="text-emerald-300">
+                                +{rewards.exp} EXP
+                            </li>
+                            {rewards.gold > 0 && (
+                                <li className="text-amber-300">
+                                    +{rewards.gold} gold
+                                </li>
                             )}
-                            <div className="mt-2 flex flex-wrap justify-center gap-2">
-                                {battle.won && battle.floor < TOP_FLOOR && (
-                                    <button
-                                        type="button"
-                                        onClick={() =>
-                                            router.post(
-                                                fight(String(battle.floor + 1))
-                                                    .url,
-                                            )
-                                        }
-                                        className="game-button px-4 py-1"
-                                    >
-                                        Next floor
-                                    </button>
-                                )}
+                            {rewards.drop && (
+                                <li className="flex items-center justify-center gap-2 text-sky-300">
+                                    <img
+                                        src={rewards.drop.icon}
+                                        alt=""
+                                        className="size-8"
+                                    />
+                                    Found {rewards.drop.name} (Lv{' '}
+                                    {rewards.drop.level})
+                                </li>
+                            )}
+                            {rewards.levelUp && (
+                                <li className="font-bold text-yellow-300">
+                                    Level up!
+                                </li>
+                            )}
+                            {!field && !rewards.firstClear && (
+                                <li className="text-sm text-slate-400">
+                                    Replays pay reduced EXP and no gold.
+                                </li>
+                            )}
+                        </ul>
+                    ) : (
+                        <p className="text-slate-300">
+                            {field
+                                ? 'You were knocked out. Rest or drink a potion before hunting again.'
+                                : 'You were knocked out. Train up and try again.'}
+                        </p>
+                    )}
+                    <div className="mt-2 flex flex-wrap justify-center gap-2">
+                        {!field &&
+                            floor !== null &&
+                            won &&
+                            floor < TOP_FLOOR && (
                                 <button
                                     type="button"
                                     onClick={() =>
                                         router.post(
-                                            fight(String(battle.floor)).url,
+                                            fight(String(floor + 1)).url,
                                         )
                                     }
                                     className="game-button px-4 py-1"
                                 >
-                                    {battle.won ? 'Fight again' : 'Retry'}
+                                    Next floor
                                 </button>
-                                <Link
-                                    href={bag()}
-                                    className="game-button px-4 py-1"
-                                >
-                                    Bag
-                                </Link>
-                                <Link
-                                    href={tower()}
-                                    className="game-button px-4 py-1"
-                                >
-                                    Tower
-                                </Link>
-                            </div>
-                        </div>
-                    </GameWindow>
+                            )}
+                        <button
+                            type="button"
+                            onClick={() =>
+                                router.post(
+                                    field
+                                        ? hunt(field.monster).url
+                                        : fight(String(floor)).url,
+                                )
+                            }
+                            className="game-button px-4 py-1"
+                        >
+                            {won ? 'Fight again' : 'Retry'}
+                        </button>
+                        <Link href={bag()} className="game-button px-4 py-1">
+                            Bag
+                        </Link>
+                        <Link href={home} className="game-button px-4 py-1">
+                            {field ? field.name : 'Tower'}
+                        </Link>
+                    </div>
                 </div>
-            )}
-        </>
+            </GameWindow>
+        </div>
     );
 }

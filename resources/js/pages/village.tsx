@@ -1,4 +1,4 @@
-import { Head, router } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -14,6 +14,7 @@ import { buildingName } from '@/game/village-scene';
 import { show as pharmacy } from '@/routes/pharmacy';
 import { show as tower } from '@/routes/tower';
 import { travel } from '@/routes/village';
+import { show as world } from '@/routes/world';
 
 type VillageSummary = { id: string; name: string };
 
@@ -48,7 +49,10 @@ export default function Village({ village, villages }: Props) {
                 onBuildingSelect={visitBuilding}
             />
 
-            <div className="absolute top-3 left-1/2 z-10 -translate-x-1/2">
+            <div className="absolute top-3 left-1/2 z-10 flex -translate-x-1/2 gap-2">
+                <Link href={world()} className="game-button px-4 py-1 text-lg">
+                    World Map
+                </Link>
                 <DropdownMenu>
                     <DropdownMenuTrigger className="game-button flex items-center gap-1 px-4 py-1 text-lg">
                         {village.name}

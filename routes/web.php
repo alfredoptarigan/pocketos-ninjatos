@@ -3,11 +3,13 @@
 use App\Http\Controllers\BagController;
 use App\Http\Controllers\BattleController;
 use App\Http\Controllers\CharacterController;
+use App\Http\Controllers\FieldController;
 use App\Http\Controllers\GearController;
 use App\Http\Controllers\PharmacyController;
 use App\Http\Controllers\SkillController;
 use App\Http\Controllers\TowerController;
 use App\Http\Controllers\VillageController;
+use App\Http\Controllers\WorldController;
 use App\Http\Middleware\EnsurePlayerHasCharacter;
 use Illuminate\Support\Facades\Route;
 
@@ -31,6 +33,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('skills', [SkillController::class, 'index'])->name('skills.index');
         Route::post('skills/{skill}/learn', [SkillController::class, 'learn'])->name('skills.learn');
 
+        Route::get('world', [WorldController::class, 'show'])->name('world.show');
+        Route::get('fields/{field}', [FieldController::class, 'show'])->name('fields.show');
+        Route::post('fields/monsters/{monster}/fight', [FieldController::class, 'fight'])->name('fields.fight');
         Route::get('tower', [TowerController::class, 'show'])->name('tower.show');
         Route::post('tower/{floor}/fight', [TowerController::class, 'fight'])->name('tower.fight');
         Route::get('battles/{battle}', [BattleController::class, 'show'])->name('battles.show');

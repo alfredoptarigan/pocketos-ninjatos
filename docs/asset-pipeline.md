@@ -120,6 +120,23 @@ extractor gives amulets `level * 5 + 20` health and rings `1 + level / 20` % cri
 chance. The client tables hold no drop lists (`singlegatenpc.DropLibID` is empty), so tower
 drops are our own rule (`config('game.equipment')`).
 
+`tools/extract_world_assets.py [--hd]` (JPEXS) builds the world map and its hunting grounds:
+
+- The map is the first frame of `ui/sceneui/worldmap.s12755.swf` (768x426, rendered at zoom 2 for
+  HD). Its buttons are named `scene_<id>` and show a region of the map. The extractor cuts each
+  region out (`world/spots/<scene>.png`) so the page can alpha-hit-test it like village buildings.
+- The areas are read from the world map tooltips in `language.lg`, not from a table:
+  `lg_Tip_WorldMap_<scene>_<n>` holds the name, entry level, monsters and bosses (`n` is the
+  viewer's village, `_0`..`_4`). There are 24 areas. Each village owns three (21xx = 111,
+  22xx = 121, 23xx = 131, 24xx = 141, 25xx = 151; levels 1/11/21), and 26xx/27xx are shared
+  (levels 16-65). 28xx and 181 are "not open yet" in the original too.
+- Monster stats are the base rows (shortest id) of `normalnpc`/`taskbossnpc`, matched by Chinese
+  name. Their levels match the original client (Sunflower 2, Stinger Bee 4, ...).
+- Backdrops are `scene/outcity/background_<scene>.swf` (1920x1080 JPEG).
+- The motion art of every field monster (`MapUserFace_N32001..N33043`) is missing from the
+  backup. Each monster borrows an unnamed original monster (`motion/mob/{human,inhuman,*boss}/n10xxx`,
+  bitmap motions only); pin a better match in `ART_OVERRIDES`.
+
 `tools/extract_effect_assets.py [--hd]` (JPEXS) renders the jutsu battle effects. For each
 `FightEffect_<skill id>[_part]` row of `effectconfig` it finds the SWF in
 `movieclip/fighteffect/` (`EffectSourceID` `FightEffect_18071` lives in `fighteffect_1807_1`,
@@ -152,11 +169,13 @@ python3 tools/extract_ui_assets.py $B        # needs Java + JPEXS
 python3 tools/extract_tower_assets.py $B
 python3 tools/extract_skill_assets.py $B
 python3 tools/extract_equipment_assets.py $B
+python3 tools/extract_world_assets.py $B     # needs Java + JPEXS
 python3 tools/extract_effect_assets.py $B    # needs Java + JPEXS
 php artisan migrate
 php artisan db:seed --class=ItemSeeder
 php artisan db:seed --class=TowerSeeder
 php artisan db:seed --class=EquipmentSeeder
+php artisan db:seed --class=FieldSeeder
 ```
 
 Re-running is safe: files are overwritten, seeders use `updateOrCreate`.
@@ -184,6 +203,8 @@ battle/backgrounds/fightbg_*.jpg      25 battle backdrops (one per 10 tower floo
 music/maincity1-4.mp3, blackcity.mp3, singlegate.mp3
 skills/<skill id>.png                 jutsu icons
 equipment/<code>.png                  equipment icons
+world/map.png, world/spots/<scene>.png  world map and its clickable regions (world.json)
+fields/<scene>.jpg                    hunting ground backdrops
 effects/<effect>.{png,json}           jutsu battle effects (Pixi spritesheet, animation 'effect')
 effects/index.json                    skill id -> effects to play
 ```

@@ -18,7 +18,8 @@ type Props = {
     skills: Record<string, SkillInfo>;
     /** Jutsu just used by the player, lit up in the skill grid. */
     glowing: string | null;
-    floor: number;
+    /** Where the battle happens, e.g. "Training Tower · Floor 3". */
+    place: string;
 };
 
 function share(value: number, max: number): number {
@@ -38,7 +39,7 @@ export default function BattleHud({
     mp,
     skills,
     glowing,
-    floor,
+    place,
 }: Props) {
     const [player, opponent] = fighters;
 
@@ -73,7 +74,7 @@ export default function BattleHud({
                 mp={mp[0]}
                 skills={skills}
                 glowing={glowing}
-                subtitle={`Training Tower · Floor ${floor}`}
+                subtitle={place}
             />
             <SidePanel
                 side="enemy"
@@ -82,11 +83,7 @@ export default function BattleHud({
                 mp={mp[1]}
                 skills={skills}
                 glowing={null}
-                subtitle={
-                    opponent.isBoss
-                        ? `Boss of floor ${floor}`
-                        : `Floor ${floor}`
-                }
+                subtitle={opponent.isBoss ? `Boss · ${place}` : place}
             />
         </div>
     );

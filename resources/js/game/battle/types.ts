@@ -104,7 +104,9 @@ export type BattleRewards = {
 
 export type BattleRecord = {
     id: number;
-    floor: number;
+    // Tower battles have a floor; hunting-ground battles have a field.
+    floor: number | null;
+    field: { scene: string; name: string; monster: number } | null;
     won: boolean;
     log: BattleLog;
     rewards: BattleRewards;

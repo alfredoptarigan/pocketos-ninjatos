@@ -18,7 +18,15 @@ class BattleController extends Controller
         abort_unless($battle->character_id === $request->user()->character->id, 404);
 
         return Inertia::render('battle', [
-            'battle' => $battle->only(['id', 'floor', 'won', 'log', 'rewards']),
+            'battle' => [
+                ...$battle->only(['id', 'floor', 'won', 'log', 'rewards']),
+                // Hunting-ground battles lead back to their area; tower battles to the tower.
+                'field' => $battle->fieldMonster ? [
+                    'scene' => $battle->fieldMonster->field_scene,
+                    'name' => $battle->fieldMonster->field->name,
+                    'monster' => $battle->fieldMonster->id,
+                ] : null,
+            ],
             // Names, icons and schools (for the sound) of the jutsu the replay may show.
             'skills' => collect(config('game.skills'))->map(fn (array $skill, string|int $id) => [
                 'name' => $skill['name'],

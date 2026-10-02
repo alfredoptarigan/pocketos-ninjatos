@@ -18,6 +18,8 @@ const GAME_PAGES = [
     'tower',
     'battle',
     'skills',
+    'world',
+    'field',
 ];
 
 void createInertiaApp({

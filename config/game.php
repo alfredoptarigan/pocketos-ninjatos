@@ -192,6 +192,24 @@ return [
     |
     */
 
+    /*
+    |--------------------------------------------------------------------------
+    | Hunting grounds (world map)
+    |--------------------------------------------------------------------------
+    |
+    | Field monsters pay their original NpcExp times exp_multiplier and
+    | level * gold_per_level gold, and sometimes drop gear. Health and chakra
+    | carry over between field fights (unlike the tower).
+    |
+    */
+
+    'fields' => [
+        'exp_multiplier' => 2,
+        'gold_per_level' => 2,
+        'drop_percent' => 5,
+        'boss_drop_percent' => 25,
+    ],
+
     'equipment' => [
         'slots' => ['weapon', 'hat', 'armor', 'gloves', 'belt', 'shoes', 'amulet', 'ring'],
         'replay_drop_percent' => 15,
