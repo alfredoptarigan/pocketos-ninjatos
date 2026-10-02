@@ -5,6 +5,7 @@ import BattleHud from '@/components/battle-hud';
 import BattleScene from '@/components/battle-scene';
 import GameWindow from '@/components/game-window';
 import type { BattleRecord, SkillInfo } from '@/game/battle/types';
+import { schoolSound } from '@/game/sfx';
 import { bag } from '@/routes';
 import { show as tower, fight } from '@/routes/tower';
 
@@ -75,6 +76,7 @@ function BattleView({ battle, skills }: Props) {
                 onMp={updateMp}
                 onSkill={lightSkill}
                 skillName={(id) => skills[id]?.name ?? 'Jutsu'}
+                skillSound={(id) => schoolSound(skills[id]?.school)}
             />
             <BattleHud
                 fighters={battle.log.fighters}

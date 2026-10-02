@@ -39,6 +39,8 @@ export type StrikeEvent = {
     crit: boolean;
     parried: boolean;
     blocked?: boolean;
+    // The jutsu that blocked it (Substitution).
+    blockSkill?: string;
     damage: number;
     targetHp: number;
     // Present when a jutsu was used.
@@ -82,7 +84,7 @@ export type BattleEvent =
     | ReviveEvent
     | EndEvent;
 
-export type SkillInfo = { name: string; icon: string };
+export type SkillInfo = { name: string; icon: string; school: string };
 
 export type BattleLog = {
     fighters: [FighterInfo, FighterInfo];

@@ -106,6 +106,7 @@ class BattleSkillsTest extends TestCase
         $hit = $this->first($this->events($this->fighter(), $this->fighter(['skills' => [$this->skill('block')]])), 'attack');
 
         $this->assertTrue($hit['blocked']);
+        $this->assertSame('9000', $hit['blockSkill']);
         $this->assertSame(0, $hit['damage']);
         $this->assertSame(100, $hit['targetHp']);
     }

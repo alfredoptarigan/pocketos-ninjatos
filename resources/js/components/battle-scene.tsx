@@ -2,9 +2,11 @@ import { Assets, Container, Sprite } from 'pixi.js';
 import type { Application, Texture } from 'pixi.js';
 import { useCallback, useRef } from 'react';
 import type { RefObject } from 'react';
+import { loadEffects } from '@/game/battle/effects';
 import { Fighter } from '@/game/battle/fighter';
 import { replay } from '@/game/battle/replay';
 import type { BattleLog, EndEvent } from '@/game/battle/types';
+import type { Sfx } from '@/game/sfx';
 import { usePixiApp } from '@/hooks/use-pixi-app';
 
 // Battles are staged on a 1000x600 world like the original client.
@@ -25,6 +27,7 @@ type Props = {
     onMp: (side: 0 | 1, mp: number) => void;
     onSkill: (side: 0 | 1, skillId: string) => void;
     skillName: (skillId: string) => string;
+    skillSound: (skillId: string) => Sfx;
 };
 
 export default function BattleScene({
@@ -35,11 +38,26 @@ export default function BattleScene({
     onMp,
     onSkill,
     skillName,
+    skillSound,
 }: Props) {
     const hostRef = useRef<HTMLDivElement>(null);
     // Keep the latest callbacks without restarting the replay on every render.
-    const callbacks = useRef({ onFinished, onHp, onMp, onSkill, skillName });
-    callbacks.current = { onFinished, onHp, onMp, onSkill, skillName };
+    const callbacks = useRef({
+        onFinished,
+        onHp,
+        onMp,
+        onSkill,
+        skillName,
+        skillSound,
+    });
+    callbacks.current = {
+        onFinished,
+        onHp,
+        onMp,
+        onSkill,
+        skillName,
+        skillSound,
+    };
 
     const setup = useCallback(
         async (app: Application, isDisposed: () => boolean) => {
@@ -48,9 +66,10 @@ export default function BattleScene({
                 log.fighters[1].art?.background ?? FALLBACK_BACKGROUND;
             const background = new Sprite(await Assets.load<Texture>(backdrop));
             background.setSize(WORLD_WIDTH, WORLD_HEIGHT);
-            const fighters = (await Promise.all(
-                log.fighters.map((info) => Fighter.create(info)),
-            )) as [Fighter, Fighter];
+            const [effects, ...fighters] = (await Promise.all([
+                loadEffects(log.events),
+                ...log.fighters.map((info) => Fighter.create(info)),
+            ])) as [Awaited<ReturnType<typeof loadEffects>>, Fighter, Fighter];
 
             if (isDisposed()) {
                 return;
@@ -90,6 +109,10 @@ export default function BattleScene({
                     onMp: (side, mp) => callbacks.current.onMp(side, mp),
                     onSkill: (side, id) => callbacks.current.onSkill(side, id),
                     skillName: (id) => callbacks.current.skillName(id),
+                    skillSound: (id) => callbacks.current.skillSound(id),
+                    effects,
+                    // Effects drawn under the fighters go right above the backdrop.
+                    underIndex: 1,
                 },
                 log.events,
             );

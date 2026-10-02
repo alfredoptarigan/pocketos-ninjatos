@@ -131,7 +131,8 @@ final class BattleSimulator
 
         $defender = $this->fighters[$target];
         $hit = ! $this->chance($defender->dodge);
-        $blocked = $hit && ! $backfire && $this->trigger($target, 'block') !== null;
+        $block = $hit && ! $backfire ? $this->trigger($target, 'block') : null;
+        $blocked = $block !== null;
         $crit = $hit && ! $blocked && $this->chance($attacker->crit);
         $parried = $hit && ! $blocked && $this->chance($defender->parry);
         $damage = $hit && ! $blocked ? $this->damage($attacker, $defender, $skill, $crit, $parried) : 0;
@@ -148,6 +149,10 @@ final class BattleSimulator
             'damage' => $damage,
             'targetHp' => $this->hp[$target],
         ];
+
+        if ($block) {
+            $event['blockSkill'] = $block['skill']->id;
+        }
 
         if ($skill) {
             $event = [...$event, ...$this->jutsuEffects($skill, $actor, $target, $damage, $backfire)];

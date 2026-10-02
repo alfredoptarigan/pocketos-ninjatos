@@ -1,24 +1,8 @@
 import { Volume2, VolumeX } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { isMuted, setMuted as storeMuted } from '@/game/sfx';
 
-const MUTED_KEY = 'pocketo:music-muted';
 const VOLUME = 0.35;
-
-function readMuted(): boolean {
-    try {
-        return localStorage.getItem(MUTED_KEY) === '1';
-    } catch {
-        return false;
-    }
-}
-
-function writeMuted(muted: boolean): void {
-    try {
-        localStorage.setItem(MUTED_KEY, muted ? '1' : '0');
-    } catch {
-        // Storage can be unavailable (private mode); muting still works for this visit.
-    }
-}
 
 /**
  * Loops `src` in the background with a mute toggle. Lives in the persistent
@@ -26,7 +10,7 @@ function writeMuted(muted: boolean): void {
  */
 export default function BackgroundMusic({ src }: { src: string }) {
     const audioRef = useRef<HTMLAudioElement | null>(null);
-    const [muted, setMuted] = useState(readMuted);
+    const [muted, setMuted] = useState(isMuted);
 
     useEffect(() => {
         const audio = audioRef.current ?? new Audio();
@@ -60,7 +44,7 @@ export default function BackgroundMusic({ src }: { src: string }) {
 
     const toggle = () => {
         setMuted((current) => {
-            writeMuted(!current);
+            storeMuted(!current);
             return !current;
         });
     };
@@ -69,7 +53,7 @@ export default function BackgroundMusic({ src }: { src: string }) {
         <button
             type="button"
             onClick={toggle}
-            aria-label={muted ? 'Play music' : 'Mute music'}
+            aria-label={muted ? 'Play sound' : 'Mute sound'}
             aria-pressed={!muted}
             className="game-button grid size-9 place-items-center"
         >

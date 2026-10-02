@@ -19,9 +19,10 @@ class BattleController extends Controller
 
         return Inertia::render('battle', [
             'battle' => $battle->only(['id', 'floor', 'won', 'log', 'rewards']),
-            // Names and icons for the jutsu the replay may show.
+            // Names, icons and schools (for the sound) of the jutsu the replay may show.
             'skills' => collect(config('game.skills'))->map(fn (array $skill, string|int $id) => [
                 'name' => $skill['name'],
+                'school' => $skill['school'],
                 'icon' => "/game-assets/skills/$id.png",
             ]),
         ]);

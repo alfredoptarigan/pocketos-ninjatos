@@ -110,6 +110,24 @@ All take the backup path and write into this repo. Run them from the repo root.
 `bitmap/icon/skill/`) to `public/game-assets/skills/<skill id>.png` (`--hd`: 4x). Skill rules
 themselves live in `config/game.php` (`skills`), translated from `lg_SkillDes_<id>`.
 
+`tools/extract_effect_assets.py [--hd]` (JPEXS) renders the jutsu battle effects. For each
+`FightEffect_<skill id>[_part]` row of `effectconfig` it finds the SWF in
+`movieclip/fighteffect/` (`EffectSourceID` `FightEffect_18071` lives in `fighteffect_1807_1`,
+`FightEffect_3826_M` in `fighteffect_3826_m`), renders its `MotionEffectSource` symbol and
+packs the trimmed frames into `effects/<effect>.{png,json}`. The anchor is the SWF origin:
+JPEXS puts it at the root `translate` of the frame SVG, and the PNG adds an even filter
+margin around the SVG bounds. `effects/index.json` maps skill id to
+`{sheet, type: attack|beaten, layer: before|under, start: ms|'hit'}` (`EffectType`,
+`LayoutIndex`, `PlayEffectTime`). Sheets taller than 4096 px are halved (lower `meta.scale`).
+Effects are laid out in original stage units for fighters ~400 units apart (a Fireball
+explodes ~386 units in front of its caster), so the replay draws them at scale 1 and casts
+jutsu with cast-time art from where the user stands. `BuffEffect_*` (status loops) and
+effects whose SWF is missing from the backup (e.g. Earth Wall 3806) are not extracted.
+
+Sound effects are not in the backup (the original client only shipped music). The battle uses
+Kenney CC0 packs (impact, RPG audio, sci-fi, interface sounds) converted to AAC with
+`afconvert -f m4af -d aac in.ogg out.m4a`. They are committed in `public/sfx/` with the licence.
+
 Shared modules: `swf.py` (SWF parsing), `motion.py` (motion → Pixi spritesheet),
 `amf3.py` (tables). Unit tests: `python3 -m unittest discover tools`.
 
@@ -122,6 +140,8 @@ python3 tools/extract_character_assets.py $B
 python3 tools/extract_item_assets.py $B
 python3 tools/extract_ui_assets.py $B        # needs Java + JPEXS
 python3 tools/extract_tower_assets.py $B
+python3 tools/extract_skill_assets.py $B
+python3 tools/extract_effect_assets.py $B    # needs Java + JPEXS
 php artisan migrate
 php artisan db:seed --class=ItemSeeder
 php artisan db:seed --class=TowerSeeder
@@ -150,6 +170,9 @@ monsters/n<id>/portrait.png           boss opponents (portrait only, no motions 
 battle/background.jpg                 old 500x300 fallback backdrop
 battle/backgrounds/fightbg_*.jpg      25 battle backdrops (one per 10 tower floors)
 music/maincity1-4.mp3, blackcity.mp3, singlegate.mp3
+skills/<skill id>.png                 jutsu icons
+effects/<effect>.{png,json}           jutsu battle effects (Pixi spritesheet, animation 'effect')
+effects/index.json                    skill id -> effects to play
 ```
 
 `database/data/pharmacy_items.json` and `database/data/tower.json` feed `ItemSeeder`
