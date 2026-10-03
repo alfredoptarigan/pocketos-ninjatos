@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import { bonuses, SLOT_LABELS } from '@/lib/gear';
 import type { GearStats } from '@/lib/gear';
 import { cn } from '@/lib/utils';
-import { use } from '@/routes/bag';
+import { sell, use } from '@/routes/bag';
 import { equip } from '@/routes/character/gear';
 import { index as wardrobe } from '@/routes/outfits';
 
@@ -13,6 +13,7 @@ export type Piece = GearStats & {
     code: string;
     name: string;
     icon: string;
+    sell_price: number;
 };
 
 export type BagItem = {
@@ -24,6 +25,8 @@ export type BagItem = {
     restore_hp: number;
     restore_chakra: number;
     restore_energy: number;
+    /** Per unit; Multi-Sell sells the whole stack. */
+    sell_price: number;
 };
 
 type Entry =
@@ -71,7 +74,20 @@ export default function InventoryBag({ gear, items, level }: Props) {
     ];
     const [page, setPage] = useState(0);
     const [selectedKey, setSelectedKey] = useState<string | null>(null);
+    // Multi-Sell mode: clicks tick entries instead of selecting one.
+    const [selling, setSelling] = useState(false);
+    const [picked, setPicked] = useState<string[]>([]);
     const selected = entries.find((entry) => entry.key === selectedKey);
+    const togglePick = (key: string) =>
+        setPicked((current) =>
+            current.includes(key)
+                ? current.filter((k) => k !== key)
+                : [...current, key],
+        );
+    const toggleSelling = () => {
+        setSelling(!selling);
+        setPicked([]);
+    };
     const shown = entries.slice(
         page * SLOTS_PER_PAGE,
         (page + 1) * SLOTS_PER_PAGE,
@@ -112,12 +128,21 @@ export default function InventoryBag({ gear, items, level }: Props) {
                             <BagSlot
                                 key={entry.key}
                                 entry={entry}
-                                selected={entry.key === selectedKey}
+                                selected={
+                                    selling
+                                        ? picked.includes(entry.key)
+                                        : entry.key === selectedKey
+                                }
+                                selling={selling}
                                 tooLow={
                                     entry.kind === 'gear' &&
                                     level < entry.piece.level
                                 }
-                                onSelect={() => setSelectedKey(entry.key)}
+                                onSelect={() =>
+                                    selling
+                                        ? togglePick(entry.key)
+                                        : setSelectedKey(entry.key)
+                                }
                             />
                         ) : (
                             <div
@@ -131,7 +156,17 @@ export default function InventoryBag({ gear, items, level }: Props) {
 
                 <div className="flex w-24 flex-col gap-1">
                     <SideButton label="Compose" />
-                    <SideButton label="Multi-Sell" />
+                    <button
+                        type="button"
+                        aria-pressed={selling}
+                        onClick={toggleSelling}
+                        className={cn(
+                            'game-button py-0.5 text-sm',
+                            selling && 'ring-2 ring-red-400',
+                        )}
+                    >
+                        Multi-Sell
+                    </button>
                     <SideButton label="Collection" />
                     <Link
                         href={wardrobe()}
@@ -153,7 +188,76 @@ export default function InventoryBag({ gear, items, level }: Props) {
                 </div>
             </div>
 
-            <Detail entry={selected} level={level} />
+            {selling ? (
+                <SellBar
+                    entries={entries.filter((entry) =>
+                        picked.includes(entry.key),
+                    )}
+                    onDone={toggleSelling}
+                />
+            ) : (
+                <Detail entry={selected} level={level} />
+            )}
+        </div>
+    );
+}
+
+function SellBar({
+    entries,
+    onDone,
+}: {
+    entries: Entry[];
+    onDone: () => void;
+}) {
+    const gold = entries.reduce(
+        (sum, entry) =>
+            sum +
+            (entry.kind === 'gear'
+                ? entry.piece.sell_price
+                : entry.item.sell_price * entry.item.quantity),
+        0,
+    );
+    const sellPicked = () =>
+        router.post(
+            sell().url,
+            {
+                gear: entries.flatMap((e) =>
+                    e.kind === 'gear' ? [e.piece.id] : [],
+                ),
+                items: entries.flatMap((e) =>
+                    e.kind === 'item' ? [e.item.id] : [],
+                ),
+            },
+            {
+                preserveScroll: true,
+                onSuccess: onDone,
+                onError: (errors) =>
+                    toast.error(errors.gear ?? 'That did not work.'),
+            },
+        );
+
+    return (
+        <div className="flex min-h-14 items-center gap-3 rounded border border-red-900 bg-slate-950/60 p-2 text-sm">
+            <p className="flex-1 text-slate-300">
+                {entries.length === 0
+                    ? 'Tick spare gear and item stacks to sell them together.'
+                    : `${entries.length} picked for ${gold.toLocaleString('en-US')} gold. Stacks sell whole.`}
+            </p>
+            <button
+                type="button"
+                disabled={entries.length === 0}
+                onClick={sellPicked}
+                className="game-button px-4 py-0.5"
+            >
+                Sell
+            </button>
+            <button
+                type="button"
+                onClick={onDone}
+                className="game-button px-3 py-0.5"
+            >
+                Cancel
+            </button>
         </div>
     );
 }
@@ -173,11 +277,13 @@ function SideButton({ label }: { label: string }) {
 type SlotProps = {
     entry: Entry;
     selected: boolean;
+    /** Multi-Sell mode: a selected slot is ticked for sale. */
+    selling: boolean;
     tooLow: boolean;
     onSelect: () => void;
 };
 
-function BagSlot({ entry, selected, tooLow, onSelect }: SlotProps) {
+function BagSlot({ entry, selected, selling, tooLow, onSelect }: SlotProps) {
     const { name, icon } = entry.kind === 'gear' ? entry.piece : entry.item;
 
     return (
@@ -187,17 +293,24 @@ function BagSlot({ entry, selected, tooLow, onSelect }: SlotProps) {
             aria-selected={selected}
             title={name}
             onClick={onSelect}
-            onDoubleClick={() =>
-                entry.kind === 'gear'
-                    ? post(equip(entry.piece.id).url)
-                    : post(use().url, { item_id: entry.item.id })
-            }
+            onDoubleClick={() => {
+                if (selling) {
+                    return;
+                }
+                if (entry.kind === 'gear') {
+                    post(equip(entry.piece.id).url);
+                } else {
+                    post(use().url, { item_id: entry.item.id });
+                }
+            }}
             className={cn(
                 'relative size-11 rounded border p-0.5',
                 entry.kind === 'gear' ? 'bg-emerald-950/70' : 'bg-slate-950/70',
-                selected
-                    ? 'border-amber-300 shadow-[0_0_8px_rgba(252,211,77,0.7)]'
-                    : 'border-sky-900 hover:border-amber-500',
+                selected && selling && 'border-red-400 ring-2 ring-red-400',
+                selected &&
+                    !selling &&
+                    'border-amber-300 shadow-[0_0_8px_rgba(252,211,77,0.7)]',
+                !selected && 'border-sky-900 hover:border-amber-500',
             )}
         >
             <img

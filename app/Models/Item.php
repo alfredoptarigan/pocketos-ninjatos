@@ -41,4 +41,12 @@ class Item extends Model
     {
         $query->where('category', self::CATEGORY_PHARMACY);
     }
+
+    /**
+     * What one unit sells back for: the same share the Equipment Shop pays for gear.
+     */
+    public function sellPrice(): int
+    {
+        return intdiv($this->price * config('game.equipment.sell_percent'), 100);
+    }
 }

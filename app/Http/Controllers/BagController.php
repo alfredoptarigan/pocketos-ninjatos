@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\MultiSell;
 use App\Http\Requests\UseItemRequest;
 use App\Models\CharacterEquipment;
 use App\Models\InventoryItem;
@@ -24,7 +25,7 @@ class BagController extends Controller
         $stacks = $character->inventory()->with('item')->orderBy('item_id')->get();
         $pieces = $character->gear()->with('equipment')->get()
             ->sortBy([fn (CharacterEquipment $piece) => $piece->equipment->slot, fn (CharacterEquipment $piece) => -$piece->equipment->level]);
-        $describe = fn (CharacterEquipment $piece) => ['id' => $piece->id, ...$piece->equipment->summary()];
+        $describe = fn (CharacterEquipment $piece) => ['id' => $piece->id, ...$piece->equipment->summary(), 'sell_price' => $piece->equipment->sellPrice()];
 
         return Inertia::render('inventory', [
             'stats' => (array) $character->stats(),
@@ -42,8 +43,27 @@ class BagController extends Controller
                 'restore_hp' => $stack->item->restore_hp,
                 'restore_chakra' => $stack->item->restore_chakra,
                 'restore_energy' => $stack->item->restore_energy,
+                'sell_price' => $stack->item->sellPrice(),
             ]),
         ]);
+    }
+
+    /**
+     * Multi-Sell: sell the picked spare gear and whole item stacks.
+     */
+    public function sell(Request $request, MultiSell $multiSell): RedirectResponse
+    {
+        $picked = $request->validate([
+            'gear' => ['array'],
+            'gear.*' => ['integer'],
+            'items' => ['array'],
+            'items.*' => ['integer'],
+        ]);
+        $result = $multiSell->handle($request->user()->character, $picked['gear'] ?? [], $picked['items'] ?? []);
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => "Sold {$result['count']} for {$result['gold']} gold."]);
+
+        return to_route('bag');
     }
 
     /**

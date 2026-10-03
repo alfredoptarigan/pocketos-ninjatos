@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Character;
+use App\Models\Equipment;
 use App\Models\Item;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -74,5 +75,36 @@ class BagTest extends TestCase
         $this->post(route('bag.use'), ['item_id' => $notOwned->id])->assertSessionHasErrors('item_id');
         $this->post(route('bag.use'), ['item_id' => $energy->id])->assertSessionHasErrors('item_id');
         $this->assertDatabaseHas('inventory_items', ['item_id' => $energy->id, 'quantity' => 1]);
+    }
+
+    public function test_multi_sell_sells_spare_gear_and_whole_stacks()
+    {
+        $character = Character::factory()->create(['gold' => 0]);
+        $sword = $character->gear()->forceCreate(['equipment_id' => Equipment::factory()->create(['price' => 40, 'level' => 1])->id]);
+        $potion = Item::factory()->create(['price' => 100]);
+        $character->inventory()->create(['item_id' => $potion->id, 'quantity' => 3]);
+        $this->actingAs($character->user);
+
+        $this->post(route('bag.sell'), ['gear' => [$sword->id], 'items' => [$potion->id]])->assertRedirect(route('bag'));
+
+        $percent = config('game.equipment.sell_percent');
+        $this->assertSame($sword->equipment->sellPrice() + intdiv(100 * $percent, 100) * 3, $character->refresh()->gold);
+        $this->assertDatabaseCount('character_equipment', 0);
+        $this->assertDatabaseCount('inventory_items', 0);
+    }
+
+    public function test_multi_sell_refuses_worn_or_foreign_gear()
+    {
+        $character = Character::factory()->create(['gold' => 0]);
+        $worn = $character->gear()->forceCreate(['equipment_id' => Equipment::factory()->create()->id, 'equipped_slot' => 'weapon']);
+        $theirs = Character::factory()->create()->gear()->forceCreate(['equipment_id' => Equipment::factory()->create()->id]);
+        $this->actingAs($character->user);
+
+        $this->post(route('bag.sell'), ['gear' => [$worn->id]])->assertSessionHasErrors('gear');
+        $this->post(route('bag.sell'), ['gear' => [$theirs->id]])->assertSessionHasErrors('gear');
+        $this->post(route('bag.sell'), [])->assertSessionHasErrors('gear');
+
+        $this->assertSame(0, $character->refresh()->gold);
+        $this->assertDatabaseCount('character_equipment', 2);
     }
 }

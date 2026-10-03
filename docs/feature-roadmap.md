@@ -43,6 +43,7 @@ Tick an item when it ships and update its row in the tables below.
 
 **Items and economy**
 
+- [x] Multi-Sell from the Inventory (spare gear and whole item stacks)
 - [ ] Forge: enhance to +12
 - [ ] Forge: crafting and compose
 - [ ] Forge: gems and sockets
