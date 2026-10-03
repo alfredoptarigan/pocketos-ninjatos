@@ -63,15 +63,15 @@ from amf3 import load_compressed          # run from tools/
 table = load_compressed(Path('.../binary/datatable/pharmacyitem.s36042.tab'))
 ```
 
-| Table                                                                                                   | Used for                                                                         |
-| ------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| `pharmacyitem`                                                                                          | Pharmacy items (price, HP/MP/SP restore, stack, icon resource)                   |
-| `singlegatenpc`, `sgategetexp`, `stollgatebossinfo`                                                     | Training Tower: 170 opponents, exp per floor, boss floors                        |
-| `rolebase`                                                                                              | Base stats and aptitudes per avatar id (our growth numbers in `config/game.php`) |
-| `buildnpc`                                                                                              | Building keeper NPC per village (`n11004` = Leaf Village pharmacy)               |
-| `tollgate` → `subtollgate` → `fightmonsterpoint` → `monstergroup`, `normalnpc`                          | Story stages (level 11+), not built yet                                          |
-| `clientskill`, `clientskillid`, `serverskillconfig`, `fightskill`, `fightingbuffconfig`, `effectconfig` | Skills and buffs, not built yet; mechanics are in `lg_SkillDes_<id>`             |
-| `equipitem`, `equipsuit`, `equipconsolidate`, `task`, `compete*`, `petitem`, `card_*`, `home*`, `crop*` | Future features                                                                  |
+| Table                                                                                                   | Used for                                                                                |
+| ------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `pharmacyitem`                                                                                          | Pharmacy items (price, HP/MP/SP restore, stack, icon resource)                          |
+| `singlegatenpc`, `sgategetexp`, `stollgatebossinfo`                                                     | Training Tower: 170 opponents, exp per floor, boss floors                               |
+| `rolebase`                                                                                              | Base stats and aptitudes per avatar id (our growth numbers in `config/game.php`)        |
+| `buildnpc`                                                                                              | Building keeper NPC per village (`n11004` = Leaf Village pharmacy)                      |
+| `tollgate` → `subtollgate` → `fightmonsterpoint` → `monstergroup`, `normalnpc`                          | Story stages (level 11+), not built yet                                                 |
+| `clientskill`, `clientskillid`, `serverskillconfig`, `fightskill`, `fightingbuffconfig`, `effectconfig` | Skills: ids, PreID, MPCostMul in `config/skills.php`; mechanics from `lg_SkillDes_<id>` |
+| `equipitem`, `equipsuit`, `equipconsolidate`, `task`, `compete*`, `petitem`, `card_*`, `home*`, `crop*` | Future features                                                                         |
 
 Full combat findings: `docs/combat-research.md`.
 
@@ -107,8 +107,15 @@ All take the backup path and write into this repo. Run them from the repo root.
 | `tools/extract_tower_assets.py`      | `singlegatenpc`, `sgategetexp`, `language.lg`, `motion/mob`, `npcbackphoto`, `scene/battle`, `ui/fightbg` | `database/data/tower.json`, `public/game-assets/monsters/n<id>/...`, `battle/background.jpg`, `battle/backgrounds/*.jpg`, `music/singlegate.mp3` |
 
 `tools/extract_skill_assets.py [--hd]` copies the skill-panel icons (`clientskill` Type 1,
-`bitmap/icon/skill/`) to `public/game-assets/skills/<skill id>.png` (`--hd`: 4x). Skill rules
-themselves live in `config/game.php` (`skills`), translated from `lg_SkillDes_<id>`.
+`bitmap/icon/skill/`) to `public/game-assets/skills/<skill id>.png` (`--hd`: 4x), and the
+battle status icons picked from `bitmap/icon/buff` (`STATUS_ICONS`) to
+`public/game-assets/statuses/<status>.png`. Skill rules live in `config/skills.php`, translated
+from `lg_SkillDes_<id>` (Indonesian) and the wiki. Gotchas: `clientskill` Type 1 holds the 50
+panel skills (10 passives `28xx`, 40 actives); the panel position is `ClipName`
+(`ClipGrid_<School>_Ahead<tier>`, School `FireE..WindE` = elements, `FireS..WindS` = body, tools,
+seal, illusion, healing); `clientskillid` lists 13 levels per jutsu (id `L*10000+id`) but only
+level 1 has text; `upskillcfg` gives the passive levels (1, 11 … 91). Scroll skills (Amaterasu,
+Izanagi) are not in this backup.
 
 `tools/extract_dungeon_assets.py [--hd]` (run after the outfit extractor) reads `tollgate` →
 `subtollgate` → `fightmonsterpoint`/`monstergroup` → `normalnpc` and writes
@@ -241,6 +248,7 @@ battle/background.jpg                 old 500x300 fallback backdrop
 battle/backgrounds/fightbg_*.jpg      25 battle backdrops (one per 10 tower floors)
 music/maincity1-4.mp3, blackcity.mp3, singlegate.mp3
 skills/<skill id>.png                 jutsu icons
+statuses/<status>.png                 battle status icons
 equipment/<code>.png                  equipment icons
 world/map.png, world/spots/<scene>.png  world map and its clickable regions (world.json)
 fields/<scene>.jpg                    hunting ground backdrops

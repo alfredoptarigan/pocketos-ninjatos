@@ -26,7 +26,7 @@ Tick an item when it ships and update its row in the tables below.
 
 **Combat and PvE**
 
-- [ ] Skill tree and skill upgrades (15 jutsu already learnable)
+- [x] Skill tree and skill upgrades (40 jutsu with all effects, 10 passives, skill points, +1..+12 upgrades, 3 loadout pages; scroll skills are not in the backup)
 - [ ] Ultimate jutsu
 - [x] Dungeons: 17 tollgates (trial, normal, hard), one battle per wave leader, daily runs
 - [ ] Dungeon "Super" difficulty (needs the Abyss Pass item), weekly ranking, end-of-stage card flip
@@ -114,18 +114,18 @@ Tick an item when it ships and update its row in the tables below.
 
 ## Combat and PvE
 
-| Status | Feature                                                          | Original data                                                                                               |
-| ------ | ---------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| ✅     | Training Tower (170 floors)                                      | `singlegatenpc`, `sgategetexp`, `stollgatebossinfo`                                                         |
-| ✅     | Battle replay, jutsu effects and sound                           | `effectconfig`, `movieclip/fighteffect`                                                                     |
-| 🟡     | Skills: 15 jutsu can be learned; skill tree and upgrades missing | `clientskill`, `serverskillconfig`, `upskillcfg`, panels `skilltree`, `skilllearn`                          |
-| ⬜     | Ultimate jutsu                                                   | `clientskill` type 2, folder `dazhao`                                                                       |
-| 🟡     | Dungeons (9 tiered tollgates with sub-stages)                    | `tollgate`, `subtollgate`, `monstergroup`, `fightmonsterpoint`, `movieclip/scene/tollclone`, `ui/tollgate*` |
-| ⬜     | Tailed Beast raids and ranking                                   | `tailbeastnpc`, `taildiffculty`, `tailheroreward`, `tailhonorprize`, `tailhonorreward`, panels `beast*`     |
-| ⬜     | Public field fights (cost energy)                                | `pubfightmonster`, `pubscenefightnpc`, `pubfightbonusrand`                                                  |
-| ⬜     | Task bosses                                                      | `taskbossnpc`                                                                                               |
-| ⬜     | Ninja NPCs (friendship, gifts)                                   | `ninjanpc`, panels `ninjanpc*`                                                                              |
-| ⬜     | Auto battle and auto challenge                                   | `autoattack`, `autoattackcommon`, panels `autoattack*`, `autochallenge`                                     |
+| Status | Feature                                                           | Original data                                                                                               |
+| ------ | ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| ✅     | Training Tower (170 floors)                                       | `singlegatenpc`, `sgategetexp`, `stollgatebossinfo`                                                         |
+| ✅     | Battle replay, jutsu effects and sound                            | `effectconfig`, `movieclip/fighteffect`                                                                     |
+| ✅     | Skills: 40 jutsu, 10 passives, upgrades, loadouts, status effects | `clientskill`, `serverskillconfig`, `upskillcfg`, panels `skilltree`, `skilllearn`                          |
+| ⬜     | Ultimate jutsu                                                    | `clientskill` type 2, folder `dazhao`                                                                       |
+| 🟡     | Dungeons (9 tiered tollgates with sub-stages)                     | `tollgate`, `subtollgate`, `monstergroup`, `fightmonsterpoint`, `movieclip/scene/tollclone`, `ui/tollgate*` |
+| ⬜     | Tailed Beast raids and ranking                                    | `tailbeastnpc`, `taildiffculty`, `tailheroreward`, `tailhonorprize`, `tailhonorreward`, panels `beast*`     |
+| ⬜     | Public field fights (cost energy)                                 | `pubfightmonster`, `pubscenefightnpc`, `pubfightbonusrand`                                                  |
+| ⬜     | Task bosses                                                       | `taskbossnpc`                                                                                               |
+| ⬜     | Ninja NPCs (friendship, gifts)                                    | `ninjanpc`, panels `ninjanpc*`                                                                              |
+| ⬜     | Auto battle and auto challenge                                    | `autoattack`, `autoattackcommon`, panels `autoattack*`, `autochallenge`                                     |
 
 ## World
 
