@@ -1,11 +1,13 @@
-import { Head, router, usePage } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { toast } from 'sonner';
+import CharacterSprite from '@/components/character-sprite';
 import GameWindow from '@/components/game-window';
 import VillageBackdrop from '@/components/village-backdrop';
 import { bonuses, SLOT_LABELS } from '@/lib/gear';
 import { cn } from '@/lib/utils';
 import { village } from '@/routes';
 import { equip, unequip } from '@/routes/character/gear';
+import { index as wardrobe } from '@/routes/outfits';
 import { characterAssets } from '@/types/game';
 
 type Piece = {
@@ -38,6 +40,8 @@ type Props = {
     slots: string[];
     worn: Record<string, Piece>;
     bag: Piece[];
+    /** False while an outfit is worn: outfits have no create-screen portrait. */
+    hasPortrait: boolean;
 };
 
 function send(url: string) {
@@ -52,7 +56,13 @@ function send(url: string) {
     );
 }
 
-export default function CharacterPanel({ stats, slots, worn, bag }: Props) {
+export default function CharacterPanel({
+    stats,
+    slots,
+    worn,
+    bag,
+    hasPortrait,
+}: Props) {
     const { character } = usePage().props;
 
     if (!character) {
@@ -90,20 +100,35 @@ export default function CharacterPanel({ stats, slots, worn, bag }: Props) {
                             <div className="flex items-center gap-2">
                                 {column(slots.slice(0, half))}
                                 <div className="flex w-[150px] flex-col items-center">
-                                    <img
-                                        src={
-                                            characterAssets(character.avatar)
-                                                .portrait
-                                        }
-                                        alt={character.name}
-                                        className="h-[220px] w-auto object-contain drop-shadow-lg"
-                                    />
+                                    {hasPortrait ? (
+                                        <img
+                                            src={
+                                                characterAssets(
+                                                    character.avatar,
+                                                ).portrait
+                                            }
+                                            alt={character.name}
+                                            className="h-[220px] w-auto object-contain drop-shadow-lg"
+                                        />
+                                    ) : (
+                                        <CharacterSprite
+                                            key={character.avatar}
+                                            avatar={character.avatar}
+                                            className="h-[220px] w-[150px]"
+                                        />
+                                    )}
                                     <p className="font-semibold text-amber-200">
                                         {character.name}
                                     </p>
                                     <p className="text-sm text-lime-400">
                                         Level {character.level}
                                     </p>
+                                    <Link
+                                        href={wardrobe()}
+                                        className="game-button mt-1 px-3 py-0.5 text-sm"
+                                    >
+                                        Wardrobe
+                                    </Link>
                                 </div>
                                 {column(slots.slice(half))}
                             </div>

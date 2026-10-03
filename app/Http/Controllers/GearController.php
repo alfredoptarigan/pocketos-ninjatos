@@ -26,6 +26,8 @@ class GearController extends Controller
             'slots' => config('game.equipment.slots'),
             'worn' => $pieces->whereNotNull('equipped_slot')->keyBy('equipped_slot')->map($describe),
             'bag' => $pieces->whereNull('equipped_slot')->values()->map($describe),
+            // Only created avatars have create-screen portraits; outfits show their sprite.
+            'hasPortrait' => $character->outfit_id === null,
         ]);
     }
 

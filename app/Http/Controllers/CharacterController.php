@@ -37,6 +37,7 @@ class CharacterController extends Controller
         $request->user()->character()->make($request->validated())
             ->forceFill([
                 'gold' => config('game.starting_gold'),
+                'coupons' => config('game.starting_coupons'),
                 'village' => config('game.home_village'),
             ])
             ->save();

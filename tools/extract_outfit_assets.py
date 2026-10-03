@@ -1,0 +1,114 @@
+#!/usr/bin/env python3
+"""Extract the wearable outfits (Naruto and Bleach characters) from the Pockie Ninja backup.
+
+Usage: python3 tools/extract_outfit_assets.py <path-to-game-pockieninja> [--hd]
+--hd upscales the art 2x with Real-ESRGAN (see tools/upscale.py).
+
+Reads avataritem (one +0 item per outfit: sex, ItemColor) and the English names
+in keyvaluetable/language, and writes database/data/outfits.json (OutfitSeeder)
+plus face.png and motions.{png,json} under public/game-assets/characters/<sex>_<id>/
+for every outfit with art. The 18 creatable avatars are outfits too. Output is
+gitignored: the source art is copyrighted and stays local.
+"""
+
+from __future__ import annotations
+
+import json
+import re
+import shutil
+import sys
+from pathlib import Path
+
+from amf3 import load_compressed
+from extract_item_assets import latest_table, number, rows
+from motion import find_motions, write_motion_sheet
+from upscale import available as upscaler_available
+from upscale import upscale_file
+
+SOURCE = 'apache/source'
+ROOT = Path(__file__).resolve().parent.parent
+ART_OUT = ROOT / 'public' / 'game-assets' / 'characters'
+DATA_OUT = ROOT / 'database' / 'data' / 'outfits.json'
+HD_SCALE = 2
+
+# Original ItemColor -> rarity. Outfit ids above this are the +1..+N upgrades.
+RARITIES = {0: 'grey', 1: 'blue', 2: 'orange'}
+LAST_BASE_OUTFIT = 100
+# The data marks Konan grey, but the original sold her in the S-rank (orange) pot.
+RARITY_OVERRIDES = {'1_68': 'orange'}
+# Indonesian leftovers in the English build.
+RENAMES = {'Kostum Natal': 'Christmas', ' Kostum': ''}
+
+
+def outfit_name(label: str) -> str:
+    """'<font color=..>Hatake Kakashi ＋0</font>' -> 'Hatake Kakashi'."""
+    name = re.sub(r'<[^>]+>', '', label)
+    name = re.sub(r'\s*[＋+]\d+\s*$', '', name)
+    for indonesian, english in RENAMES.items():
+        name = name.replace(indonesian, english)
+    return name.strip()
+
+
+def outfits(avatar_items: list[dict], language: dict) -> list[dict]:
+    """Every base (+0) outfit with an English name, ordered by id."""
+    found = []
+    for item in avatar_items:
+        avatar_id = number(item['AvatarID'])
+        name = outfit_name(language.get(f'lg_avatar{avatar_id}', ''))
+        if not 1 <= avatar_id <= LAST_BASE_OUTFIT or not name:
+            continue
+        key = f"{number(item['Sex'])}_{avatar_id}"
+        found.append({
+            'key': key,
+            'name': name,
+            'sex': number(item['Sex']),
+            'rarity': RARITY_OVERRIDES.get(key, RARITIES[number(item['ItemColor'])]),
+        })
+    return sorted(found, key=lambda outfit: int(outfit['key'].split('_')[1]))
+
+
+def extract_art(source: Path, key: str, scale: int) -> bool:
+    """Write face and motions for one outfit; False when the backup has no art for it."""
+    avatar_id = key.split('_')[1]
+    faces = sorted((source / 'bitmap/userfaceavatar/people').glob(f'userface_{key}_role*.png'))
+    try:
+        motions = find_motions(source / f'movieclip/motion/people/people_{avatar_id}', f'motion_{key}_{{action}}_role*.swf')
+    except FileNotFoundError:
+        return False
+    if not faces:
+        return False
+
+    out = ART_OUT / key
+    out.mkdir(parents=True, exist_ok=True)
+    try:
+        write_motion_sheet(key, motions, out, scale)
+    except ValueError as error:  # a few motion files are vector-only stubs
+        print(f'skipped {key}: {error}')
+        return False
+    shutil.copyfile(faces[0], out / 'face.png')
+    if scale > 1:
+        upscale_file(out / 'face.png', scale)
+    return True
+
+
+def main() -> None:
+    if len(sys.argv) not in (2, 3) or sys.argv[2:] not in ([], ['--hd']):
+        sys.exit(__doc__)
+    scale = HD_SCALE if '--hd' in sys.argv else 1
+    if scale > 1 and not upscaler_available():
+        sys.exit('Real-ESRGAN not found; see tools/upscale.py.')
+    source = Path(sys.argv[1]).expanduser() / SOURCE
+    binary = source / 'binary'
+
+    avatar_items = rows(load_compressed(latest_table(binary / 'datatable', 'avataritem')))
+    languages = sorted((binary / 'keyvaluetable').glob('language.s*.kv'), key=lambda p: int(p.name.split('.s')[1].split('.')[0]))
+    language = load_compressed(languages[-1])
+
+    kept = [outfit for outfit in outfits(avatar_items, language) if extract_art(source, outfit['key'], scale)]
+    DATA_OUT.parent.mkdir(parents=True, exist_ok=True)
+    DATA_OUT.write_text(json.dumps(kept, indent=1, ensure_ascii=False))
+    print(f'{len(kept)} outfits -> {DATA_OUT.relative_to(ROOT)}')
+
+
+if __name__ == '__main__':
+    main()

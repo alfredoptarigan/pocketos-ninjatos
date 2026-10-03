@@ -73,7 +73,8 @@ class TowerTest extends TestCase
         $this->assertSame(2, $character->level); // 130 exp > 120 needed for level 2
         $this->assertSame(10, $character->exp);
         $this->assertSame(config('game.tower.gold_base') + config('game.tower.gold_per_floor'), $character->gold);
-        $this->assertEquals(['exp' => 130, 'gold' => 25, 'levelUp' => true, 'firstClear' => true, 'drop' => null], $battle->rewards);
+        $this->assertSame(config('game.tower.coupons_per_first_clear'), $character->coupons);
+        $this->assertEquals(['exp' => 130, 'gold' => 25, 'coupons' => 1, 'levelUp' => true, 'firstClear' => true, 'drop' => null], $battle->rewards);
     }
 
     public function test_a_first_clear_drops_the_best_gear_the_opponent_level_allows()

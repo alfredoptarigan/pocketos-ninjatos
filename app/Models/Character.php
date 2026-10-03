@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
@@ -20,12 +21,15 @@ use Illuminate\Support\Carbon;
  * @property int $user_id
  * @property string $name
  * @property string $avatar Asset key "<sex>_<id>" from config('game.avatars')
+ * @property int|null $outfit_id Worn outfit; null wears the avatar
+ * @property-read Outfit|null $outfit
  * @property int $level
  * @property int $exp Experience into the current level
  * @property int|null $hp Health at vitals_at; null means full
  * @property int|null $mp Chakra at vitals_at; null means full
  * @property Carbon|null $vitals_at
  * @property int $gold
+ * @property int $coupons Gift coupons, spent at the Wishing Pot
  * @property string $village Key of config('game.villages')
  * @property int $tower_floor Highest Training Tower floor cleared
  * @property list<string> $skills Learned jutsu ids (config('game.skills'))
@@ -85,6 +89,42 @@ class Character extends Model
     public function wornGear(): HasMany
     {
         return $this->gear()->whereNotNull('equipped_slot');
+    }
+
+    /**
+     * The outfit worn over the created avatar, if any.
+     *
+     * @return BelongsTo<Outfit, $this>
+     */
+    public function outfit(): BelongsTo
+    {
+        return $this->belongsTo(Outfit::class);
+    }
+
+    /**
+     * The wardrobe: outfits drawn from the Wishing Pot.
+     *
+     * @return BelongsToMany<Outfit, $this>
+     */
+    public function outfits(): BelongsToMany
+    {
+        return $this->belongsToMany(Outfit::class, 'character_outfits')->withTimestamps();
+    }
+
+    /**
+     * 0 male, 1 female: the first part of the avatar key.
+     */
+    public function sex(): int
+    {
+        return (int) explode('_', $this->avatar)[0];
+    }
+
+    /**
+     * Asset key the ninja is drawn with: the worn outfit, else the created avatar.
+     */
+    public function look(): string
+    {
+        return $this->outfit->key ?? $this->avatar;
     }
 
     /**
@@ -171,7 +211,7 @@ class Character extends Model
 
         return [
             'name' => $this->name,
-            'avatar' => $this->avatar,
+            'avatar' => $this->look(),
             'level' => $this->level,
             'exp' => $this->exp,
             'exp_to_next' => Leveling::expToNext($this->level),
@@ -180,6 +220,7 @@ class Character extends Model
             'mp' => $this->currentMp(),
             'max_mp' => $stats->maxMp,
             'gold' => $this->gold,
+            'coupons' => $this->coupons,
             'village' => $this->village,
         ];
     }

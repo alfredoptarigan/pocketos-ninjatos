@@ -1,0 +1,179 @@
+import { Head, Link, router, usePage } from '@inertiajs/react';
+import { Ticket } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
+import CharacterSprite from '@/components/character-sprite';
+import GameWindow from '@/components/game-window';
+import VillageBackdrop from '@/components/village-backdrop';
+import { cn } from '@/lib/utils';
+import { village } from '@/routes';
+import { index as wardrobe } from '@/routes/outfits';
+import { draw } from '@/routes/wish-pot';
+import { RARITY_BORDER, RARITY_TEXT } from '@/types/game';
+import type { Outfit, Rarity } from '@/types/game';
+
+type Pot = {
+    key: string;
+    name: string;
+    price: number;
+    /** rarity => weight */
+    odds: Partial<Record<Rarity, number>>;
+};
+
+type Drawn = { outfit: Outfit; duplicate: boolean; gold: number };
+
+function oddsText(odds: Pot['odds']): string {
+    const total = Object.values(odds).reduce((sum, weight) => sum + weight, 0);
+
+    return Object.entries(odds)
+        .map(
+            ([rarity, weight]) =>
+                `${rarity} ${Math.round((weight * 100) / total)}%`,
+        )
+        .join(' · ');
+}
+
+export default function WishPot({ pots }: { pots: Pot[] }) {
+    const { character } = usePage().props;
+    const [drawn, setDrawn] = useState<Drawn | null>(null);
+    const [opening, setOpening] = useState<string | null>(null);
+
+    useEffect(
+        () =>
+            router.on('flash', (event) => {
+                const flash = (event as CustomEvent).detail?.flash;
+
+                if (flash?.drawn) {
+                    setDrawn(flash.drawn as Drawn);
+                }
+            }),
+        [],
+    );
+
+    const open = (pot: Pot) =>
+        router.post(
+            draw(pot.key).url,
+            {},
+            {
+                preserveScroll: true,
+                onStart: () => setOpening(pot.key),
+                onFinish: () => setOpening(null),
+                onError: (errors) =>
+                    toast.error(errors.coupons ?? 'The pot would not open.'),
+            },
+        );
+
+    return (
+        <>
+            <Head title="Lucky Pot" />
+            <VillageBackdrop>
+                <GameWindow title="Lucky Pot" closeHref={village().url}>
+                    <div className="grid gap-6 md:grid-cols-[220px_1fr]">
+                        <Reveal drawn={drawn} />
+
+                        <div className="flex flex-col gap-3">
+                            <ul
+                                aria-label="Wishing Pots"
+                                className="flex flex-col gap-2"
+                            >
+                                {pots.map((pot) => (
+                                    <li
+                                        key={pot.key}
+                                        className="flex flex-wrap items-center gap-3 rounded-md border border-amber-900/80 bg-slate-950/60 p-3"
+                                    >
+                                        <div className="min-w-40 flex-1">
+                                            <p className="font-semibold text-amber-200">
+                                                {pot.name}
+                                            </p>
+                                            <p className="text-xs text-slate-400 capitalize">
+                                                {oddsText(pot.odds)}
+                                            </p>
+                                        </div>
+                                        <span className="flex items-center gap-1 text-sm text-rose-300">
+                                            <Ticket className="size-4" />
+                                            {pot.price}
+                                        </span>
+                                        <button
+                                            type="button"
+                                            onClick={() => open(pot)}
+                                            disabled={
+                                                opening !== null ||
+                                                (character?.coupons ?? 0) <
+                                                    pot.price
+                                            }
+                                            className="game-button min-w-20 px-4 py-1"
+                                        >
+                                            {opening === pot.key
+                                                ? 'Opening…'
+                                                : 'Open'}
+                                        </button>
+                                    </li>
+                                ))}
+                            </ul>
+
+                            <div className="flex items-center justify-between text-sm">
+                                <Link
+                                    href={wardrobe()}
+                                    className="game-button px-3 py-0.5"
+                                >
+                                    Wardrobe
+                                </Link>
+                                <p className="flex items-center gap-2 font-semibold text-rose-300">
+                                    <Ticket className="size-4" />
+                                    {character?.coupons.toLocaleString(
+                                        'en-US',
+                                    )}{' '}
+                                    gift coupons
+                                </p>
+                            </div>
+                            <p className="text-xs text-slate-400">
+                                Earn gift coupons by clearing new Training Tower
+                                floors. A duplicate outfit pays out gold
+                                instead.
+                            </p>
+                        </div>
+                    </div>
+                </GameWindow>
+            </VillageBackdrop>
+        </>
+    );
+}
+
+function Reveal({ drawn }: { drawn: Drawn | null }) {
+    if (!drawn) {
+        return (
+            <div className="flex h-[260px] items-center justify-center rounded-md border border-dashed border-amber-900/80 bg-slate-950/40 p-4 text-center text-sm text-slate-400">
+                Open a pot to call a new outfit.
+            </div>
+        );
+    }
+
+    const { outfit } = drawn;
+
+    return (
+        <div
+            aria-live="polite"
+            className={cn(
+                'flex flex-col items-center rounded-md border-2 bg-slate-950/60 p-2',
+                RARITY_BORDER[outfit.rarity],
+            )}
+        >
+            <CharacterSprite
+                key={outfit.key}
+                avatar={outfit.key}
+                className="h-[200px] w-full"
+            />
+            <p className={cn('font-semibold', RARITY_TEXT[outfit.rarity])}>
+                {outfit.name}
+            </p>
+            <p className="text-xs text-slate-300 capitalize">
+                {outfit.rarity} · +{outfit.bonus}% stats
+            </p>
+            {drawn.duplicate && (
+                <p className="text-xs text-amber-300">
+                    Already owned: +{drawn.gold.toLocaleString('en-US')} gold
+                </p>
+            )}
+        </div>
+    );
+}

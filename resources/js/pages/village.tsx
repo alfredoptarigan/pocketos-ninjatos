@@ -15,6 +15,7 @@ import { show as equipmentShop } from '@/routes/equipment-shop';
 import { show as pharmacy } from '@/routes/pharmacy';
 import { show as tower } from '@/routes/tower';
 import { travel } from '@/routes/village';
+import { show as wishPot } from '@/routes/wish-pot';
 import { show as world } from '@/routes/world';
 
 type VillageSummary = { id: string; name: string };
@@ -30,6 +31,7 @@ const BUILDING_ROUTES: Record<string, () => { url: string }> = {
     equip: equipmentShop,
     // The original single-gate tower is entered from the hall.
     hall: tower,
+    RandPot: wishPot,
 };
 
 export default function Village({ village, villages }: Props) {

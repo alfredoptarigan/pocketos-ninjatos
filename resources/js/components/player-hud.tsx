@@ -37,8 +37,13 @@ export default function PlayerHud({ character }: { character: Character }) {
                     color="bg-emerald-500"
                     className="h-2.5"
                 />
-                <p className="text-xs text-amber-300">
-                    {character.gold.toLocaleString('en-US')} gold
+                <p className="flex justify-between text-xs">
+                    <span className="text-amber-300">
+                        {character.gold.toLocaleString('en-US')} gold
+                    </span>
+                    <span className="text-rose-300">
+                        {character.coupons.toLocaleString('en-US')} coupons
+                    </span>
                 </p>
             </div>
         </div>

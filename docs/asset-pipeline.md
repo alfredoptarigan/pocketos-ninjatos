@@ -110,6 +110,13 @@ All take the backup path and write into this repo. Run them from the repo root.
 `bitmap/icon/skill/`) to `public/game-assets/skills/<skill id>.png` (`--hd`: 4x). Skill rules
 themselves live in `config/game.php` (`skills`), translated from `lg_SkillDes_<id>`.
 
+`tools/extract_outfit_assets.py [--hd]` reads `avataritem` (base +0 outfits, ids 1-100: sex and
+`ItemColor` 0/1/2 = grey/blue/orange) and English names `lg_avatar<id>` from
+`keyvaluetable/language`, and writes `database/data/outfits.json` (`OutfitSeeder`) plus
+`face.png` and `motions.*` under `public/game-assets/characters/<sex>_<id>/` (no portrait:
+only create-screen avatars have one). 74 outfits have art; outfits without motion bitmaps
+(e.g. `0_87`) are skipped. Konan is forced to orange (the data says grey).
+
 `tools/extract_equipment_assets.py [--hd]` reads `equipitem` and writes the 126 plain
 equipment tiers (listed with English names in its `NAMES`; set pieces and event gear are
 skipped) to `database/data/equipment.json` (`EquipmentSeeder`) and icons to

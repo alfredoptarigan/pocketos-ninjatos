@@ -6,10 +6,12 @@ use App\Http\Controllers\CharacterController;
 use App\Http\Controllers\EquipmentShopController;
 use App\Http\Controllers\FieldController;
 use App\Http\Controllers\GearController;
+use App\Http\Controllers\OutfitController;
 use App\Http\Controllers\PharmacyController;
 use App\Http\Controllers\SkillController;
 use App\Http\Controllers\TowerController;
 use App\Http\Controllers\VillageController;
+use App\Http\Controllers\WishPotController;
 use App\Http\Controllers\WorldController;
 use App\Http\Middleware\EnsurePlayerHasCharacter;
 use Illuminate\Support\Facades\Route;
@@ -28,6 +30,11 @@ Route::middleware(['auth'])->group(function () {
         Route::get('character', [GearController::class, 'show'])->name('character.show');
         Route::post('character/gear/{gear}/equip', [GearController::class, 'equip'])->name('character.gear.equip');
         Route::post('character/gear/{gear}/unequip', [GearController::class, 'unequip'])->name('character.gear.unequip');
+        Route::get('outfits', [OutfitController::class, 'index'])->name('outfits.index');
+        Route::post('outfits/take-off', [OutfitController::class, 'takeOff'])->name('outfits.take-off');
+        Route::post('outfits/{outfit}/wear', [OutfitController::class, 'wear'])->name('outfits.wear');
+        Route::get('wish-pot', [WishPotController::class, 'show'])->name('wish-pot.show');
+        Route::post('wish-pot/{pot}/draw', [WishPotController::class, 'draw'])->name('wish-pot.draw');
         Route::get('bag', [BagController::class, 'show'])->name('bag');
         Route::post('bag/use', [BagController::class, 'use'])->name('bag.use');
 

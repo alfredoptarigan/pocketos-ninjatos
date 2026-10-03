@@ -5,7 +5,7 @@ namespace App\Game;
 use App\Models\Character;
 
 /**
- * A character's battle stats, derived from level, avatar aptitudes and worn gear.
+ * A character's battle stats, derived from level, avatar aptitudes, worn gear and outfit.
  */
 final readonly class CombatStats
 {
@@ -33,13 +33,16 @@ final readonly class CombatStats
         $gear = $character->exists
             ? $character->loadMissing('wornGear.equipment')->wornGear->pluck('equipment')
             : collect();
+        // A worn outfit raises health, attack and defense by its rarity's percentage.
+        $percent = 100 + ($character->outfit?->bonusPercent() ?? 0);
+        $boost = fn (int $value) => (int) round($value * $percent / 100);
 
         return new self(
-            maxHp: $combat['base_hp'] + $levels * $growth['hp'] + $gear->sum('max_hp'),
+            maxHp: $boost($combat['base_hp'] + $levels * $growth['hp'] + $gear->sum('max_hp')),
             maxMp: $combat['base_mp'] + $levels * $combat['mp_per_level'],
-            minAttack: $minAttack + $gear->sum('min_attack'),
-            maxAttack: (int) round($minAttack * $combat['max_attack_percent'] / 100) + $gear->sum('max_attack'),
-            defense: (int) round($levels * $growth['defense']) + $gear->sum('defense'),
+            minAttack: $boost($minAttack + $gear->sum('min_attack')),
+            maxAttack: $boost((int) round($minAttack * $combat['max_attack_percent'] / 100) + $gear->sum('max_attack')),
+            defense: $boost((int) round($levels * $growth['defense']) + $gear->sum('defense')),
             dodge: $growth['dodge'],
             crit: $combat['crit'] + $gear->sum('crit'),
             critMultiplier: $combat['crit_multiplier'],

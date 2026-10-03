@@ -179,6 +179,40 @@ return [
         'gold_base' => 20,
         'gold_per_floor' => 5,
         'replay_exp_percent' => 25,
+        // Gift coupons for a first clear, spent at the Wishing Pot.
+        'coupons_per_first_clear' => 1,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Outfits and the Wishing Pot
+    |--------------------------------------------------------------------------
+    |
+    | Outfits (Naruto/Bleach characters) come from tools/extract_outfit_assets.py
+    | with the original rarity: grey < blue < orange. Wearing one changes the
+    | ninja's look and adds bonus_percent to max health, attack and defense;
+    | level growth still follows the created avatar.
+    |
+    | Pots cost gift coupons and roll a rarity by weight, then a random outfit
+    | of that rarity for the ninja's sex. The colour pots are the original
+    | Exotic Wishing Pots; the Ninja Wishing Pot is our mixed-odds pot.
+    |
+    */
+
+    'starting_coupons' => 10,
+
+    'outfits' => [
+        'bonus_percent' => ['grey' => 0, 'blue' => 5, 'orange' => 10],
+        // Drawing an outfit the ninja already owns pays this much gold instead.
+        'duplicate_gold' => ['grey' => 100, 'blue' => 400, 'orange' => 1500],
+        // Event and mascot outfits never come out of a pot.
+        'event_only' => ['1_86', '0_88', '1_89', '1_90', '0_98'],
+        'pots' => [
+            'ninja' => ['name' => 'Ninja Wishing Pot', 'price' => 10, 'odds' => ['grey' => 70, 'blue' => 25, 'orange' => 5]],
+            'grey' => ['name' => 'Grey Outfit Wishing Pot', 'price' => 5, 'odds' => ['grey' => 1]],
+            'blue' => ['name' => 'Blue Outfit Wishing Pot', 'price' => 25, 'odds' => ['blue' => 1]],
+            'orange' => ['name' => 'Orange Outfit Wishing Pot', 'price' => 100, 'odds' => ['orange' => 1]],
+        ],
     ],
 
     /*
