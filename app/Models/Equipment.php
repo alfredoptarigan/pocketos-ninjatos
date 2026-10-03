@@ -23,10 +23,11 @@ use Illuminate\Support\Carbon;
  * @property int $defense
  * @property int $max_hp
  * @property int $crit Critical chance bonus, in percent
+ * @property string|null $look How a weapon looks in hand, e.g. "sharp20" (weapon motions)
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['code', 'name', 'slot', 'level', 'icon', 'price', 'min_attack', 'max_attack', 'defense', 'max_hp', 'crit'])]
+#[Fillable(['code', 'name', 'slot', 'level', 'icon', 'price', 'min_attack', 'max_attack', 'defense', 'max_hp', 'crit', 'look'])]
 class Equipment extends Model
 {
     /** @use HasFactory<EquipmentFactory> */

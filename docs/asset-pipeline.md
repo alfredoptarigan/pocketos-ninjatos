@@ -144,6 +144,15 @@ only create-screen avatars have one). 74 outfits have art; outfits without motio
 Upgrades +1..+N are other `avataritem` rows (`AvatarID = level * 100 + base`, `UseLevel`
 3 per step); the backup has no upgrade cost or stats, so those are ours (`outfits.upgrade`).
 
+`tools/extract_weapon_assets.py [--hd]` (after the outfit and equipment extractors) writes the
+weapon held in battle: `motion/weapon/people_<id>/<action>/motion_<key>_<look>_<action>_weapon.swf`
+is an overlay drawn tick for tick over the body motion from the same origin, so it lands in
+`weapons/<outfit key>/<look>/motions.*` with the same sheet format. The look comes from the
+weapon's icon (`Icon_Weapon_Sharp20` = `sharp20`, `equipment.look`). Each outfit only has art for
+its own class (`rolebase.Popsinger`: 1 blunt, 2 sharp, 4 gloves, 7 all, keyed by avatar id);
+another class's weapon is not drawn. There is no weapon art for idle (1) or dodge (2), and
+`0_88`, `1_86`, `1_89` only ship vector stubs. `people_59` spells gloves `glove`.
+
 `tools/extract_progression_data.py` (character progression, no art) writes
 `database/data/avatar_collection.json` from `avatarcollect` (Strength/Agility/Stamina per
 recorded outfit, keyed by outfit id; `OutfitSeeder` merges it into `outfits.collection`).
@@ -225,6 +234,7 @@ python3 tools/extract_ui_assets.py $B        # needs Java + JPEXS
 python3 tools/extract_tower_assets.py $B
 python3 tools/extract_skill_assets.py $B
 python3 tools/extract_equipment_assets.py $B
+python3 tools/extract_weapon_assets.py $B  # after outfits + equipment
 python3 tools/extract_world_assets.py $B     # needs Java + JPEXS
 python3 tools/extract_effect_assets.py $B    # needs Java + JPEXS
 php artisan migrate

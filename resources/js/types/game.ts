@@ -76,6 +76,11 @@ export function characterAssets(avatar: string) {
     };
 }
 
+/** The weapon a ninja holds in battle, drawn over their motions (only for their outfit's class). */
+export function weaponMotions(avatar: string, look: string): string {
+    return `/game-assets/weapons/${avatar}/${look}/motions.json`;
+}
+
 export function isFemaleAvatar(avatar: string): boolean {
     return avatar.startsWith('1_');
 }

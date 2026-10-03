@@ -36,6 +36,23 @@ class TowerTest extends TestCase
         $this->get(route('tower.show'))->assertRedirect(route('character.create'));
     }
 
+    public function test_the_battle_log_shows_the_weapon_the_ninja_holds()
+    {
+        $character = Character::factory()->create();
+        $sword = Equipment::factory()->create(['look' => 'sharp20']);
+        $character->gear()->forceCreate(['equipment_id' => $sword->id, 'equipped_slot' => 'weapon']);
+        $this->weakFloor(1);
+        $this->actingAs($character->user);
+
+        $this->post(route('tower.fight', 1));
+        $character->gear()->update(['equipped_slot' => null]);
+        $this->post(route('tower.fight', 1));
+
+        [$armed, $bare] = Battle::orderBy('id')->get();
+        $this->assertSame('sharp20', $armed->log['fighters'][0]['weapon']);
+        $this->assertNull($bare->log['fighters'][0]['weapon']);
+    }
+
     public function test_tower_lists_the_floors_and_the_players_progress()
     {
         $character = Character::factory()->create(['tower_floor' => 1]);

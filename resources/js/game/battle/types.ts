@@ -22,6 +22,8 @@ export type FighterInfo = {
     mp?: number;
     maxMp?: number;
     avatar?: string;
+    // The look of the weapon in hand, e.g. "sharp20"; null when unarmed.
+    weapon?: string | null;
     level?: number;
     // Learned jutsu ids; missing on battles recorded before jutsu existed.
     skills?: string[];

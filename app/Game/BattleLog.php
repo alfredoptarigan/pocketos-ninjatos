@@ -18,7 +18,7 @@ final class BattleLog
     public static function fighters(Character $ninja, Combatant $player, array $before, TowerFloor|FieldMonster|DungeonMonster $foe, Combatant $opponent): array
     {
         return [
-            [...$player->toArray(), 'avatar' => $ninja->look(), ...$before],
+            [...$player->toArray(), 'avatar' => $ninja->look(), 'weapon' => $ninja->weaponLook(), ...$before],
             [
                 ...$opponent->toArray(),
                 'level' => $foe->level,

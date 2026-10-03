@@ -38,6 +38,8 @@ SLOTS = {
     'Girdle': 'belt', 'Shoes': 'shoes', 'Amulet': 'amulet', 'Ring': 'ring',
 }
 
+WEAPON_ICON = 'Icon_Weapon_'
+
 # Our balance for slots without fixed stats in the data.
 AMULET_HP_PER_LEVEL = 5
 AMULET_HP_BASE = 20
@@ -105,6 +107,8 @@ def piece(row: dict, icon: str) -> dict:
         'defense': number(row['Defense']),
         'max_hp': level * AMULET_HP_PER_LEVEL + AMULET_HP_BASE if slot == 'amulet' else 0,
         'crit': 1 + level // RING_CRIT_PER_LEVELS if slot == 'ring' else 0,
+        # 'Icon_Weapon_Sharp20' -> 'sharp20', the weapon motions drawn in hand.
+        'look': row['ResourceID'].removeprefix(WEAPON_ICON).lower() if slot == 'weapon' else None,
     }
 
 

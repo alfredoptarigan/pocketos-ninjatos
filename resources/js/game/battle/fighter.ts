@@ -1,6 +1,6 @@
 import { AnimatedSprite, Assets, Container, Sprite, Texture } from 'pixi.js';
 import type { Spritesheet } from 'pixi.js';
-import { characterAssets } from '@/types/game';
+import { characterAssets, weaponMotions } from '@/types/game';
 import type { FighterInfo } from './types';
 
 // Pixi's ticker runs at 60 updates per second; SWF motions have their own fps.
@@ -23,6 +23,7 @@ export class Fighter {
         readonly info: FighterInfo,
         private readonly body: AnimatedSprite | Sprite,
         private readonly sheet: Spritesheet | null,
+        private readonly weapon: Weapon | null = null,
     ) {
         body.scale.set(
             sheet ? MOTION_SCALE : PORTRAIT_HEIGHT / body.texture.height,
@@ -33,6 +34,11 @@ export class Fighter {
             body.scale.x *= -1;
         }
         this.view.addChild(body);
+
+        if (weapon) {
+            weapon.sprite.scale.copyFrom(body.scale);
+            this.view.addChild(weapon.sprite);
+        }
     }
 
     /** The player uses their avatar's motions; opponents use monster motions or a boss portrait. */
@@ -50,7 +56,12 @@ export class Fighter {
                 updateAnchor: true,
             });
 
-            return new Fighter(info, body, sheet);
+            const weapon =
+                info.avatar && info.weapon
+                    ? await loadWeapon(info.avatar, info.weapon)
+                    : null;
+
+            return new Fighter(info, body, sheet, weapon);
         }
 
         const portrait = info.art?.type === 'portrait' ? info.art.portrait : '';
@@ -87,6 +98,7 @@ export class Fighter {
         body.textures = this.sheet.animations[name];
         body.animationSpeed = (fps / TICKER_FPS) * speed;
         body.loop = loop;
+        this.playWeapon(name, body);
 
         return new Promise((resolve) => {
             body.onComplete = () => resolve();
@@ -98,24 +110,70 @@ export class Fighter {
         });
     }
 
+    /** The weapon follows the body tick for tick; idle and dodge have no weapon art. */
+    private playWeapon(action: string, body: AnimatedSprite): void {
+        if (!this.weapon) {
+            return;
+        }
+
+        const { sprite, sheet } = this.weapon;
+        const textures = sheet.animations[action];
+        sprite.visible = Boolean(textures);
+
+        if (textures) {
+            sprite.textures = textures;
+            sprite.animationSpeed = body.animationSpeed;
+            sprite.loop = body.loop;
+            sprite.gotoAndPlay(0);
+        }
+    }
+
     /** Brief red flash when hit. */
     flash(): void {
-        this.body.tint = 0xff6b6b;
-        setTimeout(() => (this.body.tint = 0xffffff), 140);
+        this.view.tint = 0xff6b6b;
+        setTimeout(() => (this.view.tint = 0xffffff), 140);
     }
 
     fadeOut(): void {
-        this.body.alpha = 0.35;
+        this.view.alpha = 0.35;
     }
 
     /** Undo a knock-out (a revive jutsu). */
     restore(): void {
-        this.body.alpha = 1;
+        this.view.alpha = 1;
     }
 
     get height(): number {
         return this.body.height;
     }
+}
+
+type Weapon = { sprite: AnimatedSprite; sheet: Spritesheet };
+
+/** Null when the outfit has no art for this weapon (another class): the ninja fights bare-handed. */
+async function loadWeapon(
+    avatar: string,
+    look: string,
+): Promise<Weapon | null> {
+    const url = weaponMotions(avatar, look);
+    const found = await fetch(url, { method: 'HEAD' }).then(
+        (response) => response.ok,
+        () => false,
+    );
+
+    if (!found) {
+        return null;
+    }
+
+    const sheet = await Assets.load<Spritesheet>(url);
+
+    return {
+        sheet,
+        sprite: new AnimatedSprite({
+            textures: sheet.animations.stance,
+            updateAnchor: true,
+        }),
+    };
 }
 
 let vignetteTexture: Texture | null = null;

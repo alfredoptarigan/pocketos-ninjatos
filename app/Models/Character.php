@@ -294,6 +294,14 @@ class Character extends Model
     }
 
     /**
+     * The look of the weapon in hand, e.g. "sharp20"; null when unarmed.
+     */
+    public function weaponLook(): ?string
+    {
+        return $this->wornGear()->where('equipped_slot', 'weapon')->first()?->equipment->look;
+    }
+
+    /**
      * @return HasMany<Battle, $this>
      */
     public function battles(): HasMany
