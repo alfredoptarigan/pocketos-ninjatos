@@ -31,7 +31,7 @@ import tempfile
 from pathlib import Path
 
 from amf3 import load_compressed
-from swf import read_swf, symbol_classes
+from swf import black_backdrops, frames_showing, read_swf, symbol_classes
 
 OUT_DIR = Path(__file__).resolve().parent.parent / 'public' / 'game-assets' / 'effects'
 URL_DIR = '/game-assets/effects'
@@ -42,6 +42,8 @@ PANEL_SKILL = '1'  # clientskill Type 1 = skill panel
 HEADER_ROW = 1
 MAX_SHEET_WIDTH = 4096
 HD_ZOOM = 2
+# Original stage-wide black shapes (Assassinate darkens the screen) only float as a box here.
+MIN_BACKDROP_WIDTH = 400
 FIGHT_EFFECT = re.compile(r'^FightEffect_(\d{4})(?:_\w+)?$')
 
 
@@ -115,12 +117,26 @@ def origin_of(svg: Path, png_size: tuple[int, int]) -> tuple[float, float]:
     return x + (png_size[0] - width) / 2, y + (png_size[1] - height) / 2
 
 
-def write_sheet(key: str, frames_dir: Path, svg_dir: Path, zoom: float, fps: float) -> None:
+def without_black(image):
+    """Turn black into transparency (brightness becomes alpha), so art drawn over a black backdrop keeps its light."""
+    from PIL import Image
+
+    data = bytearray(image.tobytes())
+    for i in range(0, len(data), 4):
+        light = max(data[i:i + 3])
+        if light:
+            data[i:i + 3] = bytes(value * 255 // light for value in data[i:i + 3])
+        data[i + 3] = data[i + 3] * light // 255
+    return Image.frombytes('RGBA', image.size, bytes(data))
+
+
+def write_sheet(key: str, frames_dir: Path, svg_dir: Path, zoom: float, fps: float, backdrop: list[bool]) -> None:
     """Pack trimmed frames shelf-style; every frame keeps the full-size anchor at the SWF origin."""
     from PIL import Image
 
     paths = sorted(frames_dir.glob('*.png'), key=lambda p: int(p.stem))
     images = [Image.open(path).convert('RGBA') for path in paths]
+    images = [without_black(image) if index < len(backdrop) and backdrop[index] else image for index, image in enumerate(images)]
     width, height = images[0].size
     ox, oy = origin_of(svg_dir / '1.svg', (width, height))
     # Halve huge effects until the sheet fits a 4096 texture.
@@ -180,9 +196,11 @@ def main() -> None:
         swf = read_swf(row['swf'])
         with tempfile.TemporaryDirectory() as tmp:
             out = Path(tmp)
-            render(java, ffdec, row['swf'], symbol_classes(swf)[SYMBOL], zoom, out)
+            symbol = symbol_classes(swf)[SYMBOL]
+            render(java, ffdec, row['swf'], symbol, zoom, out)
             sprite = next((out / 'png').glob('DefineSprite_*')).name
-            write_sheet(row['key'], out / 'png' / sprite, out / 'svg' / sprite, zoom, swf.frame_rate)
+            backdrop = frames_showing(swf, symbol, black_backdrops(swf, MIN_BACKDROP_WIDTH))
+            write_sheet(row['key'], out / 'png' / sprite, out / 'svg' / sprite, zoom, swf.frame_rate, backdrop)
         index.setdefault(row['skill'], []).append({
             'sheet': f"{URL_DIR}/{row['key']}.json",
             'type': row['type'],

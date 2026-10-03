@@ -17,11 +17,13 @@ TAG_DEFINE_SHAPE = 2
 TAG_DEFINE_BITS_JPEG2 = 21
 TAG_DEFINE_SHAPE2 = 22
 TAG_PLACE_OBJECT2 = 26
+TAG_REMOVE_OBJECT2 = 28
 TAG_DEFINE_SHAPE3 = 32
 TAG_DEFINE_BUTTON2 = 34
 TAG_DEFINE_BITS_JPEG3 = 35
 TAG_DEFINE_BITS_LOSSLESS2 = 36
 TAG_DEFINE_SPRITE = 39
+TAG_PLACE_OBJECT3 = 70
 TAG_SYMBOL_CLASS = 76
 SHAPE_TAGS = (TAG_DEFINE_SHAPE, TAG_DEFINE_SHAPE2, TAG_DEFINE_SHAPE3)
 
@@ -35,6 +37,8 @@ PLACE_HAS_MATRIX = 0x04
 PLACE_HAS_COLOR_TRANSFORM = 0x08
 PLACE_HAS_RATIO = 0x10
 PLACE_HAS_NAME = 0x20
+PLACE3_HAS_CLASS_NAME = 0x08
+PLACE3_HAS_IMAGE = 0x10
 
 BUTTON_STATE_UP = 0x01
 BUTTON_HAS_FILTERS = 0x10
@@ -115,6 +119,14 @@ class BitReader:
 
     def consumed_bytes(self) -> int:
         return (self.pos + 7) // 8
+
+
+def read_rect(data: bytes) -> tuple[float, float]:
+    """Width and height in pixels of a RECT record."""
+    bits = BitReader(data)
+    nbits = bits.unsigned(5)
+    x_min, x_max, y_min, y_max = (bits.signed(nbits) for _ in range(4))
+    return (x_max - x_min) / TWIPS_PER_PIXEL, (y_max - y_min) / TWIPS_PER_PIXEL
 
 
 def read_rect_bytes(data: bytes) -> int:
@@ -387,3 +399,43 @@ def symbol_classes(swf: Swf) -> dict[str, int]:
             classes[tag[offset + 2:end].decode('latin1')] = character_id
             offset = end + 1
     return classes
+
+
+def black_backdrops(swf: Swf, min_width: float) -> set[int]:
+    """Ids of shapes that are one solid opaque black fill at least `min_width` pixels wide."""
+    shapes = set()
+    for code, tag in iter_tags(swf.body, swf.first_tag):
+        if code not in SHAPE_TAGS:
+            continue
+        (shape_id,) = struct.unpack_from('<H', tag)
+        width, _ = read_rect(tag[2:])
+        offset = 2 + read_rect_bytes(tag[2:])
+        black = b'\x00\x00\x00\xff' if code == TAG_DEFINE_SHAPE3 else b'\x00\x00\x00'
+        if width >= min_width and tag[offset:offset + 2] == bytes([1, SOLID_FILL]) and tag[offset + 2:].startswith(black):
+            shapes.add(shape_id)
+    return shapes
+
+
+def frames_showing(swf: Swf, sprite_id: int, characters: set[int]) -> list[bool]:
+    """Per frame of a sprite: is one of `characters` placed directly on its timeline?"""
+    for code, tag in iter_tags(swf.body, swf.first_tag):
+        if code != TAG_DEFINE_SPRITE or struct.unpack_from('<H', tag)[0] != sprite_id:
+            continue
+        frames, stage = [], {}
+        for inner_code, inner in iter_tags(tag, 4):
+            if inner_code == TAG_PLACE_OBJECT2 and inner[0] & PLACE_HAS_CHARACTER:
+                depth, character = struct.unpack_from('<HH', inner, 1)
+                stage = {**stage, depth: character}
+            elif inner_code == TAG_PLACE_OBJECT3 and inner[0] & PLACE_HAS_CHARACTER:
+                offset = 4
+                if inner[1] & PLACE3_HAS_CLASS_NAME or inner[1] & PLACE3_HAS_IMAGE:
+                    offset = inner.index(b'\0', offset) + 1
+                (depth,) = struct.unpack_from('<H', inner, 2)
+                stage = {**stage, depth: struct.unpack_from('<H', inner, offset)[0]}
+            elif inner_code == TAG_REMOVE_OBJECT2:
+                (depth,) = struct.unpack_from('<H', inner)
+                stage = {d: c for d, c in stage.items() if d != depth}
+            elif inner_code == TAG_SHOW_FRAME:
+                frames.append(any(c in characters for c in stage.values()))
+        return frames
+    return []

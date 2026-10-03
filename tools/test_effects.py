@@ -2,7 +2,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from extract_effect_assets import find_swf, origin_of, start_of
+from extract_effect_assets import find_swf, origin_of, start_of, without_black
 
 SVG = (
     '<svg ffdec:objectType="frame" height="361.45px" width="722.3px">'
@@ -32,6 +32,13 @@ class EffectTest(unittest.TestCase):
             self.assertEqual(find_swf(folder, 'FightEffect_1807_1', 'FightEffect_18071').name, 'fighteffect_1807_1.s113.swf')
             self.assertEqual(find_swf(folder, 'FightEffect_3826_M', 'FightEffect_38262').name, 'fighteffect_3826_m.swf')
             self.assertIsNone(find_swf(folder, 'FightEffect_3806', 'FightEffect_3806'))
+
+    def test_without_black_turns_brightness_into_alpha(self):
+        from PIL import Image
+
+        image = Image.new('RGBA', (3, 1))
+        image.putdata([(0, 0, 0, 255), (255, 255, 255, 255), (128, 64, 0, 255)])
+        self.assertEqual(list(without_black(image).getdata()), [(0, 0, 0, 0), (255, 255, 255, 255), (255, 127, 0, 128)])
 
 
 if __name__ == '__main__':

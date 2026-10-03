@@ -3,7 +3,7 @@
 import struct
 import unittest
 
-from swf import NO_BITMAP, first_bitmap_fill, read_matrix
+from swf import NO_BITMAP, Swf, first_bitmap_fill, frames_showing, read_matrix
 
 
 def bits_to_bytes(bits: str) -> bytes:
@@ -43,6 +43,17 @@ class FirstBitmapFillTest(unittest.TestCase):
         fills = bytes([1, 0x00, 1, 2, 3])
 
         self.assertIsNone(first_bitmap_fill(fills, 0, has_alpha=False))
+
+
+def tag(code: int, payload: bytes) -> bytes:
+    return struct.pack('<H', code << 6 | len(payload)) + payload
+
+
+class FramesShowingTest(unittest.TestCase):
+    def test_tracks_a_shape_from_placement_until_removal(self):
+        place, remove, show = tag(26, struct.pack('<BHH', 0x02, 1, 3)), tag(28, struct.pack('<H', 1)), tag(1, b'')
+        sprite = tag(39, struct.pack('<HH', 13, 3) + show + place + show + remove + show + tag(0, b''))
+        self.assertEqual(frames_showing(Swf(sprite, 0, 12), 13, {3}), [False, True, False])
 
 
 if __name__ == '__main__':
