@@ -17,6 +17,7 @@ backup) on a modern stack.
 - `docs/asset-pipeline.md`: where the original assets come from, how to extract them,
   where they land, id cheat sheet, gotchas.
 - `docs/combat-research.md`: what the original data says about battles, stages, skills.
+- `docs/feature-roadmap.md`: every feature in the original client, what is done and the backlog.
 - `config/game.php`: every gameplay number (avatars and their growth, combat formulas,
   villages, tower rewards). Formulas are ours; the original server code is not in the backup.
 
