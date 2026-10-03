@@ -20,7 +20,7 @@ Tick an item when it ships and update its row in the tables below.
 
 - [x] Titles (93 original titles; collection and achievement titles can be earned, one worn for its bonus)
 - [x] Achievements (14 of the original 68 tracked: levels, gold spent, field bosses, sign-in days, points; the rest need arena, missions, pets, cards)
-- [ ] Honor and honor exchange
+- [x] Honor and honor exchange (honor and medals from new tower floors and dungeon clears, 22 ranks, medals for EXP; the Equipment Set tab waits for equipment sets)
 - [x] Costume change (outfits with grey/blue/orange rarity, Wardrobe page)
 - [x] Avatar collection set bonuses and outfit upgrades (+1..+27, paid with outfit shards from duplicate draws)
 
@@ -109,7 +109,7 @@ Tick an item when it ships and update its row in the tables below.
 | ✅     | Create character, HUD, level and EXP, character panel | `creatrole`, `rolebase`, `roleinfo`                                                                                                |
 | ✅     | Titles                                                | `title`, `titleitem`, panels `title*`                                                                                              |
 | ✅     | Achievements                                          | `accomplishment`, panel `accomplishmentpop`                                                                                        |
-| ⬜     | Honor and honor exchange                              | `honorexchangeexp`, panels `myhonor*`, `honorexchange`                                                                             |
+| ✅     | Honor and honor exchange                              | `honorexchangeexp`, panels `myhonor*`, `honorexchange`                                                                             |
 | ✅     | Avatar collection and costume change                  | `avatarcollect`, `avatarcollectleveladd`, `avataritem`, `recastavatar`, panels `avatarcollect*`, `avatartransition`, `avatarstock` |
 
 ## Combat and PvE

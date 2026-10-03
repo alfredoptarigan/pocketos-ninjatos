@@ -118,6 +118,9 @@ class DungeonTest extends TestCase
         $this->assertTrue($rewards['dungeonCleared']);
         $this->assertSame(100 + 500, $character->refresh()->gold);
         $this->assertSame(config('game.dungeons.clear_coupons'), $character->coupons);
+        $this->assertSame(config('game.honor.dungeon_clear'), $rewards['honor']);
+        $this->assertSame(config('game.honor.dungeon_clear'), $character->honor);
+        $this->assertSame(config('game.honor.dungeon_clear'), $character->medals);
     }
 
     public function test_clearing_a_stage_restores_the_ninja_and_bosses_fight_solo()

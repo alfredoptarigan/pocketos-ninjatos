@@ -316,6 +316,33 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Honor and Honor Exchange
+    |--------------------------------------------------------------------------
+    |
+    | The original honor came from Nation and Tailed Beast fights, which are
+    | not built: here new tower floors and dungeon clears pay honor, and the
+    | same amount of medals. Total honor sets the rank (one per per_rank,
+    | up to the last rank). The Honor Exchange trades medals for EXP at the
+    | ninja's rank (honorexchangeexp: Model = medals, Exp), daily_exchanges
+    | times a day. Its "Equipment Set" tab waits for equipment sets.
+    |
+    */
+
+    'honor' => [
+        'tower_first_clear' => 5,
+        'dungeon_clear' => 30,
+        'per_rank' => 150,
+        'daily_exchanges' => 5,
+        // [medals, exp] for ranks 1..22
+        'exchange' => [
+            [90, 70], [90, 250], [100, 550], [110, 840], [120, 1200], [130, 1600], [140, 2100], [150, 2600],
+            [160, 3300], [170, 3900], [180, 4800], [200, 5500], [210, 6500], [220, 7300], [230, 8500],
+            [250, 9500], [260, 11000], [280, 12000], [290, 13500], [300, 14500], [320, 16500], [330, 18000],
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Equipment
     |--------------------------------------------------------------------------
     |

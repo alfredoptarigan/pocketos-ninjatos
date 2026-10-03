@@ -46,6 +46,8 @@ class ChallengeTowerFloor
                 'exp' => $exp,
                 'gold' => $ninja->gold + $rewards['gold'],
                 'coupons' => $ninja->coupons + $rewards['coupons'],
+                'honor' => $ninja->honor + $rewards['honor'],
+                'medals' => $ninja->medals + $rewards['honor'],
                 'tower_floor' => $firstClear ? $floor->floor : $ninja->tower_floor,
             ]);
             // Win or lose, the ninja walks out of the tower fully recovered.
@@ -71,14 +73,14 @@ class ChallengeTowerFloor
     }
 
     /**
-     * @return array{exp: int, gold: int, coupons: int, firstClear: bool}
+     * @return array{exp: int, gold: int, coupons: int, honor: int, firstClear: bool}
      */
     private function rewards(Character $ninja, TowerFloor $floor, bool $won, bool $firstClear): array
     {
         $tower = config('game.tower');
 
         if (! $won) {
-            return ['exp' => 0, 'gold' => 0, 'coupons' => 0, 'firstClear' => false];
+            return ['exp' => 0, 'gold' => 0, 'coupons' => 0, 'honor' => 0, 'firstClear' => false];
         }
 
         if ($firstClear) {
@@ -86,10 +88,11 @@ class ChallengeTowerFloor
                 'exp' => $floor->exp,
                 'gold' => $tower['gold_base'] + $floor->floor * $tower['gold_per_floor'],
                 'coupons' => $tower['coupons_per_first_clear'],
+                'honor' => config('game.honor.tower_first_clear'),
                 'firstClear' => true,
             ];
         }
 
-        return ['exp' => intdiv($floor->exp * $tower['replay_exp_percent'], 100), 'gold' => 0, 'coupons' => 0, 'firstClear' => false];
+        return ['exp' => intdiv($floor->exp * $tower['replay_exp_percent'], 100), 'gold' => 0, 'coupons' => 0, 'honor' => 0, 'firstClear' => false];
     }
 }

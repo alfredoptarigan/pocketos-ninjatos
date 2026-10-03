@@ -10,6 +10,7 @@ use App\Http\Controllers\EquipmentShopController;
 use App\Http\Controllers\FieldController;
 use App\Http\Controllers\GearController;
 use App\Http\Controllers\GiftController;
+use App\Http\Controllers\HonorController;
 use App\Http\Controllers\OutfitController;
 use App\Http\Controllers\PharmacyController;
 use App\Http\Controllers\SkillController;
@@ -40,6 +41,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('collection', [CollectionController::class, 'index'])->name('collection.index');
         Route::post('collection/{outfit}/record', [CollectionController::class, 'record'])->name('collection.record');
         Route::get('achievements', [AchievementController::class, 'index'])->name('achievements.index');
+        Route::get('honor', [HonorController::class, 'show'])->name('honor.show');
+        Route::post('honor/exchange', [HonorController::class, 'exchange'])->name('honor.exchange');
         Route::get('titles', [TitleController::class, 'index'])->name('titles.index');
         Route::post('titles/take-off', [TitleController::class, 'takeOff'])->name('titles.take-off');
         Route::post('titles/{title}/wear', [TitleController::class, 'wear'])->name('titles.wear');

@@ -44,6 +44,10 @@ use Illuminate\Support\Carbon;
  * @property int $gold_spent Gold ever spent (achievements)
  * @property int $bosses_defeated Field bosses beaten (achievements)
  * @property int $sign_in_days Days signed in (achievements)
+ * @property int $honor Honor ever earned; sets the honor rank
+ * @property int $medals Honor medals to spend at the Honor Exchange
+ * @property int $honor_exchanges Honor Exchanges made on honor_exchanged_on
+ * @property Carbon|null $honor_exchanged_on
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
@@ -86,7 +90,7 @@ class Character extends Model
      */
     protected function casts(): array
     {
-        return ['vitals_at' => 'datetime', 'skills' => 'array', 'signed_in_on' => 'date'];
+        return ['vitals_at' => 'datetime', 'skills' => 'array', 'signed_in_on' => 'date', 'honor_exchanged_on' => 'date'];
     }
 
     /**
@@ -169,6 +173,26 @@ class Character extends Model
     public function titles(): BelongsToMany
     {
         return $this->belongsToMany(Title::class, 'character_titles')->withTimestamps();
+    }
+
+    /**
+     * Honor rank 1..N: one rank per config('game.honor.per_rank') honor.
+     */
+    public function honorRank(): int
+    {
+        $honor = config('game.honor');
+
+        return min(count($honor['exchange']), 1 + intdiv($this->honor, $honor['per_rank']));
+    }
+
+    /**
+     * Honor Exchanges still allowed today.
+     */
+    public function honorExchangesLeft(): int
+    {
+        $made = $this->honor_exchanged_on?->isToday() ? $this->honor_exchanges : 0;
+
+        return max(0, config('game.honor.daily_exchanges') - $made);
     }
 
     /**

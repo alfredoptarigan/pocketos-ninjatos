@@ -74,7 +74,10 @@ class TowerTest extends TestCase
         $this->assertSame(10, $character->exp);
         $this->assertSame(config('game.tower.gold_base') + config('game.tower.gold_per_floor'), $character->gold);
         $this->assertSame(config('game.tower.coupons_per_first_clear'), $character->coupons);
-        $this->assertEquals(['exp' => 130, 'gold' => 25, 'coupons' => 1, 'levelUp' => true, 'firstClear' => true, 'drop' => null], $battle->rewards);
+        $honor = config('game.honor.tower_first_clear');
+        $this->assertSame($honor, $character->honor);
+        $this->assertSame($honor, $character->medals);
+        $this->assertEquals(['exp' => 130, 'gold' => 25, 'coupons' => 1, 'honor' => $honor, 'levelUp' => true, 'firstClear' => true, 'drop' => null], $battle->rewards);
     }
 
     public function test_a_first_clear_drops_the_best_gear_the_opponent_level_allows()

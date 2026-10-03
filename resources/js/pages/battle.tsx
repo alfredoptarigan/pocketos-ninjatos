@@ -274,6 +274,11 @@ function DungeonResult({
                                     +{rewards.coupons} gift coupons
                                 </li>
                             )}
+                            {(rewards.honor ?? 0) > 0 && (
+                                <li className="text-violet-300">
+                                    +{rewards.honor} honor and medals
+                                </li>
+                            )}
                             {rewards.drop && (
                                 <li className="flex items-center justify-center gap-2 text-sky-300">
                                     <img

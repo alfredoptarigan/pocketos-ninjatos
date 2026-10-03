@@ -102,6 +102,8 @@ export type BattleRewards = {
     drop?: GearDrop | null;
     // Dungeon waves and tower first clears.
     coupons?: number;
+    // New tower floors and dungeon clears: honor, and as many medals.
+    honor?: number;
     // Dungeon waves only: the stage this win finished, and whether it was the last one.
     stageCleared?: string | null;
     dungeonCleared?: boolean;
