@@ -88,6 +88,39 @@ class OutfitTest extends TestCase
         $this->post(route('wish-pot.draw', 'golden'))->assertNotFound();
     }
 
+    public function test_a_pick_pot_gives_the_chosen_outfit()
+    {
+        $character = $this->ninja(['coupons' => 200]);
+        $hokage = Outfit::factory()->create(['key' => '0_53', 'sex' => 0, 'rarity' => 'orange']);
+        $this->actingAs($character->user);
+
+        $this->get(route('wish-pot.show'))->assertInertia(fn (Assert $page) => $page
+            ->where('pots.5.key', 's_rank')
+            ->has('pots.5.choices', 1)
+            ->where('pots.5.choices.0.key', '0_53'));
+
+        $this->post(route('wish-pot.draw', 's_rank'), ['outfit' => '0_53'])->assertRedirect(route('wish-pot.show'));
+
+        $this->assertSame([$hokage->id], $character->outfits()->pluck('outfits.id')->all());
+        $this->assertSame(200 - config('game.outfits.pots.s_rank.price'), $character->refresh()->coupons);
+    }
+
+    public function test_a_pick_pot_refuses_other_choices_and_outfits_already_owned()
+    {
+        $character = $this->ninja(['coupons' => 200]);
+        $owned = Outfit::factory()->create(['key' => '0_53', 'sex' => 0]);
+        Outfit::factory()->create(['key' => '1_44', 'sex' => 1]);
+        Outfit::factory()->create(['key' => '0_47', 'sex' => 0]);
+        $character->outfits()->attach($owned);
+        $this->actingAs($character->user);
+
+        $this->post(route('wish-pot.draw', 's_rank'), ['outfit' => '1_44'])->assertSessionHasErrors('outfit'); // other sex
+        $this->post(route('wish-pot.draw', 's_rank'), ['outfit' => '0_47'])->assertSessionHasErrors('outfit'); // not in this pot
+        $this->post(route('wish-pot.draw', 's_rank'), ['outfit' => '0_53'])->assertSessionHasErrors('outfit'); // owned
+
+        $this->assertSame(200, $character->refresh()->coupons);
+    }
+
     public function test_wearing_an_outfit_changes_the_look_and_adds_its_bonus()
     {
         $character = $this->ninja(['level' => 1]);

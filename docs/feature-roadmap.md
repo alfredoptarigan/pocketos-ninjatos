@@ -55,7 +55,8 @@ Tick an item when it ships and update its row in the tables below.
 - [ ] Item exchange
 - [ ] Gift bags
 - [x] Wish Pot for outfits (gift coupons, Lucky Pot building in Waterfall Village)
-- [ ] Pick-one pots (S-rank, Shippuden), pet and tailed beast pots
+- [x] Pick-one pots: Shippuden and S-rank (only outfits with art: 8 of the original 18)
+- [ ] Pet and tailed beast pots (need pets and tailed beasts first)
 - [ ] Collectible cards
 - [ ] Premium shop and VIP
 

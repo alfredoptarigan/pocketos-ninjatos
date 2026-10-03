@@ -9,20 +9,24 @@ import { cn } from '@/lib/utils';
 import { village } from '@/routes';
 import { index as wardrobe } from '@/routes/outfits';
 import { draw } from '@/routes/wish-pot';
-import { RARITY_BORDER, RARITY_TEXT } from '@/types/game';
+import { characterAssets, RARITY_BORDER, RARITY_TEXT } from '@/types/game';
 import type { Outfit, Rarity } from '@/types/game';
+
+type Choice = Outfit & { owned: boolean };
 
 type Pot = {
     key: string;
     name: string;
     price: number;
-    /** rarity => weight */
-    odds: Partial<Record<Rarity, number>>;
+    /** Random pots: rarity => weight. */
+    odds?: Partial<Record<Rarity, number>>;
+    /** Pick pots: the outfits the ninja may choose from. */
+    choices: Choice[] | null;
 };
 
 type Drawn = { outfit: Outfit; duplicate: boolean; gold: number };
 
-function oddsText(odds: Pot['odds']): string {
+function oddsText(odds: NonNullable<Pot['odds']>): string {
     const total = Object.values(odds).reduce((sum, weight) => sum + weight, 0);
 
     return Object.entries(odds)
@@ -50,18 +54,18 @@ export default function WishPot({ pots }: { pots: Pot[] }) {
         [],
     );
 
-    const open = (pot: Pot) =>
-        router.post(
-            draw(pot.key).url,
-            {},
-            {
-                preserveScroll: true,
-                onStart: () => setOpening(pot.key),
-                onFinish: () => setOpening(null),
-                onError: (errors) =>
-                    toast.error(errors.coupons ?? 'The pot would not open.'),
-            },
-        );
+    const open = (pot: Pot, outfit?: string) =>
+        router.post(draw(pot.key).url, outfit ? { outfit } : {}, {
+            preserveScroll: true,
+            onStart: () => setOpening(pot.key),
+            onFinish: () => setOpening(null),
+            onError: (errors) =>
+                toast.error(
+                    errors.coupons ??
+                        errors.outfit ??
+                        'The pot would not open.',
+                ),
+        });
 
     return (
         <>
@@ -74,40 +78,19 @@ export default function WishPot({ pots }: { pots: Pot[] }) {
                         <div className="flex flex-col gap-3">
                             <ul
                                 aria-label="Wishing Pots"
-                                className="flex flex-col gap-2"
+                                className="flex max-h-[55vh] flex-col gap-2 overflow-y-auto pr-1"
                             >
                                 {pots.map((pot) => (
-                                    <li
+                                    <PotRow
                                         key={pot.key}
-                                        className="flex flex-wrap items-center gap-3 rounded-md border border-amber-900/80 bg-slate-950/60 p-3"
-                                    >
-                                        <div className="min-w-40 flex-1">
-                                            <p className="font-semibold text-amber-200">
-                                                {pot.name}
-                                            </p>
-                                            <p className="text-xs text-slate-400 capitalize">
-                                                {oddsText(pot.odds)}
-                                            </p>
-                                        </div>
-                                        <span className="flex items-center gap-1 text-sm text-rose-300">
-                                            <Ticket className="size-4" />
-                                            {pot.price}
-                                        </span>
-                                        <button
-                                            type="button"
-                                            onClick={() => open(pot)}
-                                            disabled={
-                                                opening !== null ||
-                                                (character?.coupons ?? 0) <
-                                                    pot.price
-                                            }
-                                            className="game-button min-w-20 px-4 py-1"
-                                        >
-                                            {opening === pot.key
-                                                ? 'Opening…'
-                                                : 'Open'}
-                                        </button>
-                                    </li>
+                                        pot={pot}
+                                        opening={opening}
+                                        canAfford={
+                                            (character?.coupons ?? 0) >=
+                                            pot.price
+                                        }
+                                        onOpen={(outfit) => open(pot, outfit)}
+                                    />
                                 ))}
                             </ul>
 
@@ -127,15 +110,112 @@ export default function WishPot({ pots }: { pots: Pot[] }) {
                                 </p>
                             </div>
                             <p className="text-xs text-slate-400">
-                                Earn gift coupons by clearing new Training Tower
-                                floors. A duplicate outfit pays out gold
-                                instead.
+                                Earn gift coupons from the daily sign-in
+                                (Gifts), new Training Tower floors and dungeon
+                                clears. A duplicate from a random pot pays out
+                                gold instead.
                             </p>
                         </div>
                     </div>
                 </GameWindow>
             </VillageBackdrop>
         </>
+    );
+}
+
+type PotRowProps = {
+    pot: Pot;
+    opening: string | null;
+    canAfford: boolean;
+    onOpen: (outfit?: string) => void;
+};
+
+/** One pot: its odds, or for pick pots the outfits to choose from. */
+function PotRow({ pot, opening, canAfford, onOpen }: PotRowProps) {
+    const [choice, setChoice] = useState<string | null>(null);
+    const picking = pot.choices !== null;
+    const allOwned = picking && pot.choices!.every((c) => c.owned);
+
+    return (
+        <li className="flex flex-wrap items-center gap-3 rounded-md border border-amber-900/80 bg-slate-950/60 p-3">
+            <div className="min-w-40 flex-1">
+                <p className="font-semibold text-amber-200">{pot.name}</p>
+                {pot.odds ? (
+                    <p className="text-xs text-slate-400 capitalize">
+                        {oddsText(pot.odds)}
+                    </p>
+                ) : (
+                    <p className="text-xs text-slate-400">
+                        Pick the outfit you want.
+                    </p>
+                )}
+            </div>
+            <span className="flex items-center gap-1 text-sm text-rose-300">
+                <Ticket className="size-4" />
+                {pot.price}
+            </span>
+            <button
+                type="button"
+                onClick={() => onOpen(choice ?? undefined)}
+                disabled={
+                    opening !== null ||
+                    !canAfford ||
+                    (picking && choice === null)
+                }
+                className="game-button min-w-20 px-4 py-1"
+            >
+                {opening === pot.key
+                    ? 'Opening…'
+                    : allOwned
+                      ? 'All owned'
+                      : 'Open'}
+            </button>
+            {picking && (
+                <div
+                    role="radiogroup"
+                    aria-label={`${pot.name} outfits`}
+                    className="flex w-full flex-wrap gap-2"
+                >
+                    {pot.choices!.map((outfit) => (
+                        <button
+                            key={outfit.key}
+                            type="button"
+                            role="radio"
+                            aria-checked={choice === outfit.key}
+                            disabled={outfit.owned}
+                            title={
+                                outfit.owned
+                                    ? `${outfit.name} (owned)`
+                                    : outfit.name
+                            }
+                            onClick={() => setChoice(outfit.key)}
+                            className={cn(
+                                'flex w-20 flex-col items-center rounded border-2 bg-slate-900/80 p-1 text-[11px]',
+                                choice === outfit.key
+                                    ? 'border-amber-300 shadow-[0_0_8px_rgba(252,211,77,0.6)]'
+                                    : RARITY_BORDER[outfit.rarity],
+                                outfit.owned && 'opacity-40',
+                            )}
+                        >
+                            <img
+                                src={characterAssets(outfit.key).face}
+                                alt=""
+                                className="size-10 object-contain"
+                            />
+                            <span className="line-clamp-1">{outfit.name}</span>
+                            {outfit.owned && (
+                                <span className="text-slate-400">Owned</span>
+                            )}
+                        </button>
+                    ))}
+                    {pot.choices!.length === 0 && (
+                        <p className="text-xs text-slate-400">
+                            Nothing in this pot fits your ninja.
+                        </p>
+                    )}
+                </div>
+            )}
+        </li>
     );
 }
 

@@ -219,6 +219,10 @@ return [
             'grey' => ['name' => 'Grey Outfit Wishing Pot', 'price' => 5, 'odds' => ['grey' => 1]],
             'blue' => ['name' => 'Blue Outfit Wishing Pot', 'price' => 25, 'odds' => ['blue' => 1]],
             'orange' => ['name' => 'Orange Outfit Wishing Pot', 'price' => 100, 'odds' => ['orange' => 1]],
+            // Original Magic Wishing Pots: the ninja picks one outfit of the list
+            // (only those with art in the backup; Akatsuki, Pain, Sage Naruto have none).
+            'shippuden' => ['name' => 'Shippuden Wishing Pot', 'price' => 120, 'pick' => ['0_24', '1_31', '1_67', '1_70']],
+            's_rank' => ['name' => 'S-rank Ninja Wishing Pot', 'price' => 150, 'pick' => ['0_50', '0_53', '1_30', '1_44']],
         ],
     ],
 
