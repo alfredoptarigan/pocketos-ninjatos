@@ -278,7 +278,12 @@ python3 tools/extract_tower_assets.py ~/Privates/game-pockieninja --hd       # ~
 
 - `tools/upscale.py` runs Real-ESRGAN with the `realesrgan-x4plus-anime` model at 4x and
   scales down to 2x (smoother edges). Binary path: `REALESRGAN` env var, default
-  `~/.local/opt/realesrgan/realesrgan-ncnn-vulkan`; needs numpy + Pillow.
+  `~/.local/opt/realesrgan/realesrgan-ncnn-vulkan`; needs numpy + Pillow
+  (`python3 -m pip install --user numpy`).
+- Battles draw fighters at their original size (`MOTION_SCALE` 1 in `game/battle/fighter.ts`),
+  as small as in the original client; run the character and outfit extractors with `--hd`
+  (about 30 min together) so they stay sharp when the stage is scaled up on large and retina
+  screens. Tower bosses that are avatars (`0_77`..`0_83`) come from the tower extractor.
 - **Alpha-safe:** colour and alpha are upscaled separately, and colours are first bled
   into the transparent margin. Without this the model turns the black transparent
   pixels into thick dark outlines.

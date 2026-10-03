@@ -6,9 +6,11 @@ import type { FighterInfo } from './types';
 // Pixi's ticker runs at 60 updates per second; SWF motions have their own fps.
 const TICKER_FPS = 60;
 const DEFAULT_FPS = 12;
-const MOTION_SCALE = 1.7;
+// Motions at their original size: small fighters as in the original client
+// (the sheets carry 2x HD pixels, so they stay sharp when the stage scales up).
+const MOTION_SCALE = 1;
 // Bosses without battle art stand in as a portrait about as tall as a fighter.
-const PORTRAIT_HEIGHT = 300;
+const PORTRAIT_HEIGHT = 180;
 const PORTRAIT_ANCHOR_Y = 0.82;
 
 export type Action = 'idle' | 'stance' | 'run' | 'attack' | 'dodge' | 'dead';

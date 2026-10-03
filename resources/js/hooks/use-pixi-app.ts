@@ -34,6 +34,9 @@ export function usePixiApp(
             await app.init({
                 resizeTo: host,
                 antialias: true,
+                // Render at the screen's pixel density so HD art stays sharp on retina.
+                resolution: window.devicePixelRatio || 1,
+                autoDensity: true,
                 ...optionsRef.current,
             });
 

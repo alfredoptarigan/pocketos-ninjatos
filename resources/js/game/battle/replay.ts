@@ -42,7 +42,8 @@ const IMPACT_DELAY_MS = 220;
 const RETURN_MS = 240;
 const PAUSE_MS = 180;
 const SHOUT_MS = 420;
-const STRIKE_DISTANCE = 115;
+// How far from the opponent a melee attacker stops (fighters at original size).
+const STRIKE_DISTANCE = 70;
 // A ranged jutsu lands this far into its effect.
 const RANGED_IMPACT_SHARE = 0.7;
 
