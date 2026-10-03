@@ -1,4 +1,4 @@
-import { AnimatedSprite, Assets } from 'pixi.js';
+import { AnimatedSprite, Assets, Graphics } from 'pixi.js';
 import type { Container, Spritesheet, Ticker } from 'pixi.js';
 import type { BattleEvent } from './types';
 
@@ -6,6 +6,8 @@ import type { BattleEvent } from './types';
 const INDEX_URL = '/game-assets/effects/index.json';
 const TICKER_FPS = 60;
 const DEFAULT_FPS = 12;
+// The original blacked out the stage; keep the fighters faintly visible.
+const SHADE_ALPHA = 0.85;
 
 export type EffectSpec = {
     sheet: string;
@@ -64,8 +66,19 @@ export function isRanged(specs: EffectSpec[]): boolean {
     return specs.some((spec) => spec.type === 'attack' && spec.start !== 'hit');
 }
 
+type EffectMeta = { fps?: number; backdrop?: number[] };
+
 function fpsOf(sheet: Spritesheet): number {
-    return (sheet.data.meta as { fps?: number }).fps ?? DEFAULT_FPS;
+    return (sheet.data.meta as EffectMeta).fps ?? DEFAULT_FPS;
+}
+
+/** A dark cover over the whole battle world, for frames that darkened the original stage. */
+function shadeOver(world: Container): Graphics {
+    const { x, y, width, height } = world.getLocalBounds();
+
+    return new Graphics()
+        .rect(x, y, width, height)
+        .fill({ color: 0x000000, alpha: SHADE_ALPHA });
 }
 
 /** How long an effect runs at 1x speed, in ms. */
@@ -102,14 +115,29 @@ export function playEffect(
     sprite.position.set(x, y);
     sprite.animationSpeed = (fpsOf(sheet) / TICKER_FPS) * stage.speed();
 
+    const backdrop = (sheet.data.meta as EffectMeta).backdrop ?? [];
+    const shade = backdrop.length > 0 ? shadeOver(stage.world) : undefined;
+    // The shade sits right below the effect, covering whatever it covered.
+    const layers = shade ? [shade, sprite] : [sprite];
+
     if (spec.layer === 'under') {
-        stage.world.addChildAt(sprite, stage.underIndex);
+        layers.forEach((layer, offset) =>
+            stage.world.addChildAt(layer, stage.underIndex + offset),
+        );
     } else {
-        stage.world.addChild(sprite);
+        stage.world.addChild(...layers);
+    }
+
+    if (shade) {
+        shade.visible = backdrop.includes(0);
+        sprite.onFrameChange = (frame) => {
+            shade.visible = backdrop.includes(frame);
+        };
     }
 
     return new Promise((resolve) => {
         sprite.onComplete = () => {
+            shade?.destroy();
             sprite.destroy();
             resolve();
         };

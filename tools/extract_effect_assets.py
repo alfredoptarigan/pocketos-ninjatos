@@ -42,7 +42,8 @@ PANEL_SKILL = '1'  # clientskill Type 1 = skill panel
 HEADER_ROW = 1
 MAX_SHEET_WIDTH = 4096
 HD_ZOOM = 2
-# Original stage-wide black shapes (Assassinate darkens the screen) only float as a box here.
+# Original stage-wide black shapes (Assassinate darkens the screen) would float as a box here;
+# they are keyed out and replayed as a screen-wide shade instead.
 MIN_BACKDROP_WIDTH = 400
 FIGHT_EFFECT = re.compile(r'^FightEffect_(\d{4})(?:_\w+)?$')
 
@@ -163,7 +164,11 @@ def write_sheet(key: str, frames_dir: Path, svg_dir: Path, zoom: float, fps: flo
     (OUT_DIR / f'{key}.json').write_text(json.dumps({
         'frames': frame_data,
         'animations': {'effect': names},
-        'meta': {'image': f'{key}.png', 'size': {'w': sheet.width, 'h': sheet.height}, 'scale': zoom, 'fps': fps},
+        'meta': {
+            'image': f'{key}.png', 'size': {'w': sheet.width, 'h': sheet.height}, 'scale': zoom, 'fps': fps,
+            # Frames that darkened the whole original stage; the battle replay shades the screen for them.
+            'backdrop': [index for index, dark in enumerate(backdrop) if dark],
+        },
     }))
 
 
