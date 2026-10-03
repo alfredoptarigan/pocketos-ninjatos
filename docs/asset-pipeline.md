@@ -150,7 +150,8 @@ is an overlay drawn tick for tick over the body motion from the same origin, so 
 `weapons/<outfit key>/<look>/motions.*` with the same sheet format. The look comes from the
 weapon's icon (`Icon_Weapon_Sharp20` = `sharp20`, `equipment.look`). Each outfit only has art for
 its own class (`rolebase.Popsinger`: 1 blunt, 2 sharp, 4 gloves, 7 all, keyed by avatar id);
-another class's weapon is not drawn. There is no weapon art for idle (1) or dodge (2), and
+`extract_outfit_assets.py` stores that class as `weapon_class` (null = all) and the game
+enforces it when equipping. There is no weapon art for idle (1) or dodge (2), and
 `0_88`, `1_86`, `1_89` only ship vector stubs. `people_59` spells gloves `glove`.
 
 `tools/extract_progression_data.py` (character progression, no art) writes

@@ -36,6 +36,8 @@ RARITIES = {0: 'grey', 1: 'blue', 2: 'orange'}
 LAST_BASE_OUTFIT = 100
 # The data marks Konan grey, but the original sold her in the S-rank (orange) pot.
 RARITY_OVERRIDES = {'1_68': 'orange'}
+# rolebase.Popsinger (keyed by avatar id) -> the weapons an outfit holds; 7 (all) is None.
+WEAPON_CLASSES = {1: 'blunt', 2: 'sharp', 4: 'gloves'}
 # Indonesian leftovers in the English build.
 RENAMES = {'Kostum Natal': 'Christmas', ' Kostum': ''}
 
@@ -49,7 +51,12 @@ def outfit_name(label: str) -> str:
     return name.strip()
 
 
-def outfits(avatar_items: list[dict], language: dict) -> list[dict]:
+def weapon_classes(rolebase: dict) -> dict[int, str | None]:
+    """Avatar id -> weapon class, from rolebase's Popsinger column."""
+    return {number(avatar): WEAPON_CLASSES.get(number(popsinger)) for avatar, popsinger in zip(rolebase['ID'][1:], rolebase['Popsinger'][1:])}
+
+
+def outfits(avatar_items: list[dict], language: dict, classes: dict[int, str | None]) -> list[dict]:
     """Every base (+0) outfit with an English name, ordered by id."""
     found = []
     for item in avatar_items:
@@ -63,6 +70,7 @@ def outfits(avatar_items: list[dict], language: dict) -> list[dict]:
             'name': name,
             'sex': number(item['Sex']),
             'rarity': RARITY_OVERRIDES.get(key, RARITIES[number(item['ItemColor'])]),
+            'weapon_class': classes.get(avatar_id),
         })
     return sorted(found, key=lambda outfit: int(outfit['key'].split('_')[1]))
 
@@ -104,7 +112,8 @@ def main() -> None:
     languages = sorted((binary / 'keyvaluetable').glob('language.s*.kv'), key=lambda p: int(p.name.split('.s')[1].split('.')[0]))
     language = load_compressed(languages[-1])
 
-    kept = [outfit for outfit in outfits(avatar_items, language) if extract_art(source, outfit['key'], scale)]
+    classes = weapon_classes(load_compressed(latest_table(binary / 'datatable', 'rolebase')))
+    kept = [outfit for outfit in outfits(avatar_items, language, classes) if extract_art(source, outfit['key'], scale)]
     DATA_OUT.parent.mkdir(parents=True, exist_ok=True)
     DATA_OUT.write_text(json.dumps(kept, indent=1, ensure_ascii=False))
     print(f'{len(kept)} outfits -> {DATA_OUT.relative_to(ROOT)}')

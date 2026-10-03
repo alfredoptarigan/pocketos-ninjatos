@@ -12,7 +12,7 @@ class EquipGear
     /**
      * Wear one of the ninja's pieces, sending whatever was in that slot back to the bag.
      *
-     * @throws ValidationException when the ninja's level is too low
+     * @throws ValidationException when the ninja's level is too low or the weapon is of another class
      */
     public function handle(Character $character, CharacterEquipment $piece): void
     {
@@ -24,6 +24,14 @@ class EquipGear
             if ($ninja->level < $equipment->level) {
                 throw ValidationException::withMessages([
                     'gear' => "{$equipment->name} needs level {$equipment->level}.",
+                ]);
+            }
+
+            if (! $ninja->canWield($equipment)) {
+                $names = config('game.equipment.weapon_classes');
+
+                throw ValidationException::withMessages([
+                    'gear' => "{$equipment->name} is a {$names[$equipment->weaponClass()]} weapon; this outfit fights with {$names[$ninja->weaponClass()]}.",
                 ]);
             }
 

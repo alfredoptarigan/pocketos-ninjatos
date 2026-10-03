@@ -138,6 +138,7 @@ export default function Inventory({
                             gear={gear}
                             items={items}
                             level={character.level}
+                            weaponClass={character.weapon_class}
                         />
                     </div>
                 </GameWindow>

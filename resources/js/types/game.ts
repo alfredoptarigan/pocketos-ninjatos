@@ -4,6 +4,8 @@ export type Character = {
     title: string | null;
     /** Asset key "<sex>_<id>" the ninja is drawn with: the worn outfit, else the created avatar. */
     avatar: string;
+    /** Weapons this outfit holds: "blunt", "sharp" or "gloves"; null for all. */
+    weapon_class: string | null;
     level: number;
     exp: number;
     exp_to_next: number;

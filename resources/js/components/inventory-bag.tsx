@@ -1,7 +1,7 @@
 import { Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { bonuses, SLOT_LABELS } from '@/lib/gear';
+import { bonuses, canWield, slotLabel, WEAPON_CLASS_LABELS } from '@/lib/gear';
 import type { GearStats } from '@/lib/gear';
 import { cn } from '@/lib/utils';
 import { sell, use } from '@/routes/bag';
@@ -59,10 +59,20 @@ function itemEffect(item: BagItem): string {
         .join(' · ');
 }
 
-type Props = { gear: Piece[]; items: BagItem[]; level: number };
+type Props = {
+    gear: Piece[];
+    items: BagItem[];
+    level: number;
+    weaponClass: string | null;
+};
 
 /** Spare gear first, then item stacks, paged like the original bag. */
-export default function InventoryBag({ gear, items, level }: Props) {
+export default function InventoryBag({
+    gear,
+    items,
+    level,
+    weaponClass,
+}: Props) {
     const entries: Entry[] = [
         ...gear.map((piece) => ({
             kind: 'gear' as const,
@@ -139,7 +149,8 @@ export default function InventoryBag({ gear, items, level }: Props) {
                                 selling={selling}
                                 tooLow={
                                     entry.kind === 'gear' &&
-                                    level < entry.piece.level
+                                    (level < entry.piece.level ||
+                                        !canWield(entry.piece, weaponClass))
                                 }
                                 onSelect={() =>
                                     selling
@@ -216,7 +227,11 @@ export default function InventoryBag({ gear, items, level }: Props) {
                     onDone={toggleSelling}
                 />
             ) : (
-                <Detail entry={selected} level={level} />
+                <Detail
+                    entry={selected}
+                    level={level}
+                    weaponClass={weaponClass}
+                />
             )}
         </div>
     );
@@ -350,7 +365,13 @@ function BagSlot({ entry, selected, selling, tooLow, onSelect }: SlotProps) {
     );
 }
 
-function Detail({ entry, level }: { entry?: Entry; level: number }) {
+type DetailProps = {
+    entry?: Entry;
+    level: number;
+    weaponClass: string | null;
+};
+
+function Detail({ entry, level, weaponClass }: DetailProps) {
     if (!entry) {
         return (
             <p className="min-h-14 rounded border border-sky-900 bg-slate-950/60 p-2 text-xs text-slate-400">
@@ -363,6 +384,7 @@ function Detail({ entry, level }: { entry?: Entry; level: number }) {
     if (entry.kind === 'gear') {
         const { piece } = entry;
         const tooLow = level < piece.level;
+        const fits = canWield(piece, weaponClass);
 
         return (
             <div className="flex min-h-14 items-center gap-3 rounded border border-sky-900 bg-slate-950/60 p-2 text-sm">
@@ -370,8 +392,7 @@ function Detail({ entry, level }: { entry?: Entry; level: number }) {
                 <div className="min-w-0 flex-1">
                     <p className="font-semibold text-slate-100">{piece.name}</p>
                     <p className="text-xs text-slate-300">
-                        {SLOT_LABELS[piece.slot] ?? piece.slot} ·{' '}
-                        {bonuses(piece)}
+                        {slotLabel(piece)} · {bonuses(piece)}
                     </p>
                     <p
                         className={cn(
@@ -381,10 +402,16 @@ function Detail({ entry, level }: { entry?: Entry; level: number }) {
                     >
                         Needs level {piece.level}
                     </p>
+                    {!fits && weaponClass && (
+                        <p className="text-xs text-red-400">
+                            This outfit fights with{' '}
+                            {WEAPON_CLASS_LABELS[weaponClass]} weapons
+                        </p>
+                    )}
                 </div>
                 <button
                     type="button"
-                    disabled={tooLow}
+                    disabled={tooLow || !fits}
                     onClick={() => post(equip(piece.id).url)}
                     className="game-button px-3 py-0.5"
                 >

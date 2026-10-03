@@ -17,11 +17,12 @@ use Illuminate\Support\Carbon;
  * @property string $name
  * @property int $sex 0 male, 1 female
  * @property string $rarity grey, blue or orange
+ * @property string|null $weapon_class blunt, sharp or gloves; null holds all three
  * @property array{strength: int, agility: int, stamina: int}|null $collection Attributes once recorded; null if not collectible
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['key', 'name', 'sex', 'rarity', 'collection'])]
+#[Fillable(['key', 'name', 'sex', 'rarity', 'collection', 'weapon_class'])]
 class Outfit extends Model
 {
     /** @use HasFactory<OutfitFactory> */

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Actions\UpgradeOutfit;
 use App\Game\OutfitUpgrade;
+use App\Models\Character;
 use App\Models\Outfit;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -41,6 +42,7 @@ class OutfitController extends Controller
         // Only outfits in the ninja's own wardrobe: others are a 404.
         $owned = $character->outfits()->findOrFail($outfit->id);
         $character->forceFill(['outfit_id' => $owned->id])->save();
+        $this->dropUnfitWeapon($character);
 
         return to_route('outfits.index');
     }
@@ -54,8 +56,19 @@ class OutfitController extends Controller
 
     public function takeOff(Request $request): RedirectResponse
     {
-        $request->user()->character->forceFill(['outfit_id' => null])->save();
+        $character = $request->user()->character;
+        $character->forceFill(['outfit_id' => null])->save();
+        $this->dropUnfitWeapon($character);
 
         return to_route('outfits.index');
+    }
+
+    private function dropUnfitWeapon(Character $character): void
+    {
+        $dropped = $character->refresh()->dropUnfitWeapon();
+
+        if ($dropped) {
+            Inertia::flash('toast', ['type' => 'info', 'message' => "{$dropped} went back to the bag: this outfit fights with other weapons."]);
+        }
     }
 }

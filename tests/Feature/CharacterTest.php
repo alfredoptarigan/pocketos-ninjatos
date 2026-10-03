@@ -32,7 +32,8 @@ class CharacterTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('character/create')
-                ->has('avatars', count(config('game.avatars'))));
+                ->has('avatars', count(config('game.avatars')))
+                ->where('weaponClasses.0_3', 'gloves'));
     }
 
     public function test_players_can_create_a_character()

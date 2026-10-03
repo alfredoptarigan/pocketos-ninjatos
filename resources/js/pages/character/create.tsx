@@ -7,18 +7,19 @@ import InputError from '@/components/input-error';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import { WEAPON_CLASS_LABELS } from '@/lib/gear';
 import { cn } from '@/lib/utils';
 import { store } from '@/routes/character';
 import { characterAssets, isFemaleAvatar } from '@/types/game';
 
-type Props = { avatars: string[] };
+type Props = { avatars: string[]; weaponClasses: Record<string, string> };
 
 const GENDERS = [
     { label: 'Male', female: false },
     { label: 'Female', female: true },
 ];
 
-export default function CreateCharacter({ avatars }: Props) {
+export default function CreateCharacter({ avatars, weaponClasses }: Props) {
     const [selected, setSelected] = useState(avatars[0]);
     const showFemale = isFemaleAvatar(selected);
     const visible = avatars.filter(
@@ -59,6 +60,17 @@ export default function CreateCharacter({ avatars }: Props) {
                                 <p className="text-muted-foreground">
                                     Pick a look and a name. The name cannot be
                                     changed later.
+                                </p>
+                                <p className="mt-1 text-sm">
+                                    Fights with{' '}
+                                    <strong>
+                                        {
+                                            WEAPON_CLASS_LABELS[
+                                                weaponClasses[selected]
+                                            ]
+                                        }
+                                    </strong>{' '}
+                                    weapons.
                                 </p>
                             </div>
 

@@ -74,6 +74,23 @@ class GearTest extends TestCase
         $this->assertNull($piece->refresh()->equipped_slot);
     }
 
+    public function test_a_weapon_only_fits_ninjas_of_its_class()
+    {
+        $character = Character::factory()->create(['avatar' => '0_3']); // a Fists avatar
+        $sword = $this->give($character, Equipment::factory()->create(['look' => 'sharp1']));
+        $claw = $this->give($character, Equipment::factory()->create(['look' => 'gloves1']));
+        $this->actingAs($character->user);
+
+        $this->post(route('character.gear.equip', $sword))->assertSessionHasErrors('gear');
+        $this->post(route('character.gear.equip', $claw))->assertSessionHasNoErrors();
+
+        $this->assertNull($sword->refresh()->equipped_slot);
+        $this->assertSame('weapon', $claw->refresh()->equipped_slot);
+        $this->get(route('bag'))->assertInertia(fn (Assert $page) => $page
+            ->where('character.weapon_class', 'gloves')
+            ->where('gear.0.weapon_class', 'sharp'));
+    }
+
     public function test_unequipping_puts_the_piece_back_in_the_bag()
     {
         $character = Character::factory()->create();

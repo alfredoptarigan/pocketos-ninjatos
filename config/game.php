@@ -17,24 +17,25 @@ return [
         // Per-level growth derived from the original rolebase aptitudes:
         // hp = MaxHPAdd/50, attack = max(StrAtkAdd, AgiAtkAdd)/400 (aptitudes
         // capped at 3000), defense = StaminaUp/20, dodge % = 5 + DodgeAdd/1000.
-        '0_3' => ['hp' => 28, 'attack' => 4.25, 'defense' => 3.25, 'dodge' => 6],
-        '0_9' => ['hp' => 20, 'attack' => 5.5, 'defense' => 4.0, 'dodge' => 7],
-        '0_12' => ['hp' => 24, 'attack' => 3.5, 'defense' => 4.0, 'dodge' => 6],
-        '0_14' => ['hp' => 24, 'attack' => 5.25, 'defense' => 4.0, 'dodge' => 7],
-        '0_16' => ['hp' => 16, 'attack' => 7.5, 'defense' => 5.75, 'dodge' => 8],
-        '0_17' => ['hp' => 36, 'attack' => 3.0, 'defense' => 2.0, 'dodge' => 6],
-        '0_18' => ['hp' => 22, 'attack' => 4.5, 'defense' => 4.5, 'dodge' => 6],
-        '0_19' => ['hp' => 24, 'attack' => 3.5, 'defense' => 4.0, 'dodge' => 6],
-        '0_20' => ['hp' => 22, 'attack' => 3.5, 'defense' => 4.5, 'dodge' => 6],
-        '1_26' => ['hp' => 20, 'attack' => 4.0, 'defense' => 4.5, 'dodge' => 7],
-        '1_32' => ['hp' => 18, 'attack' => 6.5, 'defense' => 5.0, 'dodge' => 8],
-        '1_33' => ['hp' => 24, 'attack' => 3.25, 'defense' => 4.0, 'dodge' => 6],
-        '1_34' => ['hp' => 22, 'attack' => 5.25, 'defense' => 4.5, 'dodge' => 7],
-        '1_36' => ['hp' => 22, 'attack' => 5.0, 'defense' => 3.0, 'dodge' => 6],
-        '1_39' => ['hp' => 16, 'attack' => 4.75, 'defense' => 6.0, 'dodge' => 7],
-        '1_61' => ['hp' => 30, 'attack' => 3.5, 'defense' => 3.5, 'dodge' => 6],
-        '1_63' => ['hp' => 26, 'attack' => 4.25, 'defense' => 3.5, 'dodge' => 6],
-        '1_65' => ['hp' => 12, 'attack' => 7.25, 'defense' => 6.5, 'dodge' => 8],
+        // weapon = the class of weapons it holds (rolebase Popsinger).
+        '0_3' => ['hp' => 28, 'attack' => 4.25, 'defense' => 3.25, 'dodge' => 6, 'weapon' => 'gloves'],
+        '0_9' => ['hp' => 20, 'attack' => 5.5, 'defense' => 4.0, 'dodge' => 7, 'weapon' => 'blunt'],
+        '0_12' => ['hp' => 24, 'attack' => 3.5, 'defense' => 4.0, 'dodge' => 6, 'weapon' => 'gloves'],
+        '0_14' => ['hp' => 24, 'attack' => 5.25, 'defense' => 4.0, 'dodge' => 7, 'weapon' => 'blunt'],
+        '0_16' => ['hp' => 16, 'attack' => 7.5, 'defense' => 5.75, 'dodge' => 8, 'weapon' => 'blunt'],
+        '0_17' => ['hp' => 36, 'attack' => 3.0, 'defense' => 2.0, 'dodge' => 6, 'weapon' => 'blunt'],
+        '0_18' => ['hp' => 22, 'attack' => 4.5, 'defense' => 4.5, 'dodge' => 6, 'weapon' => 'gloves'],
+        '0_19' => ['hp' => 24, 'attack' => 3.5, 'defense' => 4.0, 'dodge' => 6, 'weapon' => 'blunt'],
+        '0_20' => ['hp' => 22, 'attack' => 3.5, 'defense' => 4.5, 'dodge' => 6, 'weapon' => 'sharp'],
+        '1_26' => ['hp' => 20, 'attack' => 4.0, 'defense' => 4.5, 'dodge' => 7, 'weapon' => 'blunt'],
+        '1_32' => ['hp' => 18, 'attack' => 6.5, 'defense' => 5.0, 'dodge' => 8, 'weapon' => 'blunt'],
+        '1_33' => ['hp' => 24, 'attack' => 3.25, 'defense' => 4.0, 'dodge' => 6, 'weapon' => 'sharp'],
+        '1_34' => ['hp' => 22, 'attack' => 5.25, 'defense' => 4.5, 'dodge' => 7, 'weapon' => 'sharp'],
+        '1_36' => ['hp' => 22, 'attack' => 5.0, 'defense' => 3.0, 'dodge' => 6, 'weapon' => 'sharp'],
+        '1_39' => ['hp' => 16, 'attack' => 4.75, 'defense' => 6.0, 'dodge' => 7, 'weapon' => 'gloves'],
+        '1_61' => ['hp' => 30, 'attack' => 3.5, 'defense' => 3.5, 'dodge' => 6, 'weapon' => 'blunt'],
+        '1_63' => ['hp' => 26, 'attack' => 4.25, 'defense' => 3.5, 'dodge' => 6, 'weapon' => 'sharp'],
+        '1_65' => ['hp' => 12, 'attack' => 7.25, 'defense' => 6.5, 'dodge' => 8, 'weapon' => 'gloves'],
     ],
 
     /*
@@ -351,6 +352,9 @@ return [
 
     'equipment' => [
         'slots' => ['weapon', 'hat', 'armor', 'gloves', 'belt', 'shoes', 'amulet', 'ring'],
+        // Weapon classes and their original names (lg_Common_RolePopsinger*):
+        // a ninja only holds weapons of their outfit's class.
+        'weapon_classes' => ['blunt' => 'Blunt', 'sharp' => 'Sharp', 'gloves' => 'Fists'],
         'replay_drop_percent' => 15,
         // The Equipment Shop sells the basic tiers up to stock_levels_ahead
         // above the ninja's level for price * (buy_multiplier + level) and

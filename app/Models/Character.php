@@ -294,6 +294,40 @@ class Character extends Model
     }
 
     /**
+     * The class of weapons the ninja can hold, set by the outfit worn (or the
+     * created avatar): "blunt", "sharp" or "gloves"; null holds all three.
+     */
+    public function weaponClass(): ?string
+    {
+        return $this->outfit ? $this->outfit->weapon_class : config('game.avatars')[$this->avatar]['weapon'] ?? null;
+    }
+
+    public function canWield(Equipment $equipment): bool
+    {
+        $class = $equipment->weaponClass();
+
+        return $class === null || $this->weaponClass() === null || $class === $this->weaponClass();
+    }
+
+    /**
+     * After an outfit change: a weapon of another class goes back to the bag.
+     *
+     * @return string|null the name of the weapon taken off
+     */
+    public function dropUnfitWeapon(): ?string
+    {
+        $weapon = $this->wornGear()->where('equipped_slot', 'weapon')->with('equipment')->first();
+
+        if (! $weapon || $this->canWield($weapon->equipment)) {
+            return null;
+        }
+
+        $weapon->forceFill(['equipped_slot' => null])->save();
+
+        return $weapon->equipment->name;
+    }
+
+    /**
      * The look of the weapon in hand, e.g. "sharp20"; null when unarmed.
      */
     public function weaponLook(): ?string
@@ -418,6 +452,7 @@ class Character extends Model
             'name' => $this->name,
             'title' => $this->title?->name,
             'avatar' => $this->look(),
+            'weapon_class' => $this->weaponClass(),
             'level' => $this->level,
             'exp' => $this->exp,
             'exp_to_next' => Leveling::expToNext($this->level),

@@ -52,10 +52,21 @@ class Equipment extends Model
     }
 
     /**
-     * @return array<string, int|string>
+     * The class of ninja that can hold this weapon ("sharp20" -> "sharp"); null for other gear.
+     */
+    public function weaponClass(): ?string
+    {
+        return $this->look === null ? null : rtrim($this->look, '0123456789');
+    }
+
+    /**
+     * @return array<string, int|string|null>
      */
     public function summary(): array
     {
-        return $this->only(['code', 'name', 'slot', 'level', 'icon', 'min_attack', 'max_attack', 'defense', 'max_hp', 'crit']);
+        return [
+            ...$this->only(['code', 'name', 'slot', 'level', 'icon', 'min_attack', 'max_attack', 'defense', 'max_hp', 'crit']),
+            'weapon_class' => $this->weaponClass(),
+        ];
     }
 }

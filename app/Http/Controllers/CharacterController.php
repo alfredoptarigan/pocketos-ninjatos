@@ -21,6 +21,8 @@ class CharacterController extends Controller
 
         return Inertia::render('character/create', [
             'avatars' => array_keys(config('game.avatars')),
+            // The original create screen tells which weapons each avatar holds.
+            'weaponClasses' => array_map(fn (array $avatar) => $avatar['weapon'], config('game.avatars')),
         ]);
     }
 

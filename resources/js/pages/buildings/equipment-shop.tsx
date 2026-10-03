@@ -5,7 +5,13 @@ import { toast } from 'sonner';
 import GameWindow from '@/components/game-window';
 import ShopKeeper from '@/components/shop-keeper';
 import VillageBackdrop from '@/components/village-backdrop';
-import { bonuses, SLOT_LABELS } from '@/lib/gear';
+import {
+    bonuses,
+    canWield,
+    SLOT_LABELS,
+    slotLabel,
+    WEAPON_CLASS_LABELS,
+} from '@/lib/gear';
 import type { GearStats } from '@/lib/gear';
 import { cn } from '@/lib/utils';
 import { village as villageRoute } from '@/routes';
@@ -131,6 +137,9 @@ export default function EquipmentShop({ stock, bag }: Props) {
                                             ware={ware}
                                             mode={mode}
                                             level={character?.level ?? 0}
+                                            weaponClass={
+                                                character?.weapon_class ?? null
+                                            }
                                             gold={character?.gold ?? 0}
                                         />
                                     ))}
@@ -148,10 +157,11 @@ type RowProps = {
     ware: Ware;
     mode: 'buy' | 'sell';
     level: number;
+    weaponClass: string | null;
     gold: number;
 };
 
-function WareRow({ ware, mode, level, gold }: RowProps) {
+function WareRow({ ware, mode, level, weaponClass, gold }: RowProps) {
     const price = mode === 'buy' ? ware.buy_price : ware.sell_price;
     const tooPoor = mode === 'buy' && gold < price;
 
@@ -161,7 +171,7 @@ function WareRow({ ware, mode, level, gold }: RowProps) {
             <div className="min-w-0 flex-1">
                 <p className="font-semibold text-slate-100">{ware.name}</p>
                 <p className="text-xs text-slate-300">
-                    {SLOT_LABELS[ware.slot] ?? ware.slot} · {bonuses(ware)}
+                    {slotLabel(ware)} · {bonuses(ware)}
                 </p>
                 <p
                     className={cn(
@@ -171,6 +181,12 @@ function WareRow({ ware, mode, level, gold }: RowProps) {
                 >
                     Needs level {ware.level}
                 </p>
+                {!canWield(ware, weaponClass) && weaponClass && (
+                    <p className="text-xs text-red-400">
+                        Your outfit fights with{' '}
+                        {WEAPON_CLASS_LABELS[weaponClass]} weapons
+                    </p>
+                )}
             </div>
             <span
                 className={cn(

@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Character;
+use App\Models\Equipment;
 use App\Models\Outfit;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -148,6 +149,25 @@ class OutfitTest extends TestCase
 
         $this->post(route('outfits.take-off'))->assertRedirect(route('outfits.index'));
         $this->assertSame('0_3', $character->refresh()->hud()['avatar']);
+    }
+
+    public function test_an_outfit_of_another_class_sends_the_weapon_back_to_the_bag()
+    {
+        $character = $this->ninja(); // a Fists avatar
+        $claw = $character->gear()->forceCreate([
+            'equipment_id' => Equipment::factory()->create(['look' => 'gloves1'])->id, 'equipped_slot' => 'weapon',
+        ]);
+        $every = Outfit::factory()->create(['key' => '0_87', 'weapon_class' => null]);
+        $swordsman = Outfit::factory()->create(['key' => '0_1', 'weapon_class' => 'sharp']);
+        $character->outfits()->attach([$every->id, $swordsman->id]);
+        $this->actingAs($character->user);
+
+        $this->post(route('outfits.wear', $every));
+        $this->assertSame('weapon', $claw->refresh()->equipped_slot);
+
+        $this->post(route('outfits.wear', $swordsman));
+        $this->assertNull($claw->refresh()->equipped_slot);
+        $this->assertSame('sharp', $character->refresh()->weaponClass());
     }
 
     public function test_outfits_the_ninja_does_not_own_cannot_be_worn()

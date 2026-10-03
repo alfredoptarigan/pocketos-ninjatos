@@ -1,6 +1,6 @@
 import unittest
 
-from extract_outfit_assets import outfits
+from extract_outfit_assets import outfits, weapon_classes
 
 LANGUAGE = {
     'lg_avatar47': "<font color='#ff8a00'>Hatake Kakashi ＋0</font>",
@@ -16,12 +16,13 @@ def item(avatar_id, sex, color):
 
 class OutfitTest(unittest.TestCase):
     def test_base_outfits_get_english_names_and_rarities(self):
-        found = outfits([item(88, 0, 1), item(47, 0, 2), item(68, 1, 0), item(147, 0, 2), item(91, 0, 0)], LANGUAGE)
+        classes = weapon_classes({'ID': ['avatar', '47', '68', '88'], 'Popsinger': ['class', '2', '4', '7']})
+        found = outfits([item(88, 0, 1), item(47, 0, 2), item(68, 1, 0), item(147, 0, 2), item(91, 0, 0)], LANGUAGE, classes)
 
         self.assertEqual(found, [
-            {'key': '0_47', 'name': 'Hatake Kakashi', 'sex': 0, 'rarity': 'orange'},
-            {'key': '1_68', 'name': 'Konan', 'sex': 1, 'rarity': 'orange'},
-            {'key': '0_88', 'name': 'Christmas (Male)', 'sex': 0, 'rarity': 'blue'},
+            {'key': '0_47', 'name': 'Hatake Kakashi', 'sex': 0, 'rarity': 'orange', 'weapon_class': 'sharp'},
+            {'key': '1_68', 'name': 'Konan', 'sex': 1, 'rarity': 'orange', 'weapon_class': 'gloves'},
+            {'key': '0_88', 'name': 'Christmas (Male)', 'sex': 0, 'rarity': 'blue', 'weapon_class': None},
         ])
 
 
