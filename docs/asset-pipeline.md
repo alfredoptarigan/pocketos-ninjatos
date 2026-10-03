@@ -132,6 +132,10 @@ Upgrades +1..+N are other `avataritem` rows (`AvatarID = level * 100 + base`, `U
 recorded outfit, keyed by outfit id; `OutfitSeeder` merges it into `outfits.collection`).
 `avatarcollectleveladd` (tiers: Color 1/2/3 = orange/blue/grey) is copied by hand into
 `config/game.php` (`collection.tiers`). Gotcha: `avatarcollect` has no header row.
+It also writes `titles.json` (`TitleSeeder`) from `title`: names `lg_<Name>` (Indonesian
+ones translated in `TITLE_NAMES`) and bonuses parsed from the tooltip `lg_<contentself>`
+(the `contentself` key does not match the title id). Stats we lack (speed, hit, armor
+break, block, pierce, crit rating) are dropped.
 
 `tools/extract_equipment_assets.py [--hd]` reads `equipitem` and writes the 126 plain
 equipment tiers (listed with English names in its `NAMES`; set pieces and event gear are

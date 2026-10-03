@@ -3,19 +3,24 @@
 
 Usage: python3 tools/extract_progression_data.py <path-to-game-pockieninja>
 
-Writes database/data/avatar_collection.json: the Strength/Agility/Stamina an
-outfit gives once recorded in the avatar collection (avatarcollect, keyed by
-outfit id). Output is gitignored like the other extracted data.
+Writes to database/data/ (gitignored like the other extracted data):
+- avatar_collection.json: the Strength/Agility/Stamina an outfit gives once
+  recorded in the avatar collection (avatarcollect, keyed by outfit id);
+- titles.json: every title (title) with an English name and the bonuses
+  parsed from its tooltip (lg_title_contentself*); stats this rework does
+  not have (speed, hit, armor break, block...) are dropped.
 """
 
 from __future__ import annotations
 
 import json
+import re
 import sys
 from pathlib import Path
 
 from amf3 import load_compressed
 from extract_item_assets import latest_table, number
+from extract_outfit_assets import outfit_name
 
 SOURCE = 'apache/source/binary'
 ROOT = Path(__file__).resolve().parent.parent
@@ -41,6 +46,74 @@ def collection(rows: list[dict]) -> dict[str, dict]:
     }
 
 
+# Tooltip stat -> StatBonus field; "%" marks percent stats.
+TITLE_STATS = {
+    'Strength': 'strength',
+    'Agility': 'agility',
+    'Stamina': 'stamina',
+    'Max HP': 'hp',
+    'Defense': 'defense',
+    'Attack%': 'attackPercent',
+    'HP%': 'hpPercent',
+}
+# English names for titles the English build left in Indonesian.
+TITLE_NAMES = {
+    'Tidak ada gelar': 'No title',
+    'Murid Ninja': 'Ninja Student',
+    'Ninja Akademi': 'Academy Ninja',
+    'Ninja Genin': 'Genin',
+    'Ninja Chunin': 'Chunin',
+    'Ninja Jounin': 'Jonin',
+    'Ninja Genius': 'Genius Ninja',
+    'Terhormat': 'Honored',
+    'Demi Cinta!': 'For Love!',
+    'Berusaha menang': 'Striving to Win',
+    'Semangat, anak muda!': 'Fight On, Youngster!',
+    'Domba Gemuk Legendaris': 'Legendary Fat Sheep',
+}
+COLLECTION_RANKS = {'Pengumpul': 'Gatherer', 'Penjaga': 'Keeper', 'Kolektor': 'Collector', 'Koleksi': 'Curator', 'Katalog Buku': 'Cataloguer'}
+COLLECTION_COLORS = {'Orange': 'Orange', 'Biru': 'Blue', 'Abu-Abu': 'Grey'}
+
+
+def title_name(name: str) -> str:
+    """English title name: the TITLE_NAMES fixes and '<rank> <colour>' collection titles."""
+    name = outfit_name(name)
+    for rank, english_rank in COLLECTION_RANKS.items():
+        for color, english_color in COLLECTION_COLORS.items():
+            if name == f'{rank} {color}':
+                return f'{english_color} {english_rank}'
+    name = re.sub(r'\((\d+) hari\)', r' (\1 days)', name)
+    return TITLE_NAMES.get(name, name)
+
+
+def title_bonus(tooltip: str) -> dict[str, float]:
+    """'..[line]Strength    +13<br>HP    +4%<br>[line]..' -> {'strength': 13, 'hpPercent': 4}."""
+    parts = tooltip.split('[line]')
+    stats = {}
+    for line in re.sub(r'<(?!br>)[^>]+>', '', parts[1] if len(parts) > 1 else '').split('<br>'):
+        found = re.fullmatch(r'\s*(.+?)\s*\+\s*([\d.]+)(%?)\s*', line)
+        field = found and TITLE_STATS.get(found[1] + found[3])
+        if field:
+            value = float(found[2])
+            stats[field] = int(value) if value.is_integer() else value
+    return stats
+
+
+def titles(rows: list[dict], language: dict) -> list[dict]:
+    """Every title but 0 ("no title"): id, code (its Name key), English name, category, bonus."""
+    return [
+        {
+            'id': number(row['ID']),
+            'code': row['Name'],
+            'name': title_name(language.get(f"lg_{row['Name']}", row['Name'])),
+            'category': number(row['Level']),
+            'bonus': title_bonus(language.get(f"lg_{row['contentself']}", '')),
+        }
+        for row in rows
+        if number(row['ID']) > 0
+    ]
+
+
 def write(name: str, data) -> None:
     path = DATA_OUT / name
     path.write_text(json.dumps(data, indent=1, ensure_ascii=False))
@@ -53,8 +126,12 @@ def main() -> None:
     binary = Path(sys.argv[1]).expanduser() / SOURCE
     table = lambda name: all_rows(load_compressed(latest_table(binary / 'datatable', name)))  # noqa: E731
 
+    languages = sorted((binary / 'keyvaluetable').glob('language.s*.kv'), key=lambda p: int(p.name.split('.s')[1].split('.')[0]))
+    language = load_compressed(languages[-1])
+
     DATA_OUT.mkdir(parents=True, exist_ok=True)
     write('avatar_collection.json', collection(table('avatarcollect')))
+    write('titles.json', titles(table('title'), language))
 
 
 if __name__ == '__main__':

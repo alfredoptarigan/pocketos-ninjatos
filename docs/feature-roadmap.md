@@ -18,7 +18,7 @@ Tick an item when it ships and update its row in the tables below.
 
 **Character**
 
-- [ ] Titles
+- [x] Titles (93 original titles; collection and achievement titles can be earned, one worn for its bonus)
 - [ ] Achievements
 - [ ] Honor and honor exchange
 - [x] Costume change (outfits with grey/blue/orange rarity, Wardrobe page)
@@ -107,7 +107,7 @@ Tick an item when it ships and update its row in the tables below.
 | Status | Feature                                               | Original data                                                                                                                      |
 | ------ | ----------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
 | ✅     | Create character, HUD, level and EXP, character panel | `creatrole`, `rolebase`, `roleinfo`                                                                                                |
-| ⬜     | Titles                                                | `title`, `titleitem`, panels `title*`                                                                                              |
+| ✅     | Titles                                                | `title`, `titleitem`, panels `title*`                                                                                              |
 | ⬜     | Achievements                                          | `accomplishment`, panel `accomplishmentpop`                                                                                        |
 | ⬜     | Honor and honor exchange                              | `honorexchangeexp`, panels `myhonor*`, `honorexchange`                                                                             |
 | ✅     | Avatar collection and costume change                  | `avatarcollect`, `avatarcollectleveladd`, `avataritem`, `recastavatar`, panels `avatarcollect*`, `avatartransition`, `avatarstock` |

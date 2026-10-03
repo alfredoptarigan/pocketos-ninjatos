@@ -1,5 +1,7 @@
 export type Character = {
     name: string;
+    /** Name of the worn title, if any. */
+    title: string | null;
     /** Asset key "<sex>_<id>" the ninja is drawn with: the worn outfit, else the created avatar. */
     avatar: string;
     level: number;
@@ -76,4 +78,45 @@ export function characterAssets(avatar: string) {
 
 export function isFemaleAvatar(avatar: string): boolean {
     return avatar.startsWith('1_');
+}
+
+/** StatBonus fields a title adds while worn. */
+export type TitleBonus = Partial<
+    Record<
+        | 'strength'
+        | 'agility'
+        | 'stamina'
+        | 'hp'
+        | 'defense'
+        | 'attackPercent'
+        | 'hpPercent',
+        number
+    >
+>;
+
+export type Title = {
+    id: number;
+    code: string;
+    name: string;
+    bonus: TitleBonus;
+};
+
+const BONUS_LABELS: Record<keyof TitleBonus, string> = {
+    strength: 'Strength',
+    agility: 'Agility',
+    stamina: 'Stamina',
+    hp: 'Health',
+    defense: 'Defense',
+    attackPercent: 'Attack %',
+    hpPercent: 'Health %',
+};
+
+/** "Strength +13, Health % +4", or "No bonus". */
+export function describeBonus(bonus: TitleBonus): string {
+    const parts = Object.entries(bonus).map(
+        ([field, value]) =>
+            `${BONUS_LABELS[field as keyof TitleBonus]} +${value}`,
+    );
+
+    return parts.length > 0 ? parts.join(', ') : 'No bonus';
 }

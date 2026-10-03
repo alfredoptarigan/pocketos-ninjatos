@@ -249,11 +249,22 @@ return [
 
     'collection' => [
         'record_level' => 2,
-        // rarity => list of [outfits recorded, character level, percent]
+        // rarity => list of [outfits recorded, character level, percent, title earned
+        // on recording that many (title code, regardless of level)]
         'tiers' => [
-            'orange' => [[5, 25, 3.2], [10, 35, 4.9], [15, 45, 6.1], [20, 55, 7.1], [25, 65, 8], [30, 70, 9], [35, 75, 10]],
-            'blue' => [[5, 25, 2.6], [10, 35, 4], [15, 45, 5], [20, 55, 5.9], [25, 65, 6.6], [30, 70, 7.1]],
-            'grey' => [[5, 25, 2.1], [10, 35, 3.2], [15, 45, 4], [20, 55, 4.7], [25, 65, 5.3], [30, 70, 5.7]],
+            'orange' => [
+                [5, 25, 3.2, 'AvatarTitle101'], [10, 35, 4.9, 'AvatarTitle102'], [15, 45, 6.1, 'AvatarTitle103'],
+                [20, 55, 7.1, 'AvatarTitle104'], [25, 65, 8, 'AvatarTitle105'], [30, 70, 9, 'AvatarTitle106'],
+                [35, 75, 10, 'AvatarTitle107'],
+            ],
+            'blue' => [
+                [5, 25, 2.6, 'AvatarTitle201'], [10, 35, 4, 'AvatarTitle202'], [15, 45, 5, 'AvatarTitle203'],
+                [20, 55, 5.9, 'AvatarTitle204'], [25, 65, 6.6, 'AvatarTitle205'], [30, 70, 7.1, null],
+            ],
+            'grey' => [
+                [5, 25, 2.1, 'AvatarTitle301'], [10, 35, 3.2, 'AvatarTitle302'], [15, 45, 4, 'AvatarTitle303'],
+                [20, 55, 4.7, 'AvatarTitle304'], [25, 65, 5.3, 'AvatarTitle305'], [30, 70, 5.7, null],
+            ],
         ],
     ],
 

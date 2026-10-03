@@ -1,4 +1,4 @@
-import { Head, usePage } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import CharacterSprite from '@/components/character-sprite';
 import GameWindow from '@/components/game-window';
 import InventoryBag, { post } from '@/components/inventory-bag';
@@ -7,6 +7,7 @@ import VillageBackdrop from '@/components/village-backdrop';
 import { bonuses, SLOT_LABELS } from '@/lib/gear';
 import { village } from '@/routes';
 import { unequip } from '@/routes/character/gear';
+import { index as titles } from '@/routes/titles';
 import { characterAssets } from '@/types/game';
 
 type Stats = {
@@ -81,10 +82,13 @@ export default function Inventory({
                             <div className="flex items-stretch gap-2">
                                 {column(slots.slice(0, half))}
                                 <div className="flex flex-1 flex-col items-center rounded-md border border-sky-900 bg-gradient-to-b from-sky-950/80 to-slate-950/80 p-2">
-                                    {/* Titles are not built yet; the original shows "No title" until one is earned. */}
-                                    <p className="w-40 rounded border border-slate-500 bg-slate-700/80 text-center text-sm text-slate-300">
-                                        No title
-                                    </p>
+                                    <Link
+                                        href={titles()}
+                                        title="Change title"
+                                        className="w-40 rounded border border-slate-500 bg-slate-700/80 text-center text-sm text-slate-300 hover:text-amber-200"
+                                    >
+                                        {character.title ?? 'No title'}
+                                    </Link>
                                     {hasPortrait ? (
                                         <img
                                             src={

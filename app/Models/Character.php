@@ -24,6 +24,8 @@ use Illuminate\Support\Carbon;
  * @property string $name
  * @property string $avatar Asset key "<sex>_<id>" from config('game.avatars')
  * @property int|null $outfit_id Worn outfit; null wears the avatar
+ * @property int|null $title_id Worn title
+ * @property-read Title|null $title
  * @property-read Outfit|null $outfit
  * @property int $level
  * @property int $exp Experience into the current level
@@ -117,11 +119,46 @@ class Character extends Model
     }
 
     /**
-     * Stats on top of level and gear: the avatar collection (titles join in later).
+     * Stats on top of level and gear: the avatar collection and the worn title.
      */
     public function statBonus(): StatBonus
     {
-        return AvatarCollection::for($this)->bonus;
+        $bonus = AvatarCollection::for($this)->bonus;
+
+        return $this->title ? $bonus->plus($this->title->statBonus()) : $bonus;
+    }
+
+    /**
+     * @return BelongsTo<Title, $this>
+     */
+    public function title(): BelongsTo
+    {
+        return $this->belongsTo(Title::class);
+    }
+
+    /**
+     * Titles earned from achievements and the avatar collection.
+     *
+     * @return BelongsToMany<Title, $this>
+     */
+    public function titles(): BelongsToMany
+    {
+        return $this->belongsToMany(Title::class, 'character_titles')->withTimestamps();
+    }
+
+    /**
+     * Give the title with this code; false when unknown or already owned.
+     */
+    public function grantTitle(string $code): bool
+    {
+        $title = Title::query()->where('code', $code)->first();
+
+        if ($title === null || $this->titles()->whereKey($title->id)->exists()) {
+            return false;
+        }
+        $this->titles()->attach($title);
+
+        return true;
     }
 
     /**
@@ -234,6 +271,7 @@ class Character extends Model
 
         return [
             'name' => $this->name,
+            'title' => $this->title?->name,
             'avatar' => $this->look(),
             'level' => $this->level,
             'exp' => $this->exp,

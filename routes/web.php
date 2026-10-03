@@ -12,6 +12,7 @@ use App\Http\Controllers\GiftController;
 use App\Http\Controllers\OutfitController;
 use App\Http\Controllers\PharmacyController;
 use App\Http\Controllers\SkillController;
+use App\Http\Controllers\TitleController;
 use App\Http\Controllers\TowerController;
 use App\Http\Controllers\VillageController;
 use App\Http\Controllers\WishPotController;
@@ -37,6 +38,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('outfits', [OutfitController::class, 'index'])->name('outfits.index');
         Route::get('collection', [CollectionController::class, 'index'])->name('collection.index');
         Route::post('collection/{outfit}/record', [CollectionController::class, 'record'])->name('collection.record');
+        Route::get('titles', [TitleController::class, 'index'])->name('titles.index');
+        Route::post('titles/take-off', [TitleController::class, 'takeOff'])->name('titles.take-off');
+        Route::post('titles/{title}/wear', [TitleController::class, 'wear'])->name('titles.wear');
         Route::post('outfits/take-off', [OutfitController::class, 'takeOff'])->name('outfits.take-off');
         Route::post('outfits/{outfit}/wear', [OutfitController::class, 'wear'])->name('outfits.wear');
         Route::post('outfits/{outfit}/upgrade', [OutfitController::class, 'upgrade'])->name('outfits.upgrade');

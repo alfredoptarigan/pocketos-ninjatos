@@ -12,6 +12,7 @@ class RecordOutfit
     /**
      * Record an owned outfit in the avatar collection. It needs the
      * collection's upgrade level and stays in the wardrobe afterwards.
+     * Reaching a tier's count grants its title.
      *
      * @throws ValidationException when not collectible, too low or already recorded
      */
@@ -34,6 +35,13 @@ class RecordOutfit
             }
 
             $ninja->outfits()->updateExistingPivot($outfit->id, ['recorded_at' => now()]);
+
+            $recorded = $ninja->outfits()->wherePivotNotNull('recorded_at')->where('rarity', $outfit->rarity)->count();
+            foreach (config("game.collection.tiers.{$outfit->rarity}", []) as [$count, , , $title]) {
+                if ($title !== null && $recorded >= $count) {
+                    $ninja->grantTitle($title);
+                }
+            }
         });
     }
 }

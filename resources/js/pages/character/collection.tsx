@@ -16,13 +16,15 @@ type CollectibleOutfit = Outfit & {
 
 type TierProgress = { recorded: number; tier: number; percent: number };
 
+type Tier = [number, number, number, string | null];
+
 type Props = {
     outfits: CollectibleOutfit[];
     tiers: Record<Rarity, TierProgress>;
     rules: {
         record_level: number;
-        /** [outfits recorded, character level, percent] per tier. */
-        tiers: Record<Rarity, [number, number, number][]>;
+        /** [outfits recorded, character level, percent, title code] per tier. */
+        tiers: Record<Rarity, Tier[]>;
     };
 };
 
@@ -91,7 +93,7 @@ function TierCard({
 }: {
     rarity: Rarity;
     progress: TierProgress;
-    levels: [number, number, number][];
+    levels: Tier[];
 }) {
     const next = levels[progress.tier];
 
