@@ -43,6 +43,14 @@ void createInertiaApp({
         }
     },
     strictMode: true,
+    defaults: {
+        // In game every page shows "/" (like the original client), so moving
+        // around replaces the history entry instead of stacking "/" copies.
+        visitOptions: (_href, options) =>
+            window.location.pathname === '/'
+                ? { ...options, replace: true }
+                : options,
+    },
     withApp(app) {
         return (
             <TooltipProvider delayDuration={0}>

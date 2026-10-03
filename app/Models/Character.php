@@ -113,6 +113,20 @@ class Character extends Model
     }
 
     /**
+     * The hunting ground or dungeon the ninja is in; null in the village.
+     */
+    public function place(): Field|Dungeon|null
+    {
+        [$kind, $key] = explode(':', $this->location ?? 'village:');
+
+        return match ($kind) {
+            'field' => Field::find($key),
+            'dungeon' => Dungeon::find($key),
+            default => null,
+        };
+    }
+
+    /**
      * The page of the place the ninja is in.
      */
     public function locationUrl(): string

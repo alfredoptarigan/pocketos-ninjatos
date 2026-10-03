@@ -10,6 +10,7 @@ use App\Http\Controllers\EquipmentShopController;
 use App\Http\Controllers\FieldController;
 use App\Http\Controllers\GearController;
 use App\Http\Controllers\GiftController;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\HonorController;
 use App\Http\Controllers\OutfitController;
 use App\Http\Controllers\PharmacyController;
@@ -21,16 +22,18 @@ use App\Http\Controllers\WishPotController;
 use App\Http\Controllers\WorldController;
 use App\Http\Middleware\EnsureLocation;
 use App\Http\Middleware\EnsurePlayerHasCharacter;
+use App\Http\Middleware\GameEntry;
 use Illuminate\Support\Facades\Route;
 
-Route::inertia('/', 'welcome')->name('home');
+// The whole game lives at "/", like the original client (GameEntry).
+Route::get('/', HomeController::class)->name('home');
 
 // Unverified players may enter: friends' private server has no mail delivery.
 Route::middleware(['auth'])->group(function () {
     Route::get('character/create', [CharacterController::class, 'create'])->name('character.create');
     Route::post('character', [CharacterController::class, 'store'])->name('character.store');
 
-    Route::middleware(EnsurePlayerHasCharacter::class)->group(function () {
+    Route::middleware([EnsurePlayerHasCharacter::class, GameEntry::class])->group(function () {
         // Menus: open wherever the ninja is.
         // The original game shows the character inside the Inventory.
         Route::get('character', fn () => to_route('bag'))->name('character.show');
