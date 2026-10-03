@@ -8,6 +8,8 @@ Requires Pillow.
 Writes:
   database/data/tower.json                  170 floors: opponent stats, exp, art (TowerSeeder)
   public/game-assets/monsters/<id>/         motions.png/json + face.png, or portrait.png for bosses
+                                            without battle art
+  public/game-assets/characters/<sex>_<id>/ motions of bosses that are avatars (AvatarUserFace_N9..)
   public/game-assets/battle/background.jpg  battle backdrop
   public/game-assets/music/singlegate.mp3   tower music
 Output is gitignored: it is derived from copyrighted game files.
@@ -22,6 +24,7 @@ import sys
 from pathlib import Path
 
 from amf3 import load_compressed
+from extract_outfit_assets import extract_art as extract_avatar_art
 from motion import find_motions, write_motion_sheet
 from upscale import available as upscaler_available
 from upscale import upscale_file
@@ -48,13 +51,23 @@ STATS = {
     'defense': 'Defense', 'crit': 'CritMul', 'crit_multiplier': 'CritAttach', 'dodge': 'DodgeMul',
     'parry': 'ParryMul', 'counter': 'CounterMul', 'priority': 'PriorityMul',
 }
-# Animated opponents use map monster art; everything else is a boss with a portrait.
+# Animated opponents use map monster art; everything else is a boss. Most
+# bosses are avatars in costume ("AvatarUserFace_N9<sex><avatar id>", the
+# avatar id being the costume level * 100 + the outfit id) and fight in that
+# avatar's motions; the rest (Akatsuki "N9001xx", "TGateUserFace_") only
+# have a portrait.
 ANIMATED_PREFIX = 'MapUserFace_'
+AVATAR_RESOURCE = re.compile(r'AvatarUserFace_N9[01](\d{3})')
 BUILT: set[str] = set()
 BACKGROUNDS_DIR = 'movieclip/ui/fightbg'
 # arena.jpg carries red guide lines; 103001 and 4001 belong to special events.
 SKIPPED_BACKGROUNDS = {'arena', 'fightbg_103001', 'fightbg_4001'}
 FLOORS_PER_BACKGROUND = 10
+# Floors 151-170 (added later) rate dodge, block and crit ten times higher,
+# like the dungeon npcs; they are divided back to percent.
+LATE_FLOORS_FROM = 151
+RATING_DIVISOR = 10
+RATINGS = ('dodge', 'parry', 'crit')
 HD_SCALE = 2
 
 
@@ -67,12 +80,41 @@ def number(value) -> int:
     return int(value or 0)
 
 
+def stats(npcs: dict, index: int) -> dict[str, int]:
+    """The floor's battle stats, with late-floor ratings brought to the percent scale."""
+    found = {field: number(npcs[column][index]) for field, column in STATS.items()}
+    if index >= LATE_FLOORS_FROM:
+        found.update({field: found[field] // RATING_DIVISOR for field in RATINGS})
+    return found
+
+
 def art_id(resource_id: str) -> str:
     """'MapUserFace_N32051' -> 'n32051'."""
     return 'n' + re.sub(r'\D', '', resource_id.split('_')[-1])
 
 
+def boss_avatar(resource_id: str) -> int | None:
+    """'AvatarUserFace_N90277' (Aaroniero +2) -> outfit id 77; None for other art."""
+    match = AVATAR_RESOURCE.fullmatch(resource_id)
+    return int(match[1]) % 100 if match else None
+
+
+def avatar_art(source: Path, avatar: int, scale: int) -> dict | None:
+    """Motions and face of the avatar a boss is, if the backup has them (either sex)."""
+    for sex in ('0', '1'):
+        key = f'{sex}_{avatar}'
+        if key in BUILT or extract_avatar_art(source, key, scale):
+            BUILT.add(key)
+            url = f'/game-assets/characters/{key}'
+            return {'type': 'motion', 'motions': f'{url}/motions.json', 'face': f'{url}/face.png'}
+    return None
+
+
 def extract_art(source: Path, resource_id: str, scale: int) -> dict:
+    avatar = boss_avatar(resource_id)
+    if avatar is not None and (art := avatar_art(source, avatar, scale)):
+        return art
+
     key = art_id(resource_id)
     out = ASSETS / 'monsters' / key
     out.mkdir(parents=True, exist_ok=True)
@@ -123,6 +165,9 @@ def main() -> None:
     npcs = latest_table(datatable, 'singlegatenpc')
     floor_exp = latest_table(datatable, 'sgategetexp')
     language = load_compressed(source / 'binary/lg/language.lg')
+    # English names fill in the floors NAMES does not cover (the Akatsuki on top).
+    english_files = sorted((source / 'binary/keyvaluetable').glob('language.s*.kv'), key=lambda p: int(p.name.split('.s')[1].split('.')[0]))
+    english = load_compressed(english_files[-1])
     exp_by_floor = {int(order): number(exp) for order, exp in zip(floor_exp['Order'], floor_exp['Exp'])}
 
     backgrounds = copy_backgrounds(source)
@@ -134,9 +179,9 @@ def main() -> None:
         floors.append({
             'floor': floor,
             'code': npcs['ID'][index],
-            'name': NAMES.get(chinese, UNNAMED),
+            'name': NAMES.get(chinese) or english.get('lg_' + npcs['Name'][index], '').strip() or UNNAMED,
             'is_boss': not resource_id.startswith(ANIMATED_PREFIX),
-            **{field: number(npcs[column][index]) for field, column in STATS.items()},
+            **stats(npcs, index),
             # The last floor has no exp row; it reuses the previous floor's reward.
             'exp': exp_by_floor.get(floor) or exp_by_floor[max(exp_by_floor)],
             'art': {

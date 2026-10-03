@@ -1,5 +1,5 @@
-import { AnimatedSprite, Assets, Container, Sprite } from 'pixi.js';
-import type { Spritesheet, Texture } from 'pixi.js';
+import { AnimatedSprite, Assets, Container, Sprite, Texture } from 'pixi.js';
+import type { Spritesheet } from 'pixi.js';
 import { characterAssets } from '@/types/game';
 import type { FighterInfo } from './types';
 
@@ -7,7 +7,9 @@ import type { FighterInfo } from './types';
 const TICKER_FPS = 60;
 const DEFAULT_FPS = 12;
 const MOTION_SCALE = 1.7;
-const PORTRAIT_SCALE = 1.15;
+// Bosses without battle art stand in as a portrait about as tall as a fighter.
+const PORTRAIT_HEIGHT = 300;
+const PORTRAIT_ANCHOR_Y = 0.82;
 
 export type Action = 'idle' | 'stance' | 'run' | 'attack' | 'dodge' | 'dead';
 
@@ -20,7 +22,9 @@ export class Fighter {
         private readonly body: AnimatedSprite | Sprite,
         private readonly sheet: Spritesheet | null,
     ) {
-        body.scale.set(sheet ? MOTION_SCALE : PORTRAIT_SCALE);
+        body.scale.set(
+            sheet ? MOTION_SCALE : PORTRAIT_HEIGHT / body.texture.height,
+        );
         // Original motions are drawn facing left; mirror opponents so they face the player.
         if (sheet && !info.avatar) {
             body.scale.x *= -1;
@@ -47,8 +51,16 @@ export class Fighter {
         }
 
         const portrait = info.art?.type === 'portrait' ? info.art.portrait : '';
-        const body = new Sprite(await Assets.load<Texture>(portrait));
-        body.anchor.set(0.5, 1);
+        const texture = await Assets.load<Texture>(portrait);
+        const body = new Sprite(texture);
+        // Busts cut off at the bottom: sink the cut below the ground line
+        // and fade every edge so it does not read as a pasted box.
+        body.anchor.set(0.5, PORTRAIT_ANCHOR_Y);
+        const fade = new Sprite(vignette());
+        fade.anchor.set(0.5, PORTRAIT_ANCHOR_Y);
+        fade.setSize(texture.width, texture.height);
+        body.addChild(fade);
+        body.mask = fade;
 
         return new Fighter(info, body, null);
     }
@@ -101,4 +113,38 @@ export class Fighter {
     get height(): number {
         return this.body.height;
     }
+}
+
+let vignetteTexture: Texture | null = null;
+
+/** An alpha mask: opaque in the middle, clear towards every edge. */
+function vignette(): Texture {
+    if (vignetteTexture) {
+        return vignetteTexture;
+    }
+
+    const size = 128;
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const context = canvas.getContext('2d');
+
+    if (context) {
+        const gradient = context.createRadialGradient(
+            size / 2,
+            size * 0.42,
+            size * 0.3,
+            size / 2,
+            size * 0.42,
+            size * 0.62,
+        );
+        gradient.addColorStop(0, 'rgba(255,255,255,1)');
+        gradient.addColorStop(1, 'rgba(255,255,255,0)');
+        context.fillStyle = gradient;
+        context.fillRect(0, 0, size, size);
+    }
+
+    vignetteTexture = Texture.from(canvas);
+
+    return vignetteTexture;
 }

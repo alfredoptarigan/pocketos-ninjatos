@@ -117,6 +117,14 @@ seal, illusion, healing); `clientskillid` lists 13 levels per jutsu (id `L*10000
 level 1 has text; `upskillcfg` gives the passive levels (1, 11 … 91). Scroll skills (Amaterasu,
 Izanagi) are not in this backup.
 
+Tower bosses: `singlegatenpc.ResourceID` `AvatarUserFace_N9<sex><avatar id>` is an avatar in
+costume (avatar id = costume level * 100 + outfit id, e.g. `N90277` Aaroniero +2 = `0_77`), so
+`extract_tower_assets.py` writes that avatar's motions to `characters/<sex>_<id>/` (also for Bleach
+villains that are not wearable outfits, ids 77-83). Only the Akatsuki (`N9001xx`) and
+`TGateUserFace_` bosses fall back to the `npcbackphoto` bust. Gotcha: floors 151-170 rate dodge,
+block and crit 10x (like dungeon npcs); the extractor divides them by 10. English names
+(`lg_name_n9001xx`) fill the floors `NAMES` does not cover.
+
 `tools/extract_dungeon_assets.py [--hd]` (run after the outfit extractor) reads `tollgate` →
 `subtollgate` → `fightmonsterpoint`/`monstergroup` → `normalnpc` and writes
 `database/data/dungeons.json` (`DungeonSeeder`), stage pictures `public/game-assets/dungeons/<code>.jpg`
@@ -243,7 +251,7 @@ ui/menu/<name>-{up,over,down}.png     bottom menu: bag, character, tools, forge,
 ui/fight/*.png                        battle HUD: bar frames, hp/mp fills, VS, portrait frame, pet, lock slot, pills
 npcs/pharmacy.png                     pharmacy keeper portrait (n11004)
 monsters/n<id>/motions.{png,json}     animated opponents (+ face.png)
-monsters/n<id>/portrait.png           boss opponents (portrait only, no motions in the backup)
+monsters/n<id>/portrait.png           tower bosses without battle art (Akatsuki, floors 161-170)
 battle/background.jpg                 old 500x300 fallback backdrop
 battle/backgrounds/fightbg_*.jpg      25 battle backdrops (one per 10 tower floors)
 music/maincity1-4.mp3, blackcity.mp3, singlegate.mp3
