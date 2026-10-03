@@ -58,6 +58,7 @@ class DungeonTest extends TestCase
         $character = $this->ninja(['level' => 10]);
         $dungeon = $this->dungeon(overrides: ['min_level' => 16]);
         $this->actingAs($character->user);
+        $character->forceFill(['location' => "dungeon:{$dungeon->id}"])->save();
 
         $this->post(route('dungeons.enter', $dungeon))->assertSessionHasErrors('dungeon');
 
@@ -70,6 +71,7 @@ class DungeonTest extends TestCase
         $dungeon = $this->dungeon(overrides: ['daily_runs' => 1]);
         DungeonRun::factory()->for($character)->for($dungeon)->create(['status' => 'cleared']);
         $this->actingAs($character->user);
+        $character->forceFill(['location' => "dungeon:{$dungeon->id}"])->save();
 
         $this->post(route('dungeons.enter', $dungeon))->assertSessionHasErrors('dungeon');
     }
@@ -79,9 +81,11 @@ class DungeonTest extends TestCase
         $character = $this->ninja();
         $other = $this->dungeon();
         DungeonRun::factory()->for($character)->for($other)->create();
+        $dungeon = $this->dungeon();
         $this->actingAs($character->user);
+        $character->forceFill(['location' => "dungeon:{$dungeon->id}"])->save();
 
-        $this->post(route('dungeons.enter', $this->dungeon()))->assertSessionHasErrors('dungeon');
+        $this->post(route('dungeons.enter', $dungeon))->assertSessionHasErrors('dungeon');
     }
 
     public function test_winning_a_wave_moves_on_and_keeps_the_wounds()
@@ -89,6 +93,7 @@ class DungeonTest extends TestCase
         $character = $this->ninja();
         $dungeon = $this->dungeon([2], ['max_atk' => 3, 'min_atk' => 3, 'max_hp' => 30]);
         $this->actingAs($character->user);
+        $character->forceFill(['location' => "dungeon:{$dungeon->id}"])->save();
 
         $this->post(route('dungeons.enter', $dungeon))->assertRedirect(route('dungeons.show', $dungeon));
         $run = DungeonRun::sole();
@@ -109,6 +114,7 @@ class DungeonTest extends TestCase
         $dungeon = $this->dungeon([1], overrides: ['reward_exp' => 0, 'reward_gold' => 500]);
         $run = DungeonRun::factory()->for($character)->for($dungeon)->create();
         $this->actingAs($character->user);
+        $character->forceFill(['location' => "dungeon:{$dungeon->id}"])->save();
 
         $this->post(route('dungeon-runs.fight', $run));
 
@@ -129,6 +135,7 @@ class DungeonTest extends TestCase
         $dungeon = $this->dungeon([1, 1], ['max_hp' => 30, 'min_atk' => 10, 'max_atk' => 10]);
         $run = DungeonRun::factory()->for($character)->for($dungeon)->create();
         $this->actingAs($character->user);
+        $character->forceFill(['location' => "dungeon:{$dungeon->id}"])->save();
 
         $this->post(route('dungeon-runs.fight', $run));
 
@@ -143,6 +150,7 @@ class DungeonTest extends TestCase
         $dungeon = $this->dungeon([2], ['max_hp' => 100000, 'min_atk' => 100000, 'max_atk' => 100000, 'priority' => 100]);
         $run = DungeonRun::factory()->for($character)->for($dungeon)->create();
         $this->actingAs($character->user);
+        $character->forceFill(['location' => "dungeon:{$dungeon->id}"])->save();
 
         $this->post(route('dungeon-runs.fight', $run));
 
@@ -157,6 +165,7 @@ class DungeonTest extends TestCase
         $finished = DungeonRun::factory()->for($character)->for($dungeon)->create(['status' => 'cleared']);
         $theirs = DungeonRun::factory()->for(Character::factory())->for($dungeon)->create();
         $this->actingAs($character->user);
+        $character->forceFill(['location' => "dungeon:{$dungeon->id}"])->save();
 
         $this->post(route('dungeon-runs.fight', $finished))->assertSessionHasErrors('dungeon');
         $this->post(route('dungeon-runs.fight', $theirs))->assertNotFound();
@@ -165,8 +174,10 @@ class DungeonTest extends TestCase
     public function test_leaving_ends_the_run()
     {
         $character = $this->ninja();
-        $run = DungeonRun::factory()->for($character)->for($this->dungeon())->create();
+        $dungeon = $this->dungeon();
+        $run = DungeonRun::factory()->for($character)->for($dungeon)->create();
         $this->actingAs($character->user);
+        $character->forceFill(['location' => "dungeon:{$dungeon->id}"])->save();
 
         $this->post(route('dungeon-runs.leave', $run))->assertRedirect(route('dungeons.index'));
 
@@ -179,6 +190,7 @@ class DungeonTest extends TestCase
         $dungeon = $this->dungeon([2, 1]);
         $run = DungeonRun::factory()->for($character)->for($dungeon)->create(['stage' => 1, 'wave' => 0]);
         $this->actingAs($character->user);
+        $character->forceFill(['location' => "dungeon:{$dungeon->id}"])->save();
 
         $this->get(route('dungeons.show', $dungeon))->assertInertia(fn (Assert $page) => $page
             ->component('dungeons/show')

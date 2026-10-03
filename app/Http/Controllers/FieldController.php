@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Actions\HuntMonster;
 use App\Actions\SearchSpot;
+use App\Actions\Travel;
 use App\Models\Character;
 use App\Models\Field;
 use App\Models\FieldMonster;
@@ -32,6 +33,16 @@ class FieldController extends Controller
             'monsters' => $field->monsters()->get(['id', 'name', 'is_boss', 'level', 'max_hp', 'min_atk', 'max_atk', 'defense', 'exp', 'art']),
             'searches' => $this->searches($request->user()->character, $field),
         ]);
+    }
+
+    /**
+     * Go to a hunting ground from the world map.
+     */
+    public function travel(Request $request, Field $field, Travel $travel): RedirectResponse
+    {
+        $travel->handle($request->user()->character, $field);
+
+        return to_route('fields.show', $field);
     }
 
     public function search(Request $request, Field $field, string $spot, SearchSpot $search): RedirectResponse

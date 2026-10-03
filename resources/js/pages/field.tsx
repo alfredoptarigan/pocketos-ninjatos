@@ -6,8 +6,8 @@ import type { MonsterArt } from '@/game/battle/types';
 import { createField, FIELD_HEIGHT, FIELD_WIDTH } from '@/game/field-scene';
 import type { Spot } from '@/game/hotspot-scene';
 import { cn } from '@/lib/utils';
-import { village } from '@/routes';
 import { fight, search } from '@/routes/fields';
+import { returnMethod as returnToVillage } from '@/routes/village';
 import { show as world } from '@/routes/world';
 
 type Monster = {
@@ -203,7 +203,11 @@ export default function Field({ field, monsters, searches }: Props) {
                         );
                     })}
                 </ul>
-                <Link href={village()} className="game-button py-1">
+                <Link
+                    href={returnToVillage()}
+                    as="button"
+                    className="game-button py-1"
+                >
                     Village
                 </Link>
                 <Link href={world()} className="game-button py-1">

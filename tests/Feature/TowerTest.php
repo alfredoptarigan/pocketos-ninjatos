@@ -136,6 +136,19 @@ class TowerTest extends TestCase
         $this->assertDatabaseCount('battles', 0);
     }
 
+    public function test_fights_per_minute_are_limited()
+    {
+        config(['game.actions_per_minute' => 2]);
+        $character = Character::factory()->create();
+        $this->weakFloor(1);
+        $this->actingAs($character->user);
+
+        $this->post(route('tower.fight', 1))->assertRedirect();
+        $this->post(route('tower.fight', 1))->assertRedirect();
+        $this->post(route('tower.fight', 1))->assertTooManyRequests();
+        $this->assertDatabaseCount('battles', 2);
+    }
+
     public function test_losing_gives_no_progress_or_rewards()
     {
         $character = Character::factory()->create();

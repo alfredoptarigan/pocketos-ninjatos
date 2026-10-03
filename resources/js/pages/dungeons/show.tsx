@@ -6,7 +6,7 @@ import VillageBackdrop from '@/components/village-backdrop';
 import { cn } from '@/lib/utils';
 import { bag } from '@/routes';
 import { fight, leave } from '@/routes/dungeon-runs';
-import { enter, index } from '@/routes/dungeons';
+import { enter, exit } from '@/routes/dungeons';
 import { DIFFICULTY_STYLE } from '@/types/game';
 import type { Difficulty } from '@/types/game';
 
@@ -70,7 +70,11 @@ export default function DungeonPage({ dungeon, runs_left, run }: Props) {
         <>
             <Head title={dungeon.name} />
             <VillageBackdrop>
-                <GameWindow title={dungeon.name} closeHref={index().url}>
+                <GameWindow
+                    title={dungeon.name}
+                    closeHref={exit().url}
+                    closeMethod="post"
+                >
                     <div className="grid gap-4 md:grid-cols-[240px_1fr]">
                         <aside className="flex flex-col gap-2 text-sm">
                             <img

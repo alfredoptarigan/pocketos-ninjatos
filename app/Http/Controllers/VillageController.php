@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Travel;
 use App\Http\Requests\TravelRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -29,13 +30,24 @@ class VillageController extends Controller
     /**
      * Move the player to another village.
      */
-    public function travel(TravelRequest $request): RedirectResponse
+    public function travel(TravelRequest $request, Travel $travel): RedirectResponse
     {
         $village = $request->string('village')->toString();
 
+        $travel->handle($request->user()->character, null);
         $request->user()->character->forceFill(['village' => $village])->save();
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Arrived at '.config("game.villages.$village").'.']);
+
+        return to_route('village');
+    }
+
+    /**
+     * Walk back from a hunting ground to the village.
+     */
+    public function return(Request $request, Travel $travel): RedirectResponse
+    {
+        $travel->handle($request->user()->character, null);
 
         return to_route('village');
     }

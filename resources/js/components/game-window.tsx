@@ -6,6 +6,8 @@ type Props = {
     title: string;
     /** Where the close (X) button leads, usually back to the village. */
     closeHref?: string;
+    /** "post" when closing is a game action, like walking out of a dungeon. */
+    closeMethod?: 'get' | 'post';
     children: ReactNode;
     /** Overrides the default width, e.g. "max-w-xl" for narrow panels. */
     className?: string;
@@ -15,6 +17,7 @@ type Props = {
 export default function GameWindow({
     title,
     closeHref,
+    closeMethod = 'get',
     children,
     className,
 }: Props) {
@@ -34,6 +37,8 @@ export default function GameWindow({
             {closeHref && (
                 <Link
                     href={closeHref}
+                    method={closeMethod}
+                    as={closeMethod === 'post' ? 'button' : 'a'}
                     aria-label="Close"
                     className="game-close absolute -top-[22px] -right-[18px] block size-[22px]"
                 />

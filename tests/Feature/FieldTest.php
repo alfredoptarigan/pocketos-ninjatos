@@ -41,7 +41,7 @@ class FieldTest extends TestCase
     public function test_an_area_shows_its_monsters()
     {
         $monster = FieldMonster::factory()->create();
-        $this->actingAs(Character::factory()->create()->user);
+        $this->actingAs(Character::factory()->create(['location' => "field:{$monster->field_scene}"])->user);
 
         $this->get(route('fields.show', $monster->field_scene))->assertInertia(fn (Assert $page) => $page
             ->component('field')
@@ -52,7 +52,7 @@ class FieldTest extends TestCase
     public function test_areas_above_the_ninjas_level_are_closed()
     {
         $field = Field::factory()->create(['level' => 11]);
-        $this->actingAs(Character::factory()->create()->user);
+        $this->actingAs(Character::factory()->create(['location' => "field:{$field->scene}"])->user);
 
         $this->get(route('fields.show', $field))->assertRedirect(route('world.show'));
     }
@@ -62,6 +62,7 @@ class FieldTest extends TestCase
         $character = Character::factory()->create(['gold' => 0]);
         $monster = FieldMonster::factory()->create(['exp' => 30, 'level' => 4, 'priority' => 0]);
         $this->actingAs($character->user);
+        $character->forceFill(['location' => "field:{$monster->field_scene}"])->save();
 
         Lottery::alwaysLose();
         $response = $this->post(route('fields.fight', $monster));
@@ -86,6 +87,7 @@ class FieldTest extends TestCase
         $character = Character::factory()->create();
         $boss = FieldMonster::factory()->create(['is_boss' => true, 'level' => 4, 'priority' => 0]);
         $this->actingAs($character->user);
+        $character->forceFill(['location' => "field:{$boss->field_scene}"])->save();
 
         $this->post(route('fields.fight', $boss));
 
@@ -99,6 +101,7 @@ class FieldTest extends TestCase
         Equipment::factory()->create();
         $monster = FieldMonster::factory()->create();
         $this->actingAs($character->user);
+        $character->forceFill(['location' => "field:{$monster->field_scene}"])->save();
 
         Lottery::alwaysWin(fn () => $this->post(route('fields.fight', $monster)));
 
@@ -112,6 +115,7 @@ class FieldTest extends TestCase
         $character->save();
         $monster = FieldMonster::factory()->create();
         $this->actingAs($character->user);
+        $character->forceFill(['location' => "field:{$monster->field_scene}"])->save();
 
         $this->post(route('fields.fight', $monster))->assertSessionHasErrors('monster');
 
@@ -123,6 +127,7 @@ class FieldTest extends TestCase
         $character = Character::factory()->create();
         $monster = FieldMonster::factory()->create();
         $this->actingAs($character->user);
+        $character->forceFill(['location' => "field:{$monster->field_scene}"])->save();
         $this->post(route('fields.fight', $monster));
 
         $this->get(route('battles.show', Battle::sole()))->assertInertia(fn (Assert $page) => $page
@@ -135,6 +140,7 @@ class FieldTest extends TestCase
         $character = Character::factory()->create(['gold' => 0]);
         $field = Field::factory()->searchable('money')->create(['level' => 1]);
         $this->actingAs($character->user);
+        $character->forceFill(['location' => "field:{$field->scene}"])->save();
 
         $this->post(route('fields.search', [$field, 'search']))->assertRedirect(route('fields.show', $field));
 
@@ -148,6 +154,7 @@ class FieldTest extends TestCase
         $character = Character::factory()->create();
         $field = Field::factory()->searchable('money')->create();
         $this->actingAs($character->user);
+        $character->forceFill(['location' => "field:{$field->scene}"])->save();
 
         $this->post(route('fields.search', [$field, 'search']));
         $this->post(route('fields.search', [$field, 'search']))->assertSessionHasErrors('search');
@@ -164,6 +171,7 @@ class FieldTest extends TestCase
         FieldMonster::factory()->create(['field_scene' => $field->scene]);
         $key = Item::factory()->create(['code' => 'i150046', 'category' => Item::CATEGORY_KEY]);
         $this->actingAs($character->user);
+        $character->forceFill(['location' => "field:{$field->scene}"])->save();
 
         $this->post(route('fields.search', [$field, 'cache']))->assertSessionHasErrors('search');
 
@@ -180,6 +188,7 @@ class FieldTest extends TestCase
         $field = Field::factory()->searchable('monster')->create();
         $monster = FieldMonster::factory()->create(['field_scene' => $field->scene]);
         $this->actingAs($character->user);
+        $character->forceFill(['location' => "field:{$field->scene}"])->save();
 
         $response = $this->post(route('fields.search', [$field, 'search']));
 
@@ -191,7 +200,7 @@ class FieldTest extends TestCase
     public function test_the_area_page_shows_the_search_spots()
     {
         $field = Field::factory()->searchable('money')->create();
-        $this->actingAs(Character::factory()->create()->user);
+        $this->actingAs(Character::factory()->create(['location' => "field:{$field->scene}"])->user);
 
         $this->get(route('fields.show', $field))->assertInertia(fn (Assert $page) => $page
             ->has('searches', 2)

@@ -37,6 +37,7 @@ use Illuminate\Support\Carbon;
  * @property int $coupons Gift coupons, spent at the Wishing Pot
  * @property int $outfit_shards From duplicate Wishing Pot draws, spent on outfit upgrades
  * @property string $village Key of config('game.villages')
+ * @property string|null $location Where the ninja is: null for the village, "field:<scene>" or "dungeon:<id>"
  * @property int $tower_floor Highest Training Tower floor cleared
  * @property array<string, int> $skills Learned jutsu id => skill level (config('skills.skills'))
  * @property list<list<string|null>> $skill_pages Equipped jutsu per page, by slot
@@ -97,6 +98,32 @@ class Character extends Model
     protected function casts(): array
     {
         return ['vitals_at' => 'datetime', 'skills' => 'array', 'skill_pages' => 'array', 'signed_in_on' => 'date', 'honor_exchanged_on' => 'date'];
+    }
+
+    /**
+     * The location value for a place: a hunting ground, a dungeon or (null) the village.
+     */
+    public static function locationOf(Field|Dungeon|null $place): ?string
+    {
+        return match (true) {
+            $place instanceof Field => "field:{$place->scene}",
+            $place instanceof Dungeon => "dungeon:{$place->id}",
+            default => null,
+        };
+    }
+
+    /**
+     * The page of the place the ninja is in.
+     */
+    public function locationUrl(): string
+    {
+        [$kind, $key] = explode(':', $this->location ?? 'village:');
+
+        return match ($kind) {
+            'field' => route('fields.show', $key),
+            'dungeon' => route('dungeons.show', $key),
+            default => route('village'),
+        };
     }
 
     /**

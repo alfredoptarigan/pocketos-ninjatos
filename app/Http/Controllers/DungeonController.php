@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Actions\EnterDungeon;
 use App\Actions\FightDungeonWave;
+use App\Actions\Travel;
 use App\Models\Dungeon;
 use App\Models\DungeonRun;
 use Illuminate\Http\RedirectResponse;
@@ -58,6 +59,26 @@ class DungeonController extends Controller
         ]);
     }
 
+    /**
+     * Go into a dungeon from the dungeon list.
+     */
+    public function open(Request $request, Dungeon $dungeon, Travel $travel): RedirectResponse
+    {
+        $travel->handle($request->user()->character, $dungeon);
+
+        return to_route('dungeons.show', $dungeon);
+    }
+
+    /**
+     * Walk out of the dungeon back to the list, once no run is under way.
+     */
+    public function exit(Request $request, Travel $travel): RedirectResponse
+    {
+        $travel->handle($request->user()->character, null);
+
+        return to_route('dungeons.index');
+    }
+
     public function enter(Request $request, Dungeon $dungeon, EnterDungeon $enter): RedirectResponse
     {
         $enter->handle($request->user()->character, $dungeon);
@@ -74,10 +95,11 @@ class DungeonController extends Controller
         return to_route('battles.show', $fight->handle($character, $run));
     }
 
-    public function leave(Request $request, DungeonRun $run): RedirectResponse
+    public function leave(Request $request, DungeonRun $run, Travel $travel): RedirectResponse
     {
         abort_unless($run->character_id === $request->user()->character->id, 404);
         DungeonRun::query()->whereKey($run->id)->active()->update(['status' => 'left']);
+        $travel->handle($request->user()->character, null);
 
         return to_route('dungeons.index');
     }

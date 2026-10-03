@@ -1,10 +1,11 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import { Lock } from 'lucide-react';
+import { toast } from 'sonner';
 import GameWindow from '@/components/game-window';
 import VillageBackdrop from '@/components/village-backdrop';
 import { cn } from '@/lib/utils';
 import { village } from '@/routes';
-import { show } from '@/routes/dungeons';
+import { open } from '@/routes/dungeons';
 import { DIFFICULTY_STYLE } from '@/types/game';
 import type { Difficulty } from '@/types/game';
 
@@ -44,9 +45,16 @@ export default function Dungeons({ dungeons, active }: Props) {
                             return (
                                 <li key={dungeon.id}>
                                     <Link
-                                        href={show(dungeon.id)}
+                                        href={open(dungeon.id)}
+                                        as="button"
+                                        onError={(errors) =>
+                                            toast.error(
+                                                errors.location ??
+                                                    'You cannot go there.',
+                                            )
+                                        }
                                         className={cn(
-                                            'group block overflow-hidden rounded-md border-2 bg-slate-950/70 transition',
+                                            'group block w-full overflow-hidden rounded-md border-2 bg-slate-950/70 text-left transition',
                                             dungeon.id === active
                                                 ? 'border-amber-300 shadow-[0_0_10px_rgba(252,211,77,0.6)]'
                                                 : 'border-sky-900 hover:border-amber-500',

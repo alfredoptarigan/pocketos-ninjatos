@@ -5,9 +5,8 @@ import { toast } from 'sonner';
 import HotspotCanvas from '@/components/hotspot-canvas';
 import { createHotspotScene } from '@/game/hotspot-scene';
 import type { HotspotData } from '@/game/hotspot-scene';
-import { village as villageRoute } from '@/routes';
-import { show as showField } from '@/routes/fields';
-import { travel } from '@/routes/village';
+import { travel as travelToField } from '@/routes/fields';
+import { returnMethod as returnToVillage, travel } from '@/routes/village';
 
 type Area = {
     scene: string;
@@ -40,13 +39,27 @@ export default function World({ fields, villages }: Props) {
         const field = fieldOf(key);
 
         if (villageOf(key)) {
-            router.post(travel().url, { village: key });
+            router.post(
+                travel().url,
+                { village: key },
+                {
+                    onError: (errors) =>
+                        toast.error(errors.location ?? 'You cannot go there.'),
+                },
+            );
         } else if (!field) {
             toast.info(`${nameOf(key)}.`);
         } else if ((character?.level ?? 0) < field.level) {
             toast.error(`${field.name} needs level ${field.level}.`);
         } else {
-            router.visit(showField(field.scene).url);
+            router.post(
+                travelToField(field.scene).url,
+                {},
+                {
+                    onError: (errors) =>
+                        toast.error(errors.location ?? 'You cannot go there.'),
+                },
+            );
         }
     };
 
@@ -79,7 +92,8 @@ export default function World({ fields, villages }: Props) {
 
             <div className="absolute top-3 left-1/2 z-10 -translate-x-1/2">
                 <Link
-                    href={villageRoute()}
+                    href={returnToVillage()}
+                    as="button"
                     className="game-button px-4 py-1 text-lg"
                 >
                     Back to village

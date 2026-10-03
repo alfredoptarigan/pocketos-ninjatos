@@ -116,6 +116,9 @@ return [
         'exp_exponent' => 0.8,
     ],
 
+    // Fights, searches and draws a player may send per minute (anti-botting).
+    'actions_per_minute' => 30,
+
     'tower' => [
         // First clear pays gold_base + floor * gold_per_floor; replays pay
         // replay_exp_percent of the floor's exp and no gold.
