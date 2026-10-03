@@ -26,18 +26,25 @@ class GearTest extends TestCase
         $this->get(route('character.show'))->assertRedirect(route('character.create'));
     }
 
-    public function test_character_panel_shows_worn_gear_bag_and_stats()
+    public function test_the_character_panel_is_the_inventory()
+    {
+        $this->actingAs(Character::factory()->create()->user);
+
+        $this->get(route('character.show'))->assertRedirect(route('bag'));
+    }
+
+    public function test_inventory_shows_worn_gear_spare_gear_and_stats()
     {
         $character = Character::factory()->create();
         $this->give($character, Equipment::factory()->create(['name' => 'Tickle Gloves']), 'weapon');
         $this->give($character, Equipment::factory()->slot('hat', 3, ['defense' => 24])->create());
         $this->actingAs($character->user);
 
-        $this->get(route('character.show'))->assertInertia(fn (Assert $page) => $page
-            ->component('character/show')
+        $this->get(route('bag'))->assertInertia(fn (Assert $page) => $page
+            ->component('inventory')
             ->where('worn.weapon.name', 'Tickle Gloves')
-            ->has('bag', 1)
-            ->where('bag.0.slot', 'hat')
+            ->has('gear', 1)
+            ->where('gear.0.slot', 'hat')
             ->where('stats.minAttack', 20 + 14)
             ->where('stats.maxAttack', 25 + 16));
     }
@@ -49,7 +56,7 @@ class GearTest extends TestCase
         $new = $this->give($character, Equipment::factory()->create(['min_attack' => 50, 'max_attack' => 60]));
         $this->actingAs($character->user);
 
-        $this->post(route('character.gear.equip', $new))->assertRedirect(route('character.show'));
+        $this->post(route('character.gear.equip', $new))->assertRedirect(route('bag'));
 
         $this->assertNull($old->refresh()->equipped_slot);
         $this->assertSame('weapon', $new->refresh()->equipped_slot);
@@ -73,7 +80,7 @@ class GearTest extends TestCase
         $piece = $this->give($character, Equipment::factory()->create(), 'weapon');
         $this->actingAs($character->user);
 
-        $this->post(route('character.gear.unequip', $piece))->assertRedirect(route('character.show'));
+        $this->post(route('character.gear.unequip', $piece))->assertRedirect(route('bag'));
 
         $this->assertNull($piece->refresh()->equipped_slot);
     }

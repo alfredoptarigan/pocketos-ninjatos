@@ -110,7 +110,7 @@ class OutfitTest extends TestCase
             ->where('worn', $outfit->id));
 
         // Outfits have no create-screen portrait; the panel draws their sprite.
-        $this->get(route('character.show'))->assertInertia(fn (Assert $page) => $page->where('hasPortrait', false));
+        $this->get(route('bag'))->assertInertia(fn (Assert $page) => $page->where('hasPortrait', false));
 
         $this->post(route('outfits.take-off'))->assertRedirect(route('outfits.index'));
         $this->assertSame('0_3', $character->refresh()->hud()['avatar']);

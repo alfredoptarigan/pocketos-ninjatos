@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\UseItemRequest;
+use App\Models\CharacterEquipment;
 use App\Models\InventoryItem;
 use App\Models\Item;
 use Illuminate\Http\RedirectResponse;
@@ -14,13 +15,24 @@ use Inertia\Response;
 class BagController extends Controller
 {
     /**
-     * Show everything the player is carrying.
+     * The Inventory, as in the original: worn gear around the ninja, stats,
+     * and a bag of spare gear and item stacks.
      */
     public function show(Request $request): Response
     {
-        $stacks = $request->user()->character->inventory()->with('item')->orderBy('item_id')->get();
+        $character = $request->user()->character;
+        $stacks = $character->inventory()->with('item')->orderBy('item_id')->get();
+        $pieces = $character->gear()->with('equipment')->get()
+            ->sortBy([fn (CharacterEquipment $piece) => $piece->equipment->slot, fn (CharacterEquipment $piece) => -$piece->equipment->level]);
+        $describe = fn (CharacterEquipment $piece) => ['id' => $piece->id, ...$piece->equipment->summary()];
 
-        return Inertia::render('bag', [
+        return Inertia::render('inventory', [
+            'stats' => (array) $character->stats(),
+            'slots' => config('game.equipment.slots'),
+            'worn' => $pieces->whereNotNull('equipped_slot')->keyBy('equipped_slot')->map($describe),
+            'gear' => $pieces->whereNull('equipped_slot')->values()->map($describe),
+            // Only created avatars have create-screen portraits; outfits show their sprite.
+            'hasPortrait' => $character->outfit_id === null,
             'items' => $stacks->map(fn (InventoryItem $stack) => [
                 'id' => $stack->item->id,
                 'name' => $stack->item->name,

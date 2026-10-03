@@ -36,7 +36,7 @@ class BagTest extends TestCase
         $this->get(route('bag'))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
-                ->component('bag')
+                ->component('inventory')
                 ->has('items', 1)
                 ->where('items.0.name', 'Healing Powder')
                 ->where('items.0.quantity', 7));

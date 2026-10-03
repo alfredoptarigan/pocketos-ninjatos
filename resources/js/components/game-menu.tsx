@@ -8,7 +8,7 @@ type MenuButton = { key: string; label: string; href?: string };
 
 // The original bottom bar, in its original order.
 const BUTTONS: MenuButton[] = [
-    { key: 'bag', label: 'Bag', href: bag().url },
+    { key: 'bag', label: 'Inventory', href: bag().url },
     { key: 'character', label: 'Character', href: character().url },
     { key: 'tools', label: 'Jutsu', href: skills().url },
     { key: 'forge', label: 'Forge' },

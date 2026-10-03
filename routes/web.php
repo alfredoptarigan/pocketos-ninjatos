@@ -27,7 +27,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('village', [VillageController::class, 'show'])->name('village');
         Route::post('village/travel', [VillageController::class, 'travel'])->name('village.travel');
 
-        Route::get('character', [GearController::class, 'show'])->name('character.show');
+        // The original game shows the character inside the Inventory.
+        Route::get('character', fn () => to_route('bag'))->name('character.show');
         Route::post('character/gear/{gear}/equip', [GearController::class, 'equip'])->name('character.gear.equip');
         Route::post('character/gear/{gear}/unequip', [GearController::class, 'unequip'])->name('character.gear.unequip');
         Route::get('outfits', [OutfitController::class, 'index'])->name('outfits.index');

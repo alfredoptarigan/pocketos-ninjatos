@@ -3,8 +3,7 @@ import CharacterSprite from '@/components/character-sprite';
 import GameWindow from '@/components/game-window';
 import VillageBackdrop from '@/components/village-backdrop';
 import { cn } from '@/lib/utils';
-import { village } from '@/routes';
-import { show as characterPanel } from '@/routes/character';
+import { bag as inventory, village } from '@/routes';
 import { takeOff, wear } from '@/routes/outfits';
 import { show as wishPot } from '@/routes/wish-pot';
 import { characterAssets, RARITY_BORDER, RARITY_TEXT } from '@/types/game';
@@ -54,10 +53,10 @@ export default function Wardrobe({ outfits, worn, avatar }: Props) {
                                 </p>
                             )}
                             <Link
-                                href={characterPanel()}
+                                href={inventory()}
                                 className="game-button mt-2 px-3 py-0.5 text-sm"
                             >
-                                Character
+                                Inventory
                             </Link>
                         </div>
 

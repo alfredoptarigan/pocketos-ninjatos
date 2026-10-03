@@ -12,7 +12,7 @@ const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 // Pages (or page folders) that render inside the full-screen game shell.
 const GAME_PAGES = [
     'village',
-    'bag',
+    'inventory',
     'buildings',
     'character',
     'tower',
