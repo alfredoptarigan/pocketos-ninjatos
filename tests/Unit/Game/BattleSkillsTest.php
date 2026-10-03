@@ -146,9 +146,31 @@ class BattleSkillsTest extends TestCase
         $this->assertCount(1, $skilled);
     }
 
+    public function test_every_configured_skill_fights_without_errors()
+    {
+        $all = array_map(fn ($id) => Skill::find((string) $id, config('skills.max_level'), 10), array_keys(config('skills.skills')));
+        $used = [];
+
+        foreach (range(1, 80) as $seed) {
+            // Ten-slot loadouts, rotated so every jutsu leads now and then.
+            $rotated = [...array_slice($all, $seed % 40), ...array_slice($all, 0, $seed % 40)];
+            // Deep chakra, so late-slot jutsu (Creation Rebirth) are not starved by earlier ones.
+            $fighter = fn (int $from) => $this->fighter(['hp' => 1500, 'maxHp' => 1500, 'mp' => 30000, 'maxMp' => 3000, 'minAttack' => 50, 'maxAttack' => 80, 'dodge' => 10, 'crit' => 10, 'parry' => 5, 'skills' => array_slice($rotated, $from, 10)]);
+            $result = (new BattleSimulator(new Randomizer(new Mt19937($seed))))->simulate($fighter(0), $fighter(10 + $seed % 20));
+
+            $this->assertSame('end', last($result['events'])['type']);
+            foreach ($result['events'] as $event) {
+                $used[$event['skill'] ?? $event['blockSkill'] ?? ''] = true;
+            }
+        }
+
+        $unused = array_map(fn (Skill $skill) => $skill->name, array_filter($all, fn (Skill $skill) => ! isset($used[$skill->id])));
+        $this->assertSame([], array_values($unused));
+    }
+
     public function test_every_configured_skill_loads()
     {
-        foreach (array_keys(config('game.skills')) as $id) {
+        foreach (array_keys(config('skills.skills')) as $id) {
             $this->assertSame((string) $id, Skill::find((string) $id)->id);
         }
     }

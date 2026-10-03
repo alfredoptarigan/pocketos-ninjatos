@@ -58,6 +58,11 @@ Route::middleware(['auth'])->group(function () {
         Route::post('gifts/sign-in', [GiftController::class, 'signIn'])->name('gifts.sign-in');
 
         Route::get('skills', [SkillController::class, 'index'])->name('skills.index');
+        Route::post('skills/reset', [SkillController::class, 'reset'])->name('skills.reset');
+        Route::post('skills/equip', [SkillController::class, 'equip'])->name('skills.equip');
+        Route::post('skills/unequip', [SkillController::class, 'unequip'])->name('skills.unequip');
+        Route::post('skills/page', [SkillController::class, 'page'])->name('skills.page');
+        Route::post('skills/slots', [SkillController::class, 'slots'])->name('skills.slots');
         Route::post('skills/{skill}/learn', [SkillController::class, 'learn'])->name('skills.learn');
 
         Route::get('world', [WorldController::class, 'show'])->name('world.show');

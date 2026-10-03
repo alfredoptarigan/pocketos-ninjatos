@@ -2,7 +2,6 @@
 
 namespace App\Actions;
 
-use App\Game\Skill;
 use App\Models\Character;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -10,19 +9,25 @@ use Illuminate\Validation\ValidationException;
 class LearnSkill
 {
     /**
-     * Pay for and learn a jutsu, if the ninja qualifies.
+     * Spend a skill point to learn a jutsu, or to raise a known one a level.
+     * Learning needs the previous jutsu of its school.
      *
-     * @throws ValidationException when the ninja cannot learn it yet
+     * @return int the jutsu's new skill level
+     *
+     * @throws ValidationException when out of points, maxed, or missing the previous jutsu
      */
-    public function handle(Character $character, Skill $skill): void
+    public function handle(Character $character, string $skillId): int
     {
-        DB::transaction(function () use ($character, $skill) {
+        return DB::transaction(function () use ($character, $skillId) {
             $ninja = Character::query()->lockForUpdate()->findOrFail($character->id);
+            $skill = config("skills.skills.$skillId");
+            $level = $ninja->skills[$skillId] ?? 0;
+            $requires = $skill['requires'] ?? null;
+
             $problem = match (true) {
-                in_array($skill->id, $ninja->skills, true) => "You already know {$skill->name}.",
-                $ninja->level < $skill->level => "{$skill->name} needs level {$skill->level}.",
-                $skill->requires !== null && ! in_array($skill->requires, $ninja->skills, true) => "Learn {$this->nameOf($skill->requires)} first.",
-                $ninja->gold < $skill->price() => "{$skill->name} costs {$skill->price()} gold.",
+                $level >= config('skills.max_level') => "{$skill['name']} is already at the highest level.",
+                $level === 0 && $requires !== null && ! isset($ninja->skills[$requires]) => 'Learn '.config("skills.skills.$requires.name").' first.',
+                $ninja->skillPoints() < 1 => 'No skill points left. You get one every level.',
                 default => null,
             };
 
@@ -30,15 +35,9 @@ class LearnSkill
                 throw ValidationException::withMessages(['skill' => $problem]);
             }
 
-            $ninja->forceFill([
-                'gold' => $ninja->gold - $skill->price(),
-                'skills' => [...$ninja->skills, $skill->id],
-            ])->save();
-        });
-    }
+            $ninja->forceFill(['skills' => array_replace($ninja->skills, [$skillId => $level + 1])])->save();
 
-    private function nameOf(string $skillId): string
-    {
-        return config("game.skills.$skillId.name");
+            return $level + 1;
+        });
     }
 }

@@ -23,16 +23,18 @@ export type Sfx =
     | 'earth'
     | 'tool';
 
-// config('game.skills.*.school') -> cast sound.
+// config('skills.skills.*.school') -> cast sound.
 const SCHOOL_SOUNDS: Record<string, Sfx> = {
-    Fire: 'fire',
-    Lightning: 'lightning',
-    Wind: 'wind',
-    'Ninja Tools': 'explosion',
-    Taijutsu: 'taijutsu',
-    Genjutsu: 'genjutsu',
-    Earth: 'earth',
-    Medical: 'heal',
+    fire: 'fire',
+    water: 'genjutsu',
+    earth: 'earth',
+    lightning: 'lightning',
+    wind: 'wind',
+    body: 'taijutsu',
+    tools: 'explosion',
+    seal: 'genjutsu',
+    illusion: 'genjutsu',
+    healing: 'heal',
 };
 
 const loaded = new Map<Sfx, HTMLAudioElement>();

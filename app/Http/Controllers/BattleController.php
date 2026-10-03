@@ -35,7 +35,7 @@ class BattleController extends Controller
                 ] : null,
             ],
             // Names, icons and schools (for the sound) of the jutsu the replay may show.
-            'skills' => collect(config('game.skills'))->map(fn (array $skill, string|int $id) => [
+            'skills' => collect(config('skills.skills'))->map(fn (array $skill, string|int $id) => [
                 'name' => $skill['name'],
                 'school' => $skill['school'],
                 'icon' => "/game-assets/skills/$id.png",

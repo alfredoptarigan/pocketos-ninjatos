@@ -38,7 +38,10 @@ use Illuminate\Support\Carbon;
  * @property int $outfit_shards From duplicate Wishing Pot draws, spent on outfit upgrades
  * @property string $village Key of config('game.villages')
  * @property int $tower_floor Highest Training Tower floor cleared
- * @property list<string> $skills Learned jutsu ids (config('game.skills'))
+ * @property array<string, int> $skills Learned jutsu id => skill level (config('skills.skills'))
+ * @property list<list<string|null>> $skill_pages Equipped jutsu per page, by slot
+ * @property int $skill_page Page of skill_pages used in battle
+ * @property int $skill_slots_bought Slots bought beyond the free ones
  * @property int $sign_in_streak Day (1-7) of the daily sign-in streak, 0 before the first
  * @property Carbon|null $signed_in_on Last daily sign-in
  * @property int $gold_spent Gold ever spent (achievements)
@@ -62,6 +65,9 @@ class Character extends Model
         'exp' => 0,
         'tower_floor' => 0,
         'skills' => '[]',
+        'skill_pages' => '[[],[],[]]',
+        'skill_page' => 0,
+        'skill_slots_bought' => 0,
     ];
 
     /**
@@ -90,7 +96,7 @@ class Character extends Model
      */
     protected function casts(): array
     {
-        return ['vitals_at' => 'datetime', 'skills' => 'array', 'signed_in_on' => 'date', 'honor_exchanged_on' => 'date'];
+        return ['vitals_at' => 'datetime', 'skills' => 'array', 'skill_pages' => 'array', 'signed_in_on' => 'date', 'honor_exchanged_on' => 'date'];
     }
 
     /**
@@ -300,23 +306,54 @@ class Character extends Model
             priority: 0,
             mp: $this->currentMp(),
             maxMp: $stats->maxMp,
-            skills: $this->learnedSkills(),
+            skills: $this->equippedSkills(),
         );
     }
 
     /**
-     * Learned jutsu in config order, so their trigger order is stable.
+     * Jutsu on the page in use, in slot order (their trigger order), at
+     * their skill level and with their school's passive.
      *
      * @return list<Skill>
      */
-    public function learnedSkills(): array
+    public function equippedSkills(): array
     {
-        return collect(array_keys(config('game.skills')))
-            ->map(fn (string|int $id) => (string) $id)
-            ->filter(fn (string $id) => in_array($id, $this->skills, true))
-            ->map(fn (string $id) => Skill::find($id))
+        return collect($this->skill_pages[$this->skill_page] ?? [])
+            ->filter(fn (?string $id) => $id !== null && isset($this->skills[$id]))
+            ->map(fn (string $id) => Skill::find($id, $this->skills[$id], $this->passiveLevel()))
             ->values()
             ->all();
+    }
+
+    /**
+     * Level of every passive: one more every 10 character levels (upskillcfg).
+     */
+    public function passiveLevel(): int
+    {
+        return count(array_filter(config('skills.passive.levels'), fn (int $level) => $this->level >= $level));
+    }
+
+    /**
+     * Unspent skill points: one per level after the first, minus learned levels.
+     */
+    public function skillPoints(): int
+    {
+        return max(0, $this->level - 1 - array_sum($this->skills));
+    }
+
+    /**
+     * Equipped slots open on every page: free by level plus those bought.
+     */
+    public function openSkillSlots(): int
+    {
+        $slots = config('skills.slots');
+        $free = max(array_map(
+            fn (int $level, int $count) => $this->level >= $level ? $count : 0,
+            array_keys($slots['free']),
+            $slots['free'],
+        ));
+
+        return min($slots['total'], $free + $this->skill_slots_bought);
     }
 
     /**
