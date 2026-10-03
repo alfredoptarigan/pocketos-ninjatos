@@ -60,6 +60,16 @@ class SkillTest extends TestCase
         $this->post(route('skills.learn', '9999'))->assertNotFound();
     }
 
+    public function test_config_paths_in_the_jutsu_id_are_not_jutsu()
+    {
+        $character = $this->ninja();
+        $this->actingAs($character->user);
+
+        $this->post(route('skills.learn', '1808.name'))->assertNotFound();
+        $this->post(route('skills.equip'), ['skill' => '1808.name', 'slot' => 0])->assertSessionHasErrors('skill');
+        $this->assertSame([], $character->refresh()->skills);
+    }
+
     public function test_learning_a_known_jutsu_upgrades_it_up_to_the_max_level()
     {
         $character = $this->ninja(['level' => 100, 'skills' => ['1808' => 12]]);

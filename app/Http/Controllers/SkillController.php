@@ -53,7 +53,7 @@ class SkillController extends Controller
 
     public function learn(Request $request, string $skill, LearnSkill $learn): RedirectResponse
     {
-        abort_unless(config()->has("skills.skills.$skill"), 404);
+        abort_unless(array_key_exists($skill, config('skills.skills')), 404);
 
         $level = $learn->handle($request->user()->character, $skill);
         $name = config("skills.skills.$skill.name");
@@ -74,7 +74,8 @@ class SkillController extends Controller
     {
         $data = $request->validate([
             'skill' => ['required', 'string', function (string $attribute, string $value, Closure $fail) {
-                if (! config()->has("skills.skills.$value")) {
+                // Not config()->has(): a dotted id like "1808.name" would reach inside a jutsu.
+                if (! array_key_exists($value, config('skills.skills'))) {
                     $fail('Unknown jutsu.');
                 }
             }],

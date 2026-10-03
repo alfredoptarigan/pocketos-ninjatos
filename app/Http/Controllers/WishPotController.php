@@ -40,7 +40,8 @@ class WishPotController extends Controller
      */
     public function draw(Request $request, string $pot, DrawWishPot $draw): RedirectResponse
     {
-        $config = config("game.outfits.pots.{$pot}") ?? abort(404);
+        // Looked up by key, not dot path: "ninja.odds" must not reach inside a pot.
+        $config = config('game.outfits.pots')[$pot] ?? abort(404);
         $result = $draw->handle($request->user()->character, $config, $request->string('outfit')->toString() ?: null);
 
         Inertia::flash('drawn', [

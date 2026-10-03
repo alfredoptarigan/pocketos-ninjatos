@@ -86,6 +86,7 @@ class OutfitTest extends TestCase
         $this->actingAs($this->ninja()->user);
 
         $this->post(route('wish-pot.draw', 'golden'))->assertNotFound();
+        $this->post(route('wish-pot.draw', 'ninja.odds'))->assertNotFound();
     }
 
     public function test_a_pick_pot_gives_the_chosen_outfit()
