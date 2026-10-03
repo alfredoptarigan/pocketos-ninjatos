@@ -210,8 +210,12 @@ return [
 
     'outfits' => [
         'bonus_percent' => ['grey' => 0, 'blue' => 5, 'orange' => 10],
-        // Drawing an outfit the ninja already owns pays this much gold instead.
-        'duplicate_gold' => ['grey' => 100, 'blue' => 400, 'orange' => 1500],
+        // Drawing an outfit the ninja already owns gives outfit shards instead.
+        'duplicate_shards' => ['grey' => 2, 'blue' => 5, 'orange' => 15],
+        // Upgrading to +N costs N times gold and shards, needs character level
+        // level_step * (N - 1) (the original avataritem UseLevel) and adds
+        // bonus_per_level percent per level on top of the rarity bonus.
+        'upgrade' => ['max_level' => 27, 'gold' => 200, 'shards' => 1, 'level_step' => 3, 'bonus_per_level' => 1],
         // Event and mascot outfits never come out of a pot.
         'event_only' => ['1_86', '0_88', '1_89', '1_90', '0_98'],
         'pots' => [

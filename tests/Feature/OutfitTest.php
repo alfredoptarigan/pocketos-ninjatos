@@ -55,7 +55,7 @@ class OutfitTest extends TestCase
         $this->assertSame([$kakashi->id], $character->outfits()->pluck('outfits.id')->all());
     }
 
-    public function test_a_duplicate_draw_pays_gold_instead()
+    public function test_a_duplicate_draw_gives_outfit_shards_instead()
     {
         $character = $this->ninja();
         $outfit = Outfit::factory()->create(['key' => '0_21', 'sex' => 0, 'rarity' => 'blue']);
@@ -66,7 +66,7 @@ class OutfitTest extends TestCase
 
         $character->refresh();
         $this->assertSame(1, $character->outfits()->count());
-        $this->assertSame(config('game.outfits.duplicate_gold.blue'), $character->gold);
+        $this->assertSame(config('game.outfits.duplicate_shards.blue'), $character->outfit_shards);
     }
 
     public function test_a_pot_needs_enough_coupons()
@@ -157,5 +157,67 @@ class OutfitTest extends TestCase
 
         $this->post(route('outfits.wear', $outfit))->assertNotFound();
         $this->assertNull($character->refresh()->outfit_id);
+    }
+
+    public function test_upgrading_an_outfit_raises_its_level_and_bonus()
+    {
+        $character = $this->ninja(['level' => 10, 'gold' => 5000, 'outfit_shards' => 10]);
+        $plain = $character->stats();
+        $outfit = Outfit::factory()->create(['key' => '0_47', 'sex' => 0, 'rarity' => 'orange']);
+        $character->outfits()->attach($outfit);
+        $character->forceFill(['outfit_id' => $outfit->id])->save();
+        $this->actingAs($character->user);
+
+        $this->post(route('outfits.upgrade', $outfit))->assertRedirect(route('outfits.index'));
+        $this->post(route('outfits.upgrade', $outfit))->assertRedirect(route('outfits.index'));
+
+        $character->refresh();
+        $upgrade = config('game.outfits.upgrade');
+        $this->assertSame(2, $character->outfitLevel($outfit));
+        $this->assertSame(5000 - 3 * $upgrade['gold'], $character->gold);
+        $this->assertSame(10 - 3 * $upgrade['shards'], $character->outfit_shards);
+        $percent = 100 + 10 + 2 * $upgrade['bonus_per_level'];
+        $this->assertSame((int) round($plain->maxHp * $percent / 100), $character->stats()->maxHp);
+
+        $this->actingAs($character->user->fresh())->get(route('outfits.index'))->assertInertia(fn (Assert $page) => $page
+            ->where('outfits.0.level', 2)
+            ->where('outfits.0.bonus', 10 + 2 * $upgrade['bonus_per_level'])
+            ->where('outfits.0.upgrade.gold', 3 * $upgrade['gold'])
+            ->where('shards', 10 - 3 * $upgrade['shards']));
+    }
+
+    public function test_upgrading_needs_gold_shards_and_the_character_level()
+    {
+        $outfit = Outfit::factory()->create(['key' => '0_47', 'sex' => 0]);
+        $upgrade = config('game.outfits.upgrade');
+
+        $poor = $this->ninja(['level' => 80, 'gold' => 0, 'outfit_shards' => 99]);
+        $poor->outfits()->attach($outfit);
+        $this->actingAs($poor->user)->post(route('outfits.upgrade', $outfit))->assertSessionHasErrors('gold');
+
+        $noShards = $this->ninja(['level' => 80, 'gold' => 99999, 'outfit_shards' => 0]);
+        $noShards->outfits()->attach($outfit);
+        $this->actingAs($noShards->user)->post(route('outfits.upgrade', $outfit))->assertSessionHasErrors('shards');
+
+        // +2 needs character level 3 (the original UseLevel steps of 3).
+        $young = $this->ninja(['level' => 2, 'gold' => 99999, 'outfit_shards' => 99]);
+        $young->outfits()->attach($outfit, ['level' => 1]);
+        $this->actingAs($young->user)->post(route('outfits.upgrade', $outfit))->assertSessionHasErrors('level');
+
+        $maxed = $this->ninja(['level' => 99, 'gold' => 999999, 'outfit_shards' => 999]);
+        $maxed->outfits()->attach($outfit, ['level' => $upgrade['max_level']]);
+        $this->actingAs($maxed->user)->post(route('outfits.upgrade', $outfit))->assertSessionHasErrors('outfit');
+
+        $this->assertSame(0, $poor->outfitLevel($outfit));
+        $this->assertSame(0, $noShards->outfitLevel($outfit));
+        $this->assertSame(1, $young->outfitLevel($outfit));
+    }
+
+    public function test_outfits_the_ninja_does_not_own_cannot_be_upgraded()
+    {
+        $character = $this->ninja(['gold' => 99999, 'outfit_shards' => 99]);
+        $outfit = Outfit::factory()->create(['key' => '0_47', 'sex' => 0]);
+
+        $this->actingAs($character->user)->post(route('outfits.upgrade', $outfit))->assertNotFound();
     }
 }

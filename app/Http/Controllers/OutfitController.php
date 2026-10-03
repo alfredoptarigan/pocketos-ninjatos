@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\UpgradeOutfit;
+use App\Game\OutfitUpgrade;
 use App\Models\Outfit;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -13,7 +15,7 @@ class OutfitController extends Controller
     private const RARITY_ORDER = ['orange', 'blue', 'grey'];
 
     /**
-     * The wardrobe: owned outfits, best rarity first.
+     * The wardrobe: owned outfits, best rarity first, with their next upgrade.
      */
     public function index(Request $request): Response
     {
@@ -23,8 +25,12 @@ class OutfitController extends Controller
             'outfits' => $character->outfits()->orderBy('name')->get()
                 ->sortBy(fn (Outfit $outfit) => array_search($outfit->rarity, self::RARITY_ORDER, true))
                 ->values()
-                ->map(fn (Outfit $outfit) => $outfit->summary()),
+                ->map(fn (Outfit $outfit) => [
+                    ...$outfit->summary($outfit->pivot->level),
+                    'upgrade' => OutfitUpgrade::from($outfit->pivot->level),
+                ]),
             'worn' => $character->outfit_id,
+            'shards' => $character->outfit_shards,
             'avatar' => $character->avatar,
         ]);
     }
@@ -35,6 +41,13 @@ class OutfitController extends Controller
         // Only outfits in the ninja's own wardrobe: others are a 404.
         $owned = $character->outfits()->findOrFail($outfit->id);
         $character->forceFill(['outfit_id' => $owned->id])->save();
+
+        return to_route('outfits.index');
+    }
+
+    public function upgrade(Request $request, Outfit $outfit, UpgradeOutfit $upgrade): RedirectResponse
+    {
+        $upgrade->handle($request->user()->character, $outfit);
 
         return to_route('outfits.index');
     }

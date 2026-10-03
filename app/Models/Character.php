@@ -30,6 +30,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $vitals_at
  * @property int $gold
  * @property int $coupons Gift coupons, spent at the Wishing Pot
+ * @property int $outfit_shards From duplicate Wishing Pot draws, spent on outfit upgrades
  * @property string $village Key of config('game.villages')
  * @property int $tower_floor Highest Training Tower floor cleared
  * @property list<string> $skills Learned jutsu ids (config('game.skills'))
@@ -110,7 +111,17 @@ class Character extends Model
      */
     public function outfits(): BelongsToMany
     {
-        return $this->belongsToMany(Outfit::class, 'character_outfits')->withTimestamps();
+        return $this->belongsToMany(Outfit::class, 'character_outfits')->withPivot('level')->withTimestamps();
+    }
+
+    /**
+     * The +N of an owned outfit (0 when not owned).
+     */
+    public function outfitLevel(Outfit|int|null $outfit): int
+    {
+        $id = $outfit instanceof Outfit ? $outfit->id : $outfit;
+
+        return $id === null ? 0 : (int) $this->outfits()->whereKey($id)->value('character_outfits.level');
     }
 
     /**

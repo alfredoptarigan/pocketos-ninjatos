@@ -36,6 +36,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('outfits', [OutfitController::class, 'index'])->name('outfits.index');
         Route::post('outfits/take-off', [OutfitController::class, 'takeOff'])->name('outfits.take-off');
         Route::post('outfits/{outfit}/wear', [OutfitController::class, 'wear'])->name('outfits.wear');
+        Route::post('outfits/{outfit}/upgrade', [OutfitController::class, 'upgrade'])->name('outfits.upgrade');
         Route::get('wish-pot', [WishPotController::class, 'show'])->name('wish-pot.show');
         Route::post('wish-pot/{pot}/draw', [WishPotController::class, 'draw'])->name('wish-pot.draw');
         Route::get('bag', [BagController::class, 'show'])->name('bag');

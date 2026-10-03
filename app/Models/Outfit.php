@@ -36,16 +36,20 @@ class Outfit extends Model
         $query->whereNotIn('key', config('game.outfits.event_only'));
     }
 
-    public function bonusPercent(): int
+    /**
+     * Health, attack and defense percent while worn: the rarity's bonus plus
+     * config('game.outfits.upgrade.bonus_per_level') per upgrade level.
+     */
+    public function bonusPercent(int $level = 0): int
     {
-        return config("game.outfits.bonus_percent.{$this->rarity}");
+        return config("game.outfits.bonus_percent.{$this->rarity}") + $level * config('game.outfits.upgrade.bonus_per_level');
     }
 
     /**
      * @return array<string, int|string>
      */
-    public function summary(): array
+    public function summary(int $level = 0): array
     {
-        return [...$this->only(['id', 'key', 'name', 'rarity']), 'bonus' => $this->bonusPercent()];
+        return [...$this->only(['id', 'key', 'name', 'rarity']), 'level' => $level, 'bonus' => $this->bonusPercent($level)];
     }
 }

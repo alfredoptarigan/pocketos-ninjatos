@@ -23,6 +23,8 @@ export type Outfit = {
     key: string;
     name: string;
     rarity: Rarity;
+    /** Upgrade level (+N). */
+    level: number;
     /** Percent added to health, attack and defense while worn. */
     bonus: number;
 };

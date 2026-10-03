@@ -34,7 +34,7 @@ final readonly class CombatStats
             ? $character->loadMissing('wornGear.equipment')->wornGear->pluck('equipment')
             : collect();
         // A worn outfit raises health, attack and defense by its rarity's percentage.
-        $percent = 100 + ($character->outfit?->bonusPercent() ?? 0);
+        $percent = 100 + ($character->outfit?->bonusPercent($character->outfitLevel($character->outfit_id)) ?? 0);
         $boost = fn (int $value) => (int) round($value * $percent / 100);
 
         return new self(

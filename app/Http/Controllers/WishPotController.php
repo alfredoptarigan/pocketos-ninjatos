@@ -46,7 +46,7 @@ class WishPotController extends Controller
         Inertia::flash('drawn', [
             'outfit' => $result['outfit']->summary(),
             'duplicate' => $result['duplicate'],
-            'gold' => $result['gold'],
+            'shards' => $result['shards'],
         ]);
 
         return to_route('wish-pot.show');

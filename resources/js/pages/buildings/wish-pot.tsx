@@ -24,7 +24,7 @@ type Pot = {
     choices: Choice[] | null;
 };
 
-type Drawn = { outfit: Outfit; duplicate: boolean; gold: number };
+type Drawn = { outfit: Outfit; duplicate: boolean; shards: number };
 
 function oddsText(odds: NonNullable<Pot['odds']>): string {
     const total = Object.values(odds).reduce((sum, weight) => sum + weight, 0);
@@ -112,8 +112,8 @@ export default function WishPot({ pots }: { pots: Pot[] }) {
                             <p className="text-xs text-slate-400">
                                 Earn gift coupons from the daily sign-in
                                 (Gifts), new Training Tower floors and dungeon
-                                clears. A duplicate from a random pot pays out
-                                gold instead.
+                                clears. A duplicate from a random pot gives
+                                outfit shards for upgrades instead.
                             </p>
                         </div>
                     </div>
@@ -251,7 +251,7 @@ function Reveal({ drawn }: { drawn: Drawn | null }) {
             </p>
             {drawn.duplicate && (
                 <p className="text-xs text-amber-300">
-                    Already owned: +{drawn.gold.toLocaleString('en-US')} gold
+                    Already owned: +{drawn.shards} outfit shards
                 </p>
             )}
         </div>
