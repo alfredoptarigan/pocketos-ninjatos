@@ -116,8 +116,9 @@ Tick an item when it ships and update its row in the tables below.
 
 | Status | Feature                                                           | Original data                                                                                               |
 | ------ | ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| ✅     | Training Tower (170 floors)                                       | `singlegatenpc`, `sgategetexp`, `stollgatebossinfo`                                                         |
-| ✅     | Battle replay, jutsu effects and sound                            | `effectconfig`, `movieclip/fighteffect`                                                                     |
+| ✅     | Training Tower (170 floors; bosses fight in their avatar art)     | `singlegatenpc`, `sgategetexp`, `stollgatebossinfo`                                                         |
+| ✅     | Battle replay: jutsu effects, statuses, sound, HD fighters        | `effectconfig`, `movieclip/fighteffect`, `bitmap/icon/buff`                                                 |
+| ✅     | Opponents fight with chakra and jutsu (our rule: no data)         | `config/skills.php` (`monsters`)                                                                            |
 | ✅     | Skills: 40 jutsu, 10 passives, upgrades, loadouts, status effects | `clientskill`, `serverskillconfig`, `upskillcfg`, panels `skilltree`, `skilllearn`                          |
 | ⬜     | Ultimate jutsu                                                    | `clientskill` type 2, folder `dazhao`                                                                       |
 | 🟡     | Dungeons (9 tiered tollgates with sub-stages)                     | `tollgate`, `subtollgate`, `monstergroup`, `fightmonsterpoint`, `movieclip/scene/tollclone`, `ui/tollgate*` |
@@ -197,12 +198,12 @@ Pets would also give a use to the "baby" result of searching (now the baby runs 
 
 ## Quests and daily activities
 
-| Status | Feature                                          | Original data                                                                                               |
-| ------ | ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------- |
-| ⬜     | Main and side quests (Mission Hall)              | `task`, `subtask`, `taskitem`, `taskboardcfg`, `taskpichelp`, panels `task*`                                |
-| ⬜     | Daily tasks, daily sign-in, login streak rewards | `mynotedayactive`, `mynotetarget`, `dayrewardlevel`, panels `daytask`, `everydaysignin`, `continuationgift` |
-| ⬜     | Newcomer gifts and tutorial                      | `newhandgift`, `newplayguide`, `freshmanmainguide`, `levelguide`                                            |
-| ⬜     | Seasonal events (Christmas, New Year)            | `christmas`, `snownpc`, `ui/christmasactivity`, `ui/newyeaychange`                                          |
+| Status | Feature                               | Original data                                                                                               |
+| ------ | ------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| ⬜     | Main and side quests (Mission Hall)   | `task`, `subtask`, `taskitem`, `taskboardcfg`, `taskpichelp`, panels `task*`                                |
+| 🟡     | Daily tasks (sign-in and streak done) | `mynotedayactive`, `mynotetarget`, `dayrewardlevel`, panels `daytask`, `everydaysignin`, `continuationgift` |
+| ⬜     | Newcomer gifts and tutorial           | `newhandgift`, `newplayguide`, `freshmanmainguide`, `levelguide`                                            |
+| ⬜     | Seasonal events (Christmas, New Year) | `christmas`, `snownpc`, `ui/christmasactivity`, `ui/newyeaychange`                                          |
 
 ## Suggested order (private server with friends)
 
