@@ -13,7 +13,7 @@ return new class extends Migration
     {
         // Titles from database/data/titles.json (TitleSeeder); ids are the original ones.
         Schema::create('titles', function (Blueprint $table) {
-            $table->unsignedSmallInteger('id')->primary();
+            $table->unsignedInteger('id')->primary();
             $table->string('code', 32)->unique();
             $table->string('name');
             $table->unsignedTinyInteger('category');

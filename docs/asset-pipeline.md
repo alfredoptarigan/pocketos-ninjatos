@@ -135,7 +135,10 @@ recorded outfit, keyed by outfit id; `OutfitSeeder` merges it into `outfits.coll
 It also writes `titles.json` (`TitleSeeder`) from `title`: names `lg_<Name>` (Indonesian
 ones translated in `TITLE_NAMES`) and bonuses parsed from the tooltip `lg_<contentself>`
 (the `contentself` key does not match the title id). Stats we lack (speed, hit, armor
-break, block, pierce, crit rating) are dropped.
+break, block, pierce, crit rating) are dropped. `achievements.json` (`AchievementSeeder`)
+holds every `accomplishment` (target `TotalAmount`, points `CurrentAccomplishmentAmount`,
+reward title code); only the ids in `config('game.achievements.tracked')` are seeded, with
+English names from that config. Gotcha: `accomplishment` row 0 is data, not a header.
 
 `tools/extract_equipment_assets.py [--hd]` reads `equipitem` and writes the 126 plain
 equipment tiers (listed with English names in its `NAMES`; set pieces and event gear are

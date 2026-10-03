@@ -6,6 +6,7 @@ import type { GearStats } from '@/lib/gear';
 import { cn } from '@/lib/utils';
 import { sell, use } from '@/routes/bag';
 import { equip } from '@/routes/character/gear';
+import { index as achievements } from '@/routes/achievements';
 import { index as collection } from '@/routes/collection';
 import { index as wardrobe } from '@/routes/outfits';
 
@@ -173,6 +174,12 @@ export default function InventoryBag({ gear, items, level }: Props) {
                         className="game-button py-0.5 text-center text-sm"
                     >
                         Collection
+                    </Link>
+                    <Link
+                        href={achievements()}
+                        className="game-button py-0.5 text-center text-sm"
+                    >
+                        Achievements
                     </Link>
                     <Link
                         href={wardrobe()}

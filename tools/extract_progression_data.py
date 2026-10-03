@@ -8,7 +8,10 @@ Writes to database/data/ (gitignored like the other extracted data):
   recorded in the avatar collection (avatarcollect, keyed by outfit id);
 - titles.json: every title (title) with an English name and the bonuses
   parsed from its tooltip (lg_title_contentself*); stats this rework does
-  not have (speed, hit, armor break, block...) are dropped.
+  not have (speed, hit, armor break, block...) are dropped;
+- achievements.json: every achievement (accomplishment) with its target,
+  points and reward title code. Names and which ones are tracked live in
+  config/game.php ('achievements'): most need systems not built yet.
 """
 
 from __future__ import annotations
@@ -114,6 +117,20 @@ def titles(rows: list[dict], language: dict) -> list[dict]:
     ]
 
 
+def achievements(rows: list[dict]) -> list[dict]:
+    """accomplishment -> id, type, target, points, title code (None when it gives none)."""
+    return [
+        {
+            'id': number(row['ID']),
+            'type': number(row['Type']),
+            'target': number(row['TotalAmount']),
+            'points': number(row['CurrentAccomplishmentAmount']),
+            'title': None if row['Title'] in ('', 'nothing') else row['Title'],
+        }
+        for row in rows
+    ]
+
+
 def write(name: str, data) -> None:
     path = DATA_OUT / name
     path.write_text(json.dumps(data, indent=1, ensure_ascii=False))
@@ -132,6 +149,7 @@ def main() -> None:
     DATA_OUT.mkdir(parents=True, exist_ok=True)
     write('avatar_collection.json', collection(table('avatarcollect')))
     write('titles.json', titles(table('title'), language))
+    write('achievements.json', achievements(table('accomplishment')))
 
 
 if __name__ == '__main__':

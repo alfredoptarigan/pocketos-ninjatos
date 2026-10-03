@@ -1,6 +1,6 @@
 import unittest
 
-from extract_progression_data import all_rows, collection, title_bonus, title_name, titles
+from extract_progression_data import achievements, all_rows, collection, title_bonus, title_name, titles
 
 
 class ProgressionTest(unittest.TestCase):
@@ -34,6 +34,15 @@ class ProgressionTest(unittest.TestCase):
 
         self.assertEqual(titles(rows, language), [
             {'id': 1, 'code': 'EffortTitle01', 'name': 'Ninja Student', 'category': 1, 'bonus': {'stamina': 13}},
+        ])
+
+    def test_achievements_keep_target_points_and_title(self):
+        rows = [{'ID': '1010101', 'Type': '1', 'TotalAmount': '21', 'CurrentAccomplishmentAmount': '7', 'Title': 'EffortTitle01'},
+                {'ID': '1020210', 'Type': '1', 'TotalAmount': '1000', 'CurrentAccomplishmentAmount': '6', 'Title': 'nothing'}]
+
+        self.assertEqual(achievements(rows), [
+            {'id': 1010101, 'type': 1, 'target': 21, 'points': 7, 'title': 'EffortTitle01'},
+            {'id': 1020210, 'type': 1, 'target': 1000, 'points': 6, 'title': None},
         ])
 
 

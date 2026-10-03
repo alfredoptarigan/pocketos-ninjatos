@@ -81,6 +81,18 @@ class FieldTest extends TestCase
         $this->assertSame($monster->field->background, $battle->log['fighters'][1]['art']['background']);
     }
 
+    public function test_beaten_bosses_are_counted_for_achievements()
+    {
+        $character = Character::factory()->create();
+        $boss = FieldMonster::factory()->create(['is_boss' => true, 'level' => 4, 'priority' => 0]);
+        $this->actingAs($character->user);
+
+        $this->post(route('fields.fight', $boss));
+
+        $this->assertTrue(Battle::query()->where('field_monster_id', $boss->id)->sole()->won);
+        $this->assertSame(1, $character->refresh()->bosses_defeated);
+    }
+
     public function test_lucky_wins_drop_gear()
     {
         $character = Character::factory()->create();

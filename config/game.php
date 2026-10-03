@@ -277,6 +277,45 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Achievements
+    |--------------------------------------------------------------------------
+    |
+    | The original accomplishment table has 68 achievements; most need systems
+    | not built yet (arena, duels, missions, VIP, pets, cards). Only those
+    | under 'tracked' are seeded (AchievementSeeder), with target, points and
+    | reward title from the original data. Each counter is a characters column
+    | ('level', 'gold_spent', ...) or 'points', the sum of completed points.
+    |
+    */
+
+    'achievements' => [
+        'counters' => [
+            'level' => 'Reach level {target}.',
+            'gold_spent' => 'Spend {target} gold.',
+            'bosses_defeated' => 'Defeat {target} field bosses.',
+            'sign_in_days' => 'Sign in on {target} days.',
+            'points' => 'Collect {target} achievement points.',
+        ],
+        'tracked' => [
+            1010101 => ['counter' => 'level', 'name' => 'Prominent Ninja'],
+            1010102 => ['counter' => 'level', 'name' => 'Early Peep of Nindo'],
+            1010103 => ['counter' => 'level', 'name' => 'Ninjutsu Beginner'],
+            1010104 => ['counter' => 'level', 'name' => 'Ninjutsu Limits'],
+            1010105 => ['counter' => 'level', 'name' => 'Ninjutsu Master'],
+            1010106 => ['counter' => 'level', 'name' => 'Legendary Ninja'],
+            1010107 => ['counter' => 'level', 'name' => 'Ninja Sorcerer'],
+            1020210 => ['counter' => 'gold_spent', 'name' => 'Spend Like Water'],
+            1020211 => ['counter' => 'gold_spent', 'name' => 'Big Spender'],
+            1020212 => ['counter' => 'gold_spent', 'name' => 'Treat Money Like Dirt'],
+            4080724 => ['counter' => 'bosses_defeated', 'name' => 'Demon Hunter'],
+            5000749 => ['counter' => 'sign_in_days', 'name' => 'Perseverance'],
+            5150753 => ['counter' => 'points', 'name' => 'Essence of Final Release'],
+            5150754 => ['counter' => 'points', 'name' => 'Wake of Sharingan'],
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Equipment
     |--------------------------------------------------------------------------
     |

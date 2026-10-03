@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Actions\TrackAchievements;
 use App\Game\AvatarCollection;
 use App\Game\Combatant;
 use App\Game\CombatStats;
@@ -40,6 +41,9 @@ use Illuminate\Support\Carbon;
  * @property list<string> $skills Learned jutsu ids (config('game.skills'))
  * @property int $sign_in_streak Day (1-7) of the daily sign-in streak, 0 before the first
  * @property Carbon|null $signed_in_on Last daily sign-in
+ * @property int $gold_spent Gold ever spent (achievements)
+ * @property int $bosses_defeated Field bosses beaten (achievements)
+ * @property int $sign_in_days Days signed in (achievements)
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
@@ -55,6 +59,27 @@ class Character extends Model
         'tower_floor' => 0,
         'skills' => '[]',
     ];
+
+    /**
+     * Spending gold adds to gold_spent; a change to any achievement counter
+     * checks the achievements (TrackAchievements).
+     */
+    protected static function booted(): void
+    {
+        static::saving(function (Character $character) {
+            $spent = $character->exists ? $character->getOriginal('gold') - $character->gold : 0;
+
+            if ($spent > 0) {
+                $character->gold_spent += $spent;
+            }
+        });
+
+        static::saved(function (Character $character) {
+            if ($character->wasChanged(['level', 'gold_spent', 'bosses_defeated', 'sign_in_days'])) {
+                app(TrackAchievements::class)->handle($character);
+            }
+        });
+    }
 
     /**
      * @return array<string, string>
@@ -144,6 +169,16 @@ class Character extends Model
     public function titles(): BelongsToMany
     {
         return $this->belongsToMany(Title::class, 'character_titles')->withTimestamps();
+    }
+
+    /**
+     * Completed achievements.
+     *
+     * @return BelongsToMany<Achievement, $this>
+     */
+    public function achievements(): BelongsToMany
+    {
+        return $this->belongsToMany(Achievement::class, 'character_achievements')->withPivot('completed_at');
     }
 
     /**

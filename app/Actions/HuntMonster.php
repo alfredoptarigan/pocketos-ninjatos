@@ -52,7 +52,12 @@ class HuntMonster
             $drop = $won && Lottery::odds($dropPercent, 100)->choose() ? $this->dropGear->handle($ninja, $monster->level) : null;
 
             [$level, $levelExp] = Leveling::gain($ninja->level, $ninja->exp, $exp);
-            $ninja->forceFill(['level' => $level, 'exp' => $levelExp, 'gold' => $ninja->gold + $gold]);
+            $ninja->forceFill([
+                'level' => $level,
+                'exp' => $levelExp,
+                'gold' => $ninja->gold + $gold,
+                'bosses_defeated' => $ninja->bosses_defeated + ($won && $monster->is_boss ? 1 : 0),
+            ]);
             $ninja->setVitals($result['hp'][0], $result['mp'][0]);
             $ninja->save();
 

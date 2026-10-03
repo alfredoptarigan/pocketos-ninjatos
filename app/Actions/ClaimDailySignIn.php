@@ -39,6 +39,7 @@ class ClaimDailySignIn
                 'exp' => $levelExp,
                 'coupons' => $ninja->coupons + $coupons,
                 'sign_in_streak' => $day,
+                'sign_in_days' => $ninja->sign_in_days + 1,
                 'signed_in_on' => Carbon::today(),
             ])->save();
 

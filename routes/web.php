@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AchievementController;
 use App\Http\Controllers\BagController;
 use App\Http\Controllers\BattleController;
 use App\Http\Controllers\CharacterController;
@@ -38,6 +39,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('outfits', [OutfitController::class, 'index'])->name('outfits.index');
         Route::get('collection', [CollectionController::class, 'index'])->name('collection.index');
         Route::post('collection/{outfit}/record', [CollectionController::class, 'record'])->name('collection.record');
+        Route::get('achievements', [AchievementController::class, 'index'])->name('achievements.index');
         Route::get('titles', [TitleController::class, 'index'])->name('titles.index');
         Route::post('titles/take-off', [TitleController::class, 'takeOff'])->name('titles.take-off');
         Route::post('titles/{title}/wear', [TitleController::class, 'wear'])->name('titles.wear');

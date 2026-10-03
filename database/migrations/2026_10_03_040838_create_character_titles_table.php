@@ -15,13 +15,13 @@ return new class extends Migration
         Schema::create('character_titles', function (Blueprint $table) {
             $table->id();
             $table->foreignId('character_id')->constrained()->cascadeOnDelete();
-            $table->unsignedSmallInteger('title_id');
+            $table->unsignedInteger('title_id');
             $table->foreign('title_id')->references('id')->on('titles')->cascadeOnDelete();
             $table->timestamps();
             $table->unique(['character_id', 'title_id']);
         });
         Schema::table('characters', function (Blueprint $table) {
-            $table->unsignedSmallInteger('title_id')->nullable();
+            $table->unsignedInteger('title_id')->nullable();
             $table->foreign('title_id')->references('id')->on('titles')->nullOnDelete();
         });
     }

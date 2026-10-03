@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Achievement;
 use App\Models\Title;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -51,7 +52,9 @@ class TitleController extends Controller
      */
     private function sources(): array
     {
-        $sources = [];
+        $sources = Achievement::query()->whereNotNull('title')->get()
+            ->mapWithKeys(fn (Achievement $achievement) => [$achievement->title => "Achievement \"{$achievement->name}\": {$achievement->goal()}"])
+            ->all();
 
         foreach (config('game.collection.tiers') as $rarity => $tiers) {
             foreach ($tiers as [$count, , , $code]) {
