@@ -22,7 +22,7 @@ Tick an item when it ships and update its row in the tables below.
 - [ ] Achievements
 - [ ] Honor and honor exchange
 - [x] Costume change (outfits with grey/blue/orange rarity, Wardrobe page)
-- [ ] Avatar collection set bonuses and outfit upgrades (+1..+27)
+- [x] Avatar collection set bonuses and outfit upgrades (+1..+27, paid with outfit shards from duplicate draws)
 
 **Combat and PvE**
 
@@ -110,7 +110,7 @@ Tick an item when it ships and update its row in the tables below.
 | ⬜     | Titles                                                | `title`, `titleitem`, panels `title*`                                                                                              |
 | ⬜     | Achievements                                          | `accomplishment`, panel `accomplishmentpop`                                                                                        |
 | ⬜     | Honor and honor exchange                              | `honorexchangeexp`, panels `myhonor*`, `honorexchange`                                                                             |
-| 🟡     | Avatar collection and costume change                  | `avatarcollect`, `avatarcollectleveladd`, `avataritem`, `recastavatar`, panels `avatarcollect*`, `avatartransition`, `avatarstock` |
+| ✅     | Avatar collection and costume change                  | `avatarcollect`, `avatarcollectleveladd`, `avataritem`, `recastavatar`, panels `avatarcollect*`, `avatartransition`, `avatarstock` |
 
 ## Combat and PvE
 

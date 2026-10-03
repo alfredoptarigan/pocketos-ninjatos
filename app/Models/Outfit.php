@@ -17,14 +17,23 @@ use Illuminate\Support\Carbon;
  * @property string $name
  * @property int $sex 0 male, 1 female
  * @property string $rarity grey, blue or orange
+ * @property array{strength: int, agility: int, stamina: int}|null $collection Attributes once recorded; null if not collectible
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['key', 'name', 'sex', 'rarity'])]
+#[Fillable(['key', 'name', 'sex', 'rarity', 'collection'])]
 class Outfit extends Model
 {
     /** @use HasFactory<OutfitFactory> */
     use HasFactory;
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return ['collection' => 'array'];
+    }
 
     /**
      * Outfits a Wishing Pot can give: not event-only.

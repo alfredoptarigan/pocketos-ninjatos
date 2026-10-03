@@ -6,6 +6,7 @@ import type { GearStats } from '@/lib/gear';
 import { cn } from '@/lib/utils';
 import { sell, use } from '@/routes/bag';
 import { equip } from '@/routes/character/gear';
+import { index as collection } from '@/routes/collection';
 import { index as wardrobe } from '@/routes/outfits';
 
 export type Piece = GearStats & {
@@ -167,7 +168,12 @@ export default function InventoryBag({ gear, items, level }: Props) {
                     >
                         Multi-Sell
                     </button>
-                    <SideButton label="Collection" />
+                    <Link
+                        href={collection()}
+                        className="game-button py-0.5 text-center text-sm"
+                    >
+                        Collection
+                    </Link>
                     <Link
                         href={wardrobe()}
                         className="game-button py-0.5 text-center text-sm"

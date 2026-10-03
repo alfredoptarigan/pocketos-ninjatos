@@ -4,6 +4,7 @@ import GameWindow from '@/components/game-window';
 import VillageBackdrop from '@/components/village-backdrop';
 import { cn } from '@/lib/utils';
 import { bag as inventory, village } from '@/routes';
+import { index as collection } from '@/routes/collection';
 import { takeOff, upgrade, wear } from '@/routes/outfits';
 import { show as wishPot } from '@/routes/wish-pot';
 import { characterAssets, RARITY_BORDER, RARITY_TEXT } from '@/types/game';
@@ -91,6 +92,12 @@ export default function Wardrobe({ outfits, worn, avatar, shards }: Props) {
                                 className="game-button mt-2 px-3 py-0.5 text-sm"
                             >
                                 Inventory
+                            </Link>
+                            <Link
+                                href={collection()}
+                                className="game-button px-3 py-0.5 text-sm"
+                            >
+                                Collection
                             </Link>
                         </div>
 

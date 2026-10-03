@@ -3,6 +3,7 @@
 use App\Http\Controllers\BagController;
 use App\Http\Controllers\BattleController;
 use App\Http\Controllers\CharacterController;
+use App\Http\Controllers\CollectionController;
 use App\Http\Controllers\DungeonController;
 use App\Http\Controllers\EquipmentShopController;
 use App\Http\Controllers\FieldController;
@@ -34,6 +35,8 @@ Route::middleware(['auth'])->group(function () {
         Route::post('character/gear/{gear}/equip', [GearController::class, 'equip'])->name('character.gear.equip');
         Route::post('character/gear/{gear}/unequip', [GearController::class, 'unequip'])->name('character.gear.unequip');
         Route::get('outfits', [OutfitController::class, 'index'])->name('outfits.index');
+        Route::get('collection', [CollectionController::class, 'index'])->name('collection.index');
+        Route::post('collection/{outfit}/record', [CollectionController::class, 'record'])->name('collection.record');
         Route::post('outfits/take-off', [OutfitController::class, 'takeOff'])->name('outfits.take-off');
         Route::post('outfits/{outfit}/wear', [OutfitController::class, 'wear'])->name('outfits.wear');
         Route::post('outfits/{outfit}/upgrade', [OutfitController::class, 'upgrade'])->name('outfits.upgrade');

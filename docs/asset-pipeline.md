@@ -124,6 +124,14 @@ borrow `motion/mob` stand-ins and avatar-named bosses (`name_avatar45`) use the 
 `face.png` and `motions.*` under `public/game-assets/characters/<sex>_<id>/` (no portrait:
 only create-screen avatars have one). 74 outfits have art; outfits without motion bitmaps
 (e.g. `0_87`) are skipped. Konan is forced to orange (the data says grey).
+Upgrades +1..+N are other `avataritem` rows (`AvatarID = level * 100 + base`, `UseLevel`
+3 per step); the backup has no upgrade cost or stats, so those are ours (`outfits.upgrade`).
+
+`tools/extract_progression_data.py` (character progression, no art) writes
+`database/data/avatar_collection.json` from `avatarcollect` (Strength/Agility/Stamina per
+recorded outfit, keyed by outfit id; `OutfitSeeder` merges it into `outfits.collection`).
+`avatarcollectleveladd` (tiers: Color 1/2/3 = orange/blue/grey) is copied by hand into
+`config/game.php` (`collection.tiers`). Gotcha: `avatarcollect` has no header row.
 
 `tools/extract_equipment_assets.py [--hd]` reads `equipitem` and writes the 126 plain
 equipment tiers (listed with English names in its `NAMES`; set pieces and event gear are

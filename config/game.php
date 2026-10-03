@@ -232,6 +232,40 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Avatar collection and attributes
+    |--------------------------------------------------------------------------
+    |
+    | A +record_level outfit can be recorded in the collection for its
+    | original Strength/Agility/Stamina (avatarcollect). Recording enough
+    | outfits of one rarity reaches a tier (avatarcollectleveladd): from that
+    | character level, health and attack rise by the tier's percent. The
+    | original SpdRate has no stat here. Tiers without a level in the data
+    | use 70, like orange tier 6.
+    |
+    | We have no Strength/Agility/Stamina: they convert to attack, dodge and
+    | health with the rates under 'attributes'.
+    |
+    */
+
+    'collection' => [
+        'record_level' => 2,
+        // rarity => list of [outfits recorded, character level, percent]
+        'tiers' => [
+            'orange' => [[5, 25, 3.2], [10, 35, 4.9], [15, 45, 6.1], [20, 55, 7.1], [25, 65, 8], [30, 70, 9], [35, 75, 10]],
+            'blue' => [[5, 25, 2.6], [10, 35, 4], [15, 45, 5], [20, 55, 5.9], [25, 65, 6.6], [30, 70, 7.1]],
+            'grey' => [[5, 25, 2.1], [10, 35, 3.2], [15, 45, 4], [20, 55, 4.7], [25, 65, 5.3], [30, 70, 5.7]],
+        ],
+    ],
+
+    'attributes' => [
+        'strength_attack' => 1,
+        'stamina_hp' => 5,
+        // One percent of dodge per this many Agility.
+        'agility_per_dodge' => 20,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Equipment
     |--------------------------------------------------------------------------
     |

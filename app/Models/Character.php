@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use App\Game\AvatarCollection;
 use App\Game\Combatant;
 use App\Game\CombatStats;
 use App\Game\Leveling;
 use App\Game\Skill;
+use App\Game\StatBonus;
 use App\Game\Vitals;
 use Database\Factories\CharacterFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -111,7 +113,15 @@ class Character extends Model
      */
     public function outfits(): BelongsToMany
     {
-        return $this->belongsToMany(Outfit::class, 'character_outfits')->withPivot('level')->withTimestamps();
+        return $this->belongsToMany(Outfit::class, 'character_outfits')->withPivot('level', 'recorded_at')->withTimestamps();
+    }
+
+    /**
+     * Stats on top of level and gear: the avatar collection (titles join in later).
+     */
+    public function statBonus(): StatBonus
+    {
+        return AvatarCollection::for($this)->bonus;
     }
 
     /**
