@@ -45,13 +45,14 @@ class BattleSkillsTest extends TestCase
 
         $this->assertSame('9000', $hit['skill']);
         $this->assertSame(20, $hit['damage']); // 10 * 200%
-        $this->assertSame(10, $hit['mpCost']); // ceil(100 * 100 max chakra / 1000)
-        $this->assertSame(90, $hit['actorMp']);
+        $this->assertSame(5, $hit['mpCost']); // ceil(100 * 100 max chakra / 2000)
+        $this->assertSame(95, $hit['actorMp']);
     }
 
     public function test_jutsu_need_enough_chakra()
     {
-        $events = $this->events($this->fighter(['mp' => 5, 'skills' => [$this->skill('strike', ['chakra' => 100])]]), $this->fighter());
+        // The jutsu costs 5 chakra.
+        $events = $this->events($this->fighter(['mp' => 4, 'skills' => [$this->skill('strike', ['chakra' => 100])]]), $this->fighter());
 
         $this->assertArrayNotHasKey('skill', $this->first($events, 'attack'));
     }

@@ -97,8 +97,10 @@ return [
         // Damage taken is multiplied by 1 - def / (def + defense_scale).
         'defense_scale' => 500,
         'max_turns' => 60,
-        // A jutsu costs ceil(chakra * max chakra / skill_chakra_divisor).
-        'skill_chakra_divisor' => 1000,
+        // A jutsu costs ceil(chakra * max chakra / skill_chakra_divisor): Fireball
+        // (100) 5% of max chakra, Static Field (300) 15%, so a ninja can cast
+        // about a dozen jutsu a fight before running dry.
+        'skill_chakra_divisor' => 2000,
         // Bomb is thrown back with this % chance per turn played (capped).
         'bomb_backfire_per_turn' => 1,
         'bomb_backfire_cap' => 40,

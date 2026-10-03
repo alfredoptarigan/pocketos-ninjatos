@@ -150,7 +150,17 @@ class JutsuEffectsTest extends TestCase
         $fireball = $this->jutsu('strike', null, ['chakra' => 100, 'chance' => 100]);
         $events = $this->events($this->fighter(['skills' => [$palm]]), $this->fighter(['skills' => [$fireball]]));
 
-        $this->assertSame(200, $this->of($events, 'attack', ['actor' => 1])[0]['mpCost']); // 100 * 1000 / 1000, doubled
+        $this->assertSame(100, $this->of($events, 'attack', ['actor' => 1])[0]['mpCost']); // 100 * 1000 / 2000, doubled
+    }
+
+    public function test_effect_only_jutsu_are_not_cast_again_while_their_effect_lasts()
+    {
+        $mirage = $this->jutsu('follow_up', 'mirage', ['power' => 0, 'amount' => 1, 'chakra' => 10]);
+        $boil = $this->jutsu('prepare', 'bloodboil', ['power' => 0, 'amount' => 0, 'recoil' => 0, 'turns' => 50, 'chakra' => 10]);
+        $events = $this->events($this->fighter(['skills' => [$boil, $mirage]]), $this->fighter());
+
+        $this->assertCount(1, $this->of($events, 'cast', ['skill' => $mirage->id]));
+        $this->assertCount(1, $this->of($events, 'cast', ['skill' => $boil->id]));
     }
 
     public function test_eight_gates_open_when_hurt_and_give_extra_turns()

@@ -65,6 +65,11 @@ trait AppliesJutsuEffects
             return false;
         }
 
+        // An effect-only jutsu is not cast again while its effect still lasts.
+        if ($skill->power === 0 && $this->effectLasts($side, $skill)) {
+            return false;
+        }
+
         return match ($skill->effect) {
             'charm' => $this->hasBuff(1 - $side),
             'cleanse' => $this->removableDebuffs($side) !== [],
@@ -72,6 +77,22 @@ trait AppliesJutsuEffects
             'shield' => ! $this->has($side, 'shield'),
             'gates' => $this->gates[$side]['open'] < self::MAX_GATES && $this->turn - $this->gates[$side]['last'] >= $skill->param('cooldown', 1),
             default => $skill->kind !== 'revive' || ! $this->immobile($side),
+        };
+    }
+
+    /**
+     * Whether the status a jutsu would put on its user or target is still on.
+     */
+    private function effectLasts(int $side, Skill $skill): bool
+    {
+        $target = 1 - $side;
+
+        return match ($skill->effect) {
+            'bloodboil', 'invulnerable', 'regen' => $this->has($side, $skill->effect),
+            'freeze', 'charm', 'slow', 'mirage', 'chakra_burn', 'snare', 'clay', 'seal', 'dead_demon' => $this->has($target, $skill->effect),
+            'waterfall' => $this->stun[$target] > 0,
+            'poison' => $this->poisoned[$target],
+            default => false,
         };
     }
 
