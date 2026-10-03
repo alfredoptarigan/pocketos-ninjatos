@@ -15,7 +15,7 @@ final class BattleLog
      * @param  array{level: int, mp: int, maxMp: int}  $before  the ninja as the battle started
      * @return array<int, array<string, mixed>>
      */
-    public static function fighters(Character $ninja, Combatant $player, array $before, TowerFloor|FieldMonster $foe, Combatant $opponent): array
+    public static function fighters(Character $ninja, Combatant $player, array $before, TowerFloor|FieldMonster|DungeonMonster $foe, Combatant $opponent): array
     {
         return [
             [...$player->toArray(), 'avatar' => $ninja->look(), ...$before],

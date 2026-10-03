@@ -28,7 +28,8 @@ Tick an item when it ships and update its row in the tables below.
 
 - [ ] Skill tree and skill upgrades (15 jutsu already learnable)
 - [ ] Ultimate jutsu
-- [ ] Dungeons (9 tiered tollgates)
+- [x] Dungeons: 17 tollgates (trial, normal, hard), one battle per wave leader, daily runs
+- [ ] Dungeon "Super" difficulty (needs the Abyss Pass item), weekly ranking, end-of-stage card flip
 - [ ] Tailed Beast raids and ranking
 - [ ] Public field fights (energy)
 - [ ] Task bosses
@@ -116,7 +117,7 @@ Tick an item when it ships and update its row in the tables below.
 | ✅     | Battle replay, jutsu effects and sound                           | `effectconfig`, `movieclip/fighteffect`                                                                     |
 | 🟡     | Skills: 15 jutsu can be learned; skill tree and upgrades missing | `clientskill`, `serverskillconfig`, `upskillcfg`, panels `skilltree`, `skilllearn`                          |
 | ⬜     | Ultimate jutsu                                                   | `clientskill` type 2, folder `dazhao`                                                                       |
-| ⬜     | Dungeons (9 tiered tollgates with sub-stages)                    | `tollgate`, `subtollgate`, `monstergroup`, `fightmonsterpoint`, `movieclip/scene/tollclone`, `ui/tollgate*` |
+| 🟡     | Dungeons (9 tiered tollgates with sub-stages)                    | `tollgate`, `subtollgate`, `monstergroup`, `fightmonsterpoint`, `movieclip/scene/tollclone`, `ui/tollgate*` |
 | ⬜     | Tailed Beast raids and ranking                                   | `tailbeastnpc`, `taildiffculty`, `tailheroreward`, `tailhonorprize`, `tailhonorreward`, panels `beast*`     |
 | ⬜     | Public field fights (cost energy)                                | `pubfightmonster`, `pubscenefightnpc`, `pubfightbonusrand`                                                  |
 | ⬜     | Task bosses                                                      | `taskbossnpc`                                                                                               |
@@ -137,7 +138,7 @@ Tick an item when it ships and update its row in the tables below.
 
 | Status | Feature                                         | Original data                                                                                  |
 | ------ | ----------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| ✅     | Bag, Pharmacy                                   | `pharmacyitem`                                                                                 |
+| ✅     | Inventory (bag + character panel), Pharmacy     | `pharmacyitem`                                                                                 |
 | ✅     | Equipment (8 slots), Equipment Shop             | `equipitem`                                                                                    |
 | ⬜     | Forge: enhance to +12                           | `equipconsolidate`, `upgradecue`                                                               |
 | ⬜     | Forge: crafting and compose                     | `equipcompose`, `composemethoditem`, `composetable`, `composetemp`, panels `equipcompose*`     |

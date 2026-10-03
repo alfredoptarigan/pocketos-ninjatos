@@ -34,6 +34,15 @@ export const RARITY_TEXT: Record<Rarity, string> = {
     orange: 'text-orange-400',
 };
 
+export type Difficulty = 'trial' | 'normal' | 'hard';
+
+/** Badge colours of dungeon difficulties. */
+export const DIFFICULTY_STYLE: Record<Difficulty, string> = {
+    trial: 'bg-slate-600 text-slate-100',
+    normal: 'bg-emerald-700 text-emerald-50',
+    hard: 'bg-red-700 text-red-50',
+};
+
 export const RARITY_BORDER: Record<Rarity, string> = {
     grey: 'border-slate-500',
     blue: 'border-sky-500',

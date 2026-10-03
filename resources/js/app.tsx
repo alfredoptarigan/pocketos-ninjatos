@@ -13,6 +13,7 @@ const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 const GAME_PAGES = [
     'village',
     'inventory',
+    'dungeons',
     'buildings',
     'character',
     'tower',

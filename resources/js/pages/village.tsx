@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import VillageCanvas from '@/components/village-canvas';
 import { buildingName } from '@/game/village-scene';
+import { index as dungeons } from '@/routes/dungeons';
 import { show as equipmentShop } from '@/routes/equipment-shop';
 import { show as pharmacy } from '@/routes/pharmacy';
 import { show as tower } from '@/routes/tower';
@@ -56,6 +57,12 @@ export default function Village({ village, villages }: Props) {
             <div className="absolute top-3 left-1/2 z-10 flex -translate-x-1/2 gap-2">
                 <Link href={world()} className="game-button px-4 py-1 text-lg">
                     World Map
+                </Link>
+                <Link
+                    href={dungeons()}
+                    className="game-button px-4 py-1 text-lg"
+                >
+                    Dungeons
                 </Link>
                 <DropdownMenu>
                     <DropdownMenuTrigger className="game-button flex items-center gap-1 px-4 py-1 text-lg">

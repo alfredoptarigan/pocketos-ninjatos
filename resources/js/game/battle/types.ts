@@ -100,6 +100,11 @@ export type BattleRewards = {
     firstClear: boolean;
     // Missing on battles recorded before gear existed.
     drop?: GearDrop | null;
+    // Dungeon waves and tower first clears.
+    coupons?: number;
+    // Dungeon waves only: the stage this win finished, and whether it was the last one.
+    stageCleared?: string | null;
+    dungeonCleared?: boolean;
 };
 
 export type BattleRecord = {
@@ -107,6 +112,8 @@ export type BattleRecord = {
     // Tower battles have a floor; hunting-ground battles have a field.
     floor: number | null;
     field: { scene: string; name: string; monster: number } | null;
+    // Dungeon waves; `active` is false once the run is cleared, lost or left.
+    dungeon: { id: number; name: string; run: number; active: boolean } | null;
     won: boolean;
     log: BattleLog;
     rewards: BattleRewards;

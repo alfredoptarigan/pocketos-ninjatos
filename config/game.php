@@ -245,6 +245,28 @@ return [
     ],
 
     /*
+    |--------------------------------------------------------------------------
+    | Dungeons (original tollgates)
+    |--------------------------------------------------------------------------
+    |
+    | From tools/extract_dungeon_assets.py. A run fights each stage's waves in
+    | order, one battle per wave against its leader; wounds carry over and a
+    | loss ends the run. Waves pay their leader's exp times exp_multiplier,
+    | stage bosses always drop gear, each stage pays its original reward and a
+    | full clear pays the dungeon's reward plus clear_coupons gift coupons.
+    | Runs per day per dungeon come from the original TotalTimes.
+    |
+    */
+
+    'dungeons' => [
+        'exp_multiplier' => 2,
+        'clear_coupons' => 2,
+        // Stage bosses were tuned for two-player teams; solo they keep this
+        // share of health and attack. A stage clear also restores the ninja.
+        'solo_boss_percent' => 70,
+    ],
+
+    /*
     | Searching a spot in a hunting ground (original roleoutsearch): a money
     | pouch holds (area level + 9) * gold_per_level gold; a found potion costs
     | at most max(potion_price_floor, area level * 5) in the pharmacy.

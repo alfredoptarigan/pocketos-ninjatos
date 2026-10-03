@@ -7,6 +7,8 @@ import GameWindow from '@/components/game-window';
 import type { BattleRecord, SkillInfo } from '@/game/battle/types';
 import { schoolSound } from '@/game/sfx';
 import { bag } from '@/routes';
+import { fight as fightWave } from '@/routes/dungeon-runs';
+import { show as showDungeon } from '@/routes/dungeons';
 import { fight as hunt, show as showField } from '@/routes/fields';
 import { show as tower, fight } from '@/routes/tower';
 
@@ -61,9 +63,10 @@ function BattleView({ battle, skills }: Props) {
         );
     };
 
-    const place = battle.field
-        ? battle.field.name
-        : `Training Tower · Floor ${battle.floor}`;
+    const place =
+        battle.dungeon?.name ??
+        battle.field?.name ??
+        `Training Tower · Floor ${battle.floor}`;
 
     const toggleFast = () => {
         speed.current = fast ? 1 : FAST_SPEED;
@@ -127,7 +130,12 @@ type ResultProps = { battle: BattleRecord; opponent: string; place: string };
 
 /** Victory/defeat window with the rewards and where to go next. */
 function BattleResult({ battle, opponent, place }: ResultProps) {
-    const { field, floor, rewards, won } = battle;
+    const { dungeon, field, floor, rewards, won } = battle;
+
+    if (dungeon) {
+        return <DungeonResult battle={battle} opponent={opponent} />;
+    }
+
     const home = field ? showField(field.scene) : tower();
 
     return (
@@ -214,6 +222,98 @@ function BattleResult({ battle, opponent, place }: ResultProps) {
                         </Link>
                         <Link href={home} className="game-button px-4 py-1">
                             {field ? field.name : 'Tower'}
+                        </Link>
+                    </div>
+                </div>
+            </GameWindow>
+        </div>
+    );
+}
+
+/** A dungeon wave's result: stage and clear rewards, then on to the next wave. */
+function DungeonResult({
+    battle,
+    opponent,
+}: {
+    battle: BattleRecord;
+    opponent: string;
+}) {
+    const { rewards, won } = battle;
+    const dungeon = battle.dungeon!;
+    const home = showDungeon(dungeon.id);
+    const title = rewards.dungeonCleared
+        ? 'Dungeon cleared!'
+        : won
+          ? 'Victory!'
+          : 'Defeat';
+
+    return (
+        <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/50 px-4">
+            <GameWindow title={title} closeHref={home.url}>
+                <div className="flex min-w-72 flex-col items-center gap-3 text-center">
+                    <p className="text-slate-300">
+                        {dungeon.name}: {opponent}
+                    </p>
+                    {won ? (
+                        <ul className="space-y-1 text-lg">
+                            {rewards.stageCleared && (
+                                <li className="text-amber-200">
+                                    {rewards.stageCleared} cleared!
+                                </li>
+                            )}
+                            <li className="text-emerald-300">
+                                +{rewards.exp} EXP
+                            </li>
+                            {rewards.gold > 0 && (
+                                <li className="text-amber-300">
+                                    +{rewards.gold} gold
+                                </li>
+                            )}
+                            {(rewards.coupons ?? 0) > 0 && (
+                                <li className="text-rose-300">
+                                    +{rewards.coupons} gift coupons
+                                </li>
+                            )}
+                            {rewards.drop && (
+                                <li className="flex items-center justify-center gap-2 text-sky-300">
+                                    <img
+                                        src={rewards.drop.icon}
+                                        alt=""
+                                        className="size-8"
+                                    />
+                                    Found {rewards.drop.name} (Lv{' '}
+                                    {rewards.drop.level})
+                                </li>
+                            )}
+                            {rewards.levelUp && (
+                                <li className="font-bold text-yellow-300">
+                                    Level up!
+                                </li>
+                            )}
+                        </ul>
+                    ) : (
+                        <p className="text-slate-300">
+                            You were knocked out and the run is over. Train up
+                            and enter again.
+                        </p>
+                    )}
+                    <div className="mt-2 flex flex-wrap justify-center gap-2">
+                        {dungeon.active && (
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    router.post(fightWave(dungeon.run).url)
+                                }
+                                className="game-button px-4 py-1"
+                            >
+                                Next wave
+                            </button>
+                        )}
+                        <Link href={bag()} className="game-button px-4 py-1">
+                            Inventory
+                        </Link>
+                        <Link href={home} className="game-button px-4 py-1">
+                            {dungeon.name}
                         </Link>
                     </div>
                 </div>

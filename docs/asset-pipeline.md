@@ -110,6 +110,14 @@ All take the backup path and write into this repo. Run them from the repo root.
 `bitmap/icon/skill/`) to `public/game-assets/skills/<skill id>.png` (`--hd`: 4x). Skill rules
 themselves live in `config/game.php` (`skills`), translated from `lg_SkillDes_<id>`.
 
+`tools/extract_dungeon_assets.py [--hd]` (run after the outfit extractor) reads `tollgate` →
+`subtollgate` → `fightmonsterpoint`/`monstergroup` → `normalnpc` and writes
+`database/data/dungeons.json` (`DungeonSeeder`), stage pictures `public/game-assets/dungeons/<code>.jpg`
+and the backdrop `battle/backgrounds/fightbg_3102.jpg`. Gotchas: `tollgate` has no header row but
+`fightmonsterpoint` row 0 is data too; `Hard` 1 means _strong_ monsters and 2 normal; dungeon npcs
+rate dodge/parry/crit ~10x the tower scale (divided by 10); their art is not in the backup, so they
+borrow `motion/mob` stand-ins and avatar-named bosses (`name_avatar45`) use the outfit art.
+
 `tools/extract_outfit_assets.py [--hd]` reads `avataritem` (base +0 outfits, ids 1-100: sex and
 `ItemColor` 0/1/2 = grey/blue/orange) and English names `lg_avatar<id>` from
 `keyvaluetable/language`, and writes `database/data/outfits.json` (`OutfitSeeder`) plus

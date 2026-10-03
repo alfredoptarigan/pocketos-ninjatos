@@ -3,6 +3,7 @@
 use App\Http\Controllers\BagController;
 use App\Http\Controllers\BattleController;
 use App\Http\Controllers\CharacterController;
+use App\Http\Controllers\DungeonController;
 use App\Http\Controllers\EquipmentShopController;
 use App\Http\Controllers\FieldController;
 use App\Http\Controllers\GearController;
@@ -49,6 +50,12 @@ Route::middleware(['auth'])->group(function () {
         Route::get('tower', [TowerController::class, 'show'])->name('tower.show');
         Route::post('tower/{floor}/fight', [TowerController::class, 'fight'])->name('tower.fight');
         Route::get('battles/{battle}', [BattleController::class, 'show'])->name('battles.show');
+
+        Route::get('dungeons', [DungeonController::class, 'index'])->name('dungeons.index');
+        Route::get('dungeons/{dungeon}', [DungeonController::class, 'show'])->name('dungeons.show');
+        Route::post('dungeons/{dungeon}/enter', [DungeonController::class, 'enter'])->name('dungeons.enter');
+        Route::post('dungeon-runs/{run}/fight', [DungeonController::class, 'fight'])->name('dungeon-runs.fight');
+        Route::post('dungeon-runs/{run}/leave', [DungeonController::class, 'leave'])->name('dungeon-runs.leave');
 
         // Art experiments: original HD sprites next to the vector remake.
         Route::inertia('lab/characters', 'lab/characters')->name('lab.characters');

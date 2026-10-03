@@ -26,6 +26,13 @@ class BattleController extends Controller
                     'name' => $battle->fieldMonster->field->name,
                     'monster' => $battle->fieldMonster->id,
                 ] : null,
+                // Dungeon waves lead back to the dungeon, or on to the next wave.
+                'dungeon' => $battle->dungeonRun ? [
+                    'id' => $battle->dungeonRun->dungeon_id,
+                    'name' => $battle->dungeonRun->dungeon->name,
+                    'run' => $battle->dungeonRun->id,
+                    'active' => $battle->dungeonRun->status === 'active',
+                ] : null,
             ],
             // Names, icons and schools (for the sound) of the jutsu the replay may show.
             'skills' => collect(config('game.skills'))->map(fn (array $skill, string|int $id) => [
