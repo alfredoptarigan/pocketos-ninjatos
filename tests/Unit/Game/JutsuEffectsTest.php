@@ -61,6 +61,17 @@ class JutsuEffectsTest extends TestCase
         $this->assertNotEmpty($this->of($events, 'expire', ['status' => 'burn']));
     }
 
+    public function test_timed_statuses_count_down_once_per_turn_of_their_side()
+    {
+        $fireball = $this->jutsu('strike', 'burn', ['school' => 'fire', 'amount' => 60, 'turns' => 3, 'max_uses' => 1]);
+        $events = $this->events($this->fighter(['skills' => [$fireball]]), $this->fighter());
+
+        $expired = array_search('expire', array_column($events, 'type'), true);
+        $countdowns = $this->of(array_slice($events, 0, $expired), 'countdown', ['actor' => 1]);
+        $this->assertCount(3, $countdowns);
+        $this->assertSame([], $this->of($this->events($this->fighter(), $this->fighter()), 'countdown'));
+    }
+
     public function test_mist_stops_burns_and_can_make_attacks_miss()
     {
         $fireball = $this->jutsu('strike', 'burn', ['school' => 'fire', 'amount' => 60, 'turns' => 3]);
@@ -78,8 +89,9 @@ class JutsuEffectsTest extends TestCase
 
         $this->assertSame('cast', $events[0]['type']);
         $this->assertSame(['type' => 'stunned', 'actor' => 1, 'reason' => 'freeze'], $events[2]);
-        $this->assertSame(20, $events[3]['damage']); // the next hit breaks the ice for double
-        $this->assertTrue($events[3]['shatter']);
+        $hit = $this->of(array_slice($events, 3), 'attack')[0];
+        $this->assertSame(20, $hit['damage']); // the next hit breaks the ice for double
+        $this->assertTrue($hit['shatter']);
     }
 
     public function test_prayer_blocks_and_makes_the_user_untouchable()

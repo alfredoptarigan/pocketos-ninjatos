@@ -123,6 +123,11 @@ trait TracksStatuses
      */
     private function countDownStatuses(int $side): void
     {
+        // Lets the replay show the turns left on each status icon.
+        if (array_filter(array_column($this->statuses[$side], 'turns'), fn ($turns) => $turns !== null)) {
+            $this->events[] = ['type' => 'countdown', 'actor' => $side];
+        }
+
         foreach ($this->statuses[$side] as $status => $data) {
             if ($data['turns'] === null) {
                 continue;

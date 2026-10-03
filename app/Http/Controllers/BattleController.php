@@ -34,10 +34,11 @@ class BattleController extends Controller
                     'active' => $battle->dungeonRun->status === 'active',
                 ] : null,
             ],
-            // Names, icons and schools (for the sound) of the jutsu the replay may show.
+            // Names, icons, schools (for the sound) and descriptions (status tooltips) of the jutsu the replay may show.
             'skills' => collect(config('skills.skills'))->map(fn (array $skill, string|int $id) => [
                 'name' => $skill['name'],
                 'school' => $skill['school'],
+                'description' => $skill['description'] ?? '',
                 'icon' => "/game-assets/skills/$id.png",
             ]),
         ]);

@@ -91,6 +91,8 @@ export type ExpireEvent = {
     // The jutsu that lifted it, if any.
     skill?: string;
 };
+// A side finished its turn: its timed statuses lose one turn.
+export type CountdownEvent = { type: 'countdown'; actor: Side };
 // Burn, poison, nightmares, healing over time and exploding clay.
 export type TickEvent = {
     type: 'tick';
@@ -139,6 +141,7 @@ export type BattleEvent =
     | StunnedEvent
     | CastEvent
     | StatusEvent
+    | CountdownEvent
     | ExpireEvent
     | TickEvent
     | CloudEvent
@@ -148,7 +151,21 @@ export type BattleEvent =
     | ReviveEvent
     | EndEvent;
 
-export type SkillInfo = { name: string; icon: string; school: string };
+export type SkillInfo = {
+    name: string;
+    icon: string;
+    school: string;
+    description: string;
+};
+
+/** A status on a fighter, as the battle HUD shows it. */
+export type ActiveStatus = {
+    status: string;
+    skill: string | null;
+    /** Turns left; null for the rest of the fight. */
+    turns: number | null;
+    source: Side;
+};
 
 export type BattleLog = {
     fighters: [FighterInfo, FighterInfo];

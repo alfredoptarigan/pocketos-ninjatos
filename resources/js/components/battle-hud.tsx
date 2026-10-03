@@ -1,4 +1,11 @@
-import type { FighterInfo, SkillInfo } from '@/game/battle/types';
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from '@/components/ui/tooltip';
+import { statusLabel } from '@/game/battle/statuses';
+import type { ActiveStatus, FighterInfo, SkillInfo } from '@/game/battle/types';
 import { cn } from '@/lib/utils';
 import { characterAssets } from '@/types/game';
 
@@ -20,7 +27,7 @@ type Props = {
     /** Jutsu just used by the player, lit up in the skill grid. */
     glowing: string | null;
     /** Active statuses per side (icons under the bars). */
-    statuses: [string[], string[]];
+    statuses: [ActiveStatus[], ActiveStatus[]];
     /** Where the battle happens, e.g. "Training Tower · Floor 3". */
     place: string;
 };
@@ -56,6 +63,8 @@ export default function BattleHud({
                     hp={hp[0]}
                     mp={mp[0]}
                     statuses={statuses[0]}
+                    skills={skills}
+                    fighters={fighters}
                 />
                 <div className="relative mt-0.5 h-[62px] w-[63px] shrink-0">
                     <img
@@ -75,6 +84,8 @@ export default function BattleHud({
                     hp={hp[1]}
                     mp={mp[1]}
                     statuses={statuses[1]}
+                    skills={skills}
+                    fighters={fighters}
                 />
             </div>
 
@@ -106,12 +117,16 @@ function TopGroup({
     hp,
     mp,
     statuses,
+    skills,
+    fighters,
 }: {
     side: Side;
     fighter: FighterInfo;
     hp: number;
     mp: number;
-    statuses: string[];
+    statuses: ActiveStatus[];
+    skills: Record<string, SkillInfo>;
+    fighters: [FighterInfo, FighterInfo];
 }) {
     const maxMp = fighter.maxMp ?? 0;
     const mirrored = side === 'enemy';
@@ -165,23 +180,98 @@ function TopGroup({
                         label={`${fighter.name} chakra`}
                     />
                 </div>
-                <ul
-                    aria-label={`${fighter.name} statuses`}
-                    className={`flex gap-1 px-8 ${mirrored ? 'flex-row-reverse' : ''}`}
-                >
-                    {statuses.map((status) => (
-                        <li key={status}>
-                            <img
-                                src={`/game-assets/statuses/${status}.png`}
-                                alt={status.replace('_', ' ')}
-                                title={status.replace('_', ' ')}
-                                className="size-6 rounded-sm border border-black/60"
+                <TooltipProvider delayDuration={100}>
+                    <ul
+                        aria-label={`${fighter.name} statuses`}
+                        className={`flex gap-1.5 px-8 ${mirrored ? 'flex-row-reverse' : ''}`}
+                    >
+                        {statuses.map((active) => (
+                            <StatusIcon
+                                key={active.status}
+                                active={active}
+                                skill={
+                                    active.skill
+                                        ? skills[active.skill]
+                                        : undefined
+                                }
+                                from={fighters[active.source].name}
                             />
-                        </li>
-                    ))}
-                </ul>
+                        ))}
+                    </ul>
+                </TooltipProvider>
             </div>
         </div>
+    );
+}
+
+function turnsLeft(turns: number | null): string {
+    if (turns === null) {
+        return 'Until the end of the fight';
+    }
+
+    return `${turns} turn${turns === 1 ? '' : 's'} left`;
+}
+
+/** A status icon with its turns left; hovering shows the jutsu behind it. */
+function StatusIcon({
+    active,
+    skill,
+    from,
+}: {
+    active: ActiveStatus;
+    skill?: SkillInfo;
+    from: string;
+}) {
+    const label = statusLabel(active.status);
+    const left = turnsLeft(active.turns);
+
+    return (
+        <Tooltip>
+            <TooltipTrigger asChild>
+                <li
+                    tabIndex={0}
+                    aria-label={`${skill?.name ?? label}: ${label}, ${left}`}
+                    className="pointer-events-auto relative cursor-help"
+                >
+                    <img
+                        src={`/game-assets/statuses/${active.status}.png`}
+                        alt=""
+                        className="size-6 rounded-sm border border-black/60"
+                    />
+                    {active.turns !== null && (
+                        <span className="absolute -right-1.5 -bottom-1 text-xs leading-none font-bold text-white [text-shadow:0_0_2px_#000,0_0_2px_#000,0_0_2px_#000]">
+                            {active.turns}
+                        </span>
+                    )}
+                </li>
+            </TooltipTrigger>
+            <TooltipContent
+                side="bottom"
+                className="max-w-64 border border-amber-500/60 bg-black/90 text-white [&_svg]:bg-black/90 [&_svg]:fill-black/90"
+            >
+                <div className="flex items-center gap-2">
+                    {skill && (
+                        <img
+                            src={skill.icon}
+                            alt=""
+                            className="size-8 rounded-sm border border-black/60"
+                        />
+                    )}
+                    <div>
+                        <p className="text-sm font-bold text-amber-300">
+                            {skill?.name ?? label}
+                        </p>
+                        <p className="text-sky-300">
+                            {label} · {left}
+                        </p>
+                    </div>
+                </div>
+                {skill?.description && (
+                    <p className="mt-1.5 text-white/80">{skill.description}</p>
+                )}
+                <p className="mt-1 text-white/50">From {from}</p>
+            </TooltipContent>
+        </Tooltip>
     );
 }
 

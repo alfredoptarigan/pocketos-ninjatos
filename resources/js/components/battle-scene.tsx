@@ -5,6 +5,7 @@ import type { RefObject } from 'react';
 import { loadEffects } from '@/game/battle/effects';
 import { Fighter } from '@/game/battle/fighter';
 import { replay } from '@/game/battle/replay';
+import type { StatusChange } from '@/game/battle/statuses';
 import type { BattleLog, EndEvent } from '@/game/battle/types';
 import type { Sfx } from '@/game/sfx';
 import { usePixiApp } from '@/hooks/use-pixi-app';
@@ -27,7 +28,7 @@ type Props = {
     onHp: (side: 0 | 1, hp: number) => void;
     onMp: (side: 0 | 1, mp: number) => void;
     onSkill: (side: 0 | 1, skillId: string) => void;
-    onStatus: (side: 0 | 1, status: string, active: boolean) => void;
+    onStatus: (change: StatusChange) => void;
     skillName: (skillId: string) => string;
     skillSound: (skillId: string) => Sfx;
 };
@@ -113,8 +114,7 @@ export default function BattleScene({
                     onHp: (side, hp) => callbacks.current.onHp(side, hp),
                     onMp: (side, mp) => callbacks.current.onMp(side, mp),
                     onSkill: (side, id) => callbacks.current.onSkill(side, id),
-                    onStatus: (side, status, active) =>
-                        callbacks.current.onStatus(side, status, active),
+                    onStatus: (change) => callbacks.current.onStatus(change),
                     skillName: (id) => callbacks.current.skillName(id),
                     skillSound: (id) => callbacks.current.skillSound(id),
                     effects,

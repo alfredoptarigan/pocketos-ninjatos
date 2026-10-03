@@ -5,6 +5,8 @@ import type { Sfx } from '@/game/sfx';
 import { effectDuration, isRanged, playEffect } from './effects';
 import type { EffectIndex, EffectSpec } from './effects';
 import type { Fighter } from './fighter';
+import { statusLabel } from './statuses';
+import type { StatusChange } from './statuses';
 import { tween, wait } from './tween';
 import type {
     BattleEvent,
@@ -26,8 +28,8 @@ export type ReplayContext = {
     onMp: (side: Side, mp: number) => void;
     /** A jutsu was used (lets the HUD light up its icon). */
     onSkill: (side: Side, skillId: string) => void;
-    /** A status started (true) or ended (false) on a side. */
-    onStatus: (side: Side, status: string, active: boolean) => void;
+    /** A status started, ended or lost a turn. */
+    onStatus: (change: StatusChange) => void;
     skillName: (skillId: string) => string;
     skillSound: (skillId: string) => Sfx;
     /** Original effects of the jutsu used in this battle. */
@@ -59,32 +61,6 @@ const COLOURS = {
     poison: 0x86efac,
     burn: 0xf97316,
     lightning: 0xfde047,
-};
-
-// What floats over a fighter when a status lands (BattleSimulator statuses).
-const STATUS_LABELS: Record<string, string> = {
-    burn: 'BURNING',
-    drunk: 'DRUNK',
-    freeze: 'FROZEN',
-    slow: 'SLOWED',
-    shield: 'SHIELD',
-    invulnerable: 'UNTOUCHABLE',
-    poison: 'POISONED',
-    seal: 'SEALED',
-    dead_demon: 'DEMON SEAL',
-    bloodboil: 'BLOODBOIL',
-    charm: 'CHARMED',
-    snare: 'SNARED',
-    clay: 'CLAY',
-    prison: 'DEFENSE DOWN',
-    mirage: 'NIGHTMARE',
-    regen: 'REGENERATING',
-    chakra_burn: 'CHAKRA DRAIN',
-    gates: 'GATE OPEN',
-    cloud: 'THUNDER CLOUD',
-    mist: 'MIST',
-    sunset: 'SUNSET',
-    cursed_seal: 'CURSED SEAL',
 };
 
 const STUN_LABELS: Record<string, string> = {
@@ -122,11 +98,11 @@ export async function replay(
                 await cast(ctx, event);
                 break;
             case 'status':
-                ctx.onStatus(event.actor, event.status, true);
+                ctx.onStatus(event);
                 floatText(
                     ctx,
                     ctx.fighters[event.actor],
-                    STATUS_LABELS[event.status] ?? event.status.toUpperCase(),
+                    statusLabel(event.status),
                     COLOURS.status,
                     18,
                     0.95,
@@ -134,11 +110,14 @@ export async function replay(
                 await wait(ctx.ticker, PAUSE_MS, ctx.speed);
                 break;
             case 'expire':
-                ctx.onStatus(event.actor, event.status, false);
+                ctx.onStatus(event);
 
                 if (event.skill) {
                     shout(ctx, event.actor, event.skill);
                 }
+                break;
+            case 'countdown':
+                ctx.onStatus(event);
                 break;
             case 'tick':
                 await tick(ctx, event);

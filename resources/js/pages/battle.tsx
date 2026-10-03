@@ -4,7 +4,13 @@ import { useRef, useState } from 'react';
 import BattleHud from '@/components/battle-hud';
 import BattleScene from '@/components/battle-scene';
 import GameWindow from '@/components/game-window';
-import type { BattleRecord, SkillInfo } from '@/game/battle/types';
+import { applyStatusChange } from '@/game/battle/statuses';
+import type { StatusChange } from '@/game/battle/statuses';
+import type {
+    ActiveStatus,
+    BattleRecord,
+    SkillInfo,
+} from '@/game/battle/types';
 import { schoolSound } from '@/game/sfx';
 import { bag } from '@/routes';
 import { fight as fightWave } from '@/routes/dungeon-runs';
@@ -37,14 +43,16 @@ function BattleView({ battle, skills }: Props) {
         opponent.mp ?? opponent.maxMp ?? 0,
     ]);
     const [glowing, setGlowing] = useState<string | null>(null);
-    const [statuses, setStatuses] = useState<[string[], string[]]>([[], []]);
+    const [statuses, setStatuses] = useState<[ActiveStatus[], ActiveStatus[]]>([
+        [],
+        [],
+    ]);
 
-    const updateStatus = (side: 0 | 1, status: string, active: boolean) => {
+    const updateStatus = (change: StatusChange) => {
         setStatuses((current) => {
-            const others = current[side].filter((name) => name !== status);
-            const next = active ? [...others, status] : others;
+            const next = applyStatusChange(current[change.actor], change);
 
-            return side === 0 ? [next, current[1]] : [current[0], next];
+            return change.actor === 0 ? [next, current[1]] : [current[0], next];
         });
     };
 
