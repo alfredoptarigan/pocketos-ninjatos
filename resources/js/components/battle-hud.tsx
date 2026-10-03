@@ -121,8 +121,8 @@ function TopGroup({
             className={`flex items-start gap-1 ${mirrored ? 'flex-row-reverse' : ''}`}
         >
             <div className="flex flex-col items-center">
-                <span className="text-lg leading-none font-bold text-white [text-shadow:0_0_3px_#000,0_0_3px_#000]">
-                    {mirrored ? 'Enemy' : 'Ally'}
+                <span className="max-w-[160px] truncate text-lg leading-none font-bold text-white [text-shadow:0_0_3px_#000,0_0_3px_#000]">
+                    {fighter.name}
                 </span>
                 <div className="relative h-[64px] w-[78px]">
                     <img

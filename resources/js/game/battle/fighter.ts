@@ -25,8 +25,9 @@ export class Fighter {
         body.scale.set(
             sheet ? MOTION_SCALE : PORTRAIT_HEIGHT / body.texture.height,
         );
-        // Original motions are drawn facing left; mirror opponents so they face the player.
-        if (sheet && !info.avatar) {
+        // Original motions are drawn facing left; mirror the player (on the
+        // left) so they face the opponent.
+        if (sheet && info.avatar) {
             body.scale.x *= -1;
         }
         this.view.addChild(body);

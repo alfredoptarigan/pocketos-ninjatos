@@ -3,11 +3,16 @@
 namespace App\Models\Concerns;
 
 use App\Game\Combatant;
+use App\Game\MonsterSkills;
 
 /**
- * Turns a row with the original npc stat columns (tower floors, field monsters) into a fighter.
+ * Turns a row with the original npc stat columns (tower floors, field monsters,
+ * dungeon leaders) into a fighter, with its chakra and jutsu (MonsterSkills).
  *
  * @property string $name
+ * @property bool $is_boss
+ * @property int $level
+ * @property int $max_mp
  * @property int $max_hp
  * @property int $min_atk
  * @property int $max_atk
@@ -37,6 +42,9 @@ trait FightsAsOpponent
             parry: $this->parry,
             counter: $this->counter,
             priority: $this->priority,
+            mp: $this->max_mp,
+            maxMp: $this->max_mp,
+            skills: MonsterSkills::for($this->name, $this->level, (bool) $this->is_boss),
         );
     }
 }

@@ -89,6 +89,13 @@ return [
     // hasted side acts again with this share of the speed %.
     'speed_chance_percent' => 50,
 
+    // Opponents' jutsu. The client data never says which jutsu a monster
+    // knows (that lived on the server), so each monster draws a fixed set by
+    // its name: base + one per per_levels levels (+boss_bonus for bosses, at
+    // most max), from tiers up to 1 + level / tier_per_levels, at skill level
+    // 1 + level / skill_level_per_levels.
+    'monsters' => ['base' => 1, 'per_levels' => 20, 'boss_bonus' => 2, 'max' => 6, 'tier_per_levels' => 25, 'skill_level_per_levels' => 10],
+
     // Panel columns, left to right. Element schools are the five basic
     // elements (Sunset, Five Element Seal).
     'schools' => [

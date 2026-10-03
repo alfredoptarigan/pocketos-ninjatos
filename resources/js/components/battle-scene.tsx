@@ -13,9 +13,10 @@ import { usePixiApp } from '@/hooks/use-pixi-app';
 const WORLD_WIDTH = 1000;
 const WORLD_HEIGHT = 600;
 const GROUND_Y = 500;
-// The player stands on the right facing left, as in the original client.
-const PLAYER_X = 700;
-const OPPONENT_X = 300;
+// The player stands on the left facing right, the opponent on the right,
+// matching the HUD (ally panel left, enemy panel right).
+const PLAYER_X = 300;
+const OPPONENT_X = 700;
 // Battles recorded before per-floor backdrops existed.
 const FALLBACK_BACKGROUND = '/game-assets/battle/background.jpg';
 
