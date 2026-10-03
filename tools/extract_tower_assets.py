@@ -99,6 +99,22 @@ def boss_avatar(resource_id: str) -> int | None:
     return int(match[1]) % 100 if match else None
 
 
+def file_version(path: Path) -> int:
+    """'motion_32056_52.s27942.swf' -> 27942; unversioned files are the oldest."""
+    match = re.search(r'\.s(\d+)\.', path.name)
+    return int(match[1]) if match else 0
+
+
+def mob_folder(mob_dir: Path, key: str) -> Path:
+    """The motions folder of a map monster.
+
+    A later patch reused an id for a new monster in another kind folder
+    (n32056 is Di Roy in human/ and a beast in inhumanboss/); the original,
+    which matches the face, is the folder whose newest file is oldest.
+    """
+    return min(mob_dir.glob(f'*/{key}'), key=lambda folder: max(map(file_version, folder.iterdir()), default=0))
+
+
 def avatar_art(source: Path, avatar: int, scale: int) -> dict | None:
     """Motions and face of the avatar a boss is, if the backup has them (either sex)."""
     for sex in ('0', '1'):
@@ -121,7 +137,7 @@ def extract_art(source: Path, resource_id: str, scale: int) -> dict:
     url = f'/game-assets/monsters/{key}'
 
     if resource_id.startswith(ANIMATED_PREFIX):
-        folder = next((source / 'movieclip/motion/mob').glob(f'*/{key}'))
+        folder = mob_folder(source / 'movieclip/motion/mob', key)
         number_id = key[1:]
         # Several floors share an opponent; build its art once per run.
         if key not in BUILT:

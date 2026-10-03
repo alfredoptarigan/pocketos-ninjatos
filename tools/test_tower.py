@@ -1,6 +1,8 @@
+import tempfile
 import unittest
+from pathlib import Path
 
-from extract_tower_assets import STATS, boss_avatar, stats
+from extract_tower_assets import STATS, boss_avatar, mob_folder, stats
 
 
 class TowerTest(unittest.TestCase):
@@ -19,6 +21,17 @@ class TowerTest(unittest.TestCase):
         self.assertEqual(stats(npcs, 151)['dodge'], 25)
         self.assertEqual(stats(npcs, 151)['crit'], 25)
         self.assertEqual(stats(npcs, 151)['max_hp'], 256)
+
+    def test_a_reused_mob_id_keeps_its_original_art(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            mob = Path(tmp)
+            for kind, files in {'human': ['motion_32056_7.swf', 'motion_32056_1.s117.swf'],
+                                'inhumanboss': ['motion_32056_17.swf', 'motion_32056_52.s27942.swf']}.items():
+                (mob / kind / 'n32056').mkdir(parents=True)
+                for name in files:
+                    (mob / kind / 'n32056' / name).touch()
+
+            self.assertEqual(mob_folder(mob, 'n32056'), mob / 'human' / 'n32056')
 
 
 if __name__ == '__main__':

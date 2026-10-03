@@ -123,7 +123,9 @@ costume (avatar id = costume level * 100 + outfit id, e.g. `N90277` Aaroniero +2
 villains that are not wearable outfits, ids 77-83). Only the Akatsuki (`N9001xx`) and
 `TGateUserFace_` bosses fall back to the `npcbackphoto` bust. Gotcha: floors 151-170 rate dodge,
 block and crit 10x (like dungeon npcs); the extractor divides them by 10. English names
-(`lg_name_n9001xx`) fill the floors `NAMES` does not cover.
+(`lg_name_n9001xx`) fill the floors `NAMES` does not cover. Gotcha: a later patch reused two mob
+ids in a second kind folder (`n32056` Di Roy is `human/` and a beast in `inhumanboss/`, also
+`n31027`); `mob_folder` keeps the folder with the oldest files, the one matching the face.
 
 `tools/extract_dungeon_assets.py [--hd]` (run after the outfit extractor) reads `tollgate` →
 `subtollgate` → `fightmonsterpoint`/`monstergroup` → `normalnpc` and writes
