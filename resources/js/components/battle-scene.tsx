@@ -26,6 +26,7 @@ type Props = {
     onHp: (side: 0 | 1, hp: number) => void;
     onMp: (side: 0 | 1, mp: number) => void;
     onSkill: (side: 0 | 1, skillId: string) => void;
+    onStatus: (side: 0 | 1, status: string, active: boolean) => void;
     skillName: (skillId: string) => string;
     skillSound: (skillId: string) => Sfx;
 };
@@ -37,6 +38,7 @@ export default function BattleScene({
     onHp,
     onMp,
     onSkill,
+    onStatus,
     skillName,
     skillSound,
 }: Props) {
@@ -47,6 +49,7 @@ export default function BattleScene({
         onHp,
         onMp,
         onSkill,
+        onStatus,
         skillName,
         skillSound,
     });
@@ -55,6 +58,7 @@ export default function BattleScene({
         onHp,
         onMp,
         onSkill,
+        onStatus,
         skillName,
         skillSound,
     };
@@ -108,6 +112,8 @@ export default function BattleScene({
                     onHp: (side, hp) => callbacks.current.onHp(side, hp),
                     onMp: (side, mp) => callbacks.current.onMp(side, mp),
                     onSkill: (side, id) => callbacks.current.onSkill(side, id),
+                    onStatus: (side, status, active) =>
+                        callbacks.current.onStatus(side, status, active),
                     skillName: (id) => callbacks.current.skillName(id),
                     skillSound: (id) => callbacks.current.skillSound(id),
                     effects,

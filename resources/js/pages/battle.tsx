@@ -37,6 +37,16 @@ function BattleView({ battle, skills }: Props) {
         opponent.mp ?? opponent.maxMp ?? 0,
     ]);
     const [glowing, setGlowing] = useState<string | null>(null);
+    const [statuses, setStatuses] = useState<[string[], string[]]>([[], []]);
+
+    const updateStatus = (side: 0 | 1, status: string, active: boolean) => {
+        setStatuses((current) => {
+            const others = current[side].filter((name) => name !== status);
+            const next = active ? [...others, status] : others;
+
+            return side === 0 ? [next, current[1]] : [current[0], next];
+        });
+    };
 
     const updateMp = (side: 0 | 1, value: number) => {
         setMp((current) =>
@@ -83,6 +93,7 @@ function BattleView({ battle, skills }: Props) {
                 onHp={updateHp}
                 onMp={updateMp}
                 onSkill={lightSkill}
+                onStatus={updateStatus}
                 skillName={(id) => skills[id]?.name ?? 'Jutsu'}
                 skillSound={(id) => schoolSound(skills[id]?.school)}
             />
@@ -92,6 +103,7 @@ function BattleView({ battle, skills }: Props) {
                 mp={mp}
                 skills={skills}
                 glowing={glowing}
+                statuses={statuses}
                 place={place}
             />
 

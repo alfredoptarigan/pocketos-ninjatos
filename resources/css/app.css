@@ -208,3 +208,55 @@
 .game-pill[aria-pressed='true'] {
     background-image: var(--ui-pill-pressed);
 }
+
+/*
+ * The skill panel's blue skin (the later client's Skills window): a teal
+ * frame, dark label plates, blue buttons and dark level bars.
+ */
+.skill-window {
+    border: 3px solid #7fdcf2;
+    border-radius: 14px;
+    background: linear-gradient(#2b6a86, #1f5068);
+    box-shadow:
+        inset 0 0 0 2px #0f2f3f,
+        0 10px 30px rgb(0 0 0 / 0.5);
+}
+
+.skill-panel {
+    border: 2px solid #3f8aa6;
+    border-radius: 8px;
+    background: rgb(17 52 70 / 0.55);
+}
+
+.skill-label {
+    border: 2px solid #9aa8ae;
+    border-radius: 4px;
+    background: #22282c;
+    color: #e5eef2;
+    font-family: ui-monospace, monospace;
+    letter-spacing: 0.08em;
+}
+
+.skill-button {
+    border: 2px solid #9fd8ff;
+    border-radius: 6px;
+    background: linear-gradient(#64b4f0, #2d6db8);
+    color: #fff;
+    font-weight: 700;
+    text-shadow: 0 1px 1px #0b2a4d;
+}
+
+.skill-button:hover:not(:disabled) {
+    background: linear-gradient(#7cc4f6, #3a80cc);
+}
+
+.skill-button:disabled {
+    filter: grayscale(1);
+    opacity: 0.6;
+}
+
+.skill-bar {
+    border-radius: 4px;
+    background: linear-gradient(#1b1f22, #2c3236);
+    color: #f1f5f9;
+}

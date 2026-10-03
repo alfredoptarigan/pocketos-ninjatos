@@ -1,178 +1,374 @@
-import { Head, router, usePage } from '@inertiajs/react';
-import { Check, Coins, Lock } from 'lucide-react';
-import GameWindow from '@/components/game-window';
+import { Head, Link, usePage } from '@inertiajs/react';
+import { ChevronLeft, ChevronRight, Lock } from 'lucide-react';
+import type { DragEvent } from 'react';
+import {
+    BuySlotDialog,
+    InfoDialog,
+    ResetDialog,
+    ScrollSkillDialog,
+} from '@/components/skill-dialogs';
+import SkillCell from '@/components/skill-cell';
+import SkillMenu from '@/components/skill-menu';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import VillageBackdrop from '@/components/village-backdrop';
+import { DRAG_TYPE, send, upgradeLabel } from '@/lib/skills';
+import type { Jutsu, Passive, SkillRules } from '@/lib/skills';
 import { cn } from '@/lib/utils';
 import { village } from '@/routes';
-import { learn } from '@/routes/skills';
+import { equip, page as switchPage, unequip } from '@/routes/skills';
 
-type Jutsu = {
-    id: string;
-    name: string;
-    school: string;
-    kind: string;
-    description: string;
-    level: number;
-    requires: string | null;
-    price: number;
-    icon: string;
-    learned: boolean;
+type Props = {
+    passives: Passive[];
+    /** Tier by tier, schools left to right: ten per row. */
+    skills: Jutsu[];
+    points: number;
+    /** Equipped jutsu ids per page, by slot. */
+    pages: (string | null)[][];
+    page: number;
+    openSlots: number;
+    slotPrices: number[];
+    slotsBought: number;
+    rules: SkillRules;
 };
 
-const KIND_LABELS: Record<string, string> = {
-    strike: 'Attack jutsu',
-    follow_up: 'Follow-up',
-    extra: 'Before acting',
-    counter: 'Counter',
-    block: 'Defense',
-    reflect: 'Reflect',
-    heal: 'Healing',
-    revive: 'Revival',
-};
+const TOTAL_SLOTS = 10;
 
-export default function Skills({ skills }: { skills: Jutsu[] }) {
-    const { character } = usePage().props;
+export default function Skills({
+    passives,
+    skills,
+    points,
+    pages,
+    page,
+    openSlots,
+    slotPrices,
+    slotsBought,
+    rules,
+}: Props) {
+    const { errors } = usePage().props;
+    const error = Object.values(errors ?? {})[0];
     const byId = Object.fromEntries(skills.map((skill) => [skill.id, skill]));
-    const schools = [...new Set(skills.map((skill) => skill.school))];
+    const equipped = pages[page] ?? [];
+    const freeSlot =
+        Array.from({ length: openSlots }, (_, slot) => slot).find(
+            (slot) => !equipped[slot],
+        ) ?? null;
+    const learnedSchools = new Set(
+        skills.filter((skill) => skill.level > 0).map((skill) => skill.school),
+    );
+    const nextPrice = slotPrices[slotsBought];
 
-    // Why a jutsu cannot be learned yet, or null when it can.
-    const blocker = (skill: Jutsu): string | null => {
-        if (!character) {
-            return 'No ninja';
+    const drop = (slot: number) => (event: DragEvent) => {
+        const id = event.dataTransfer.getData(DRAG_TYPE);
+
+        if (id) {
+            event.preventDefault();
+            send(equip().url, { skill: id, slot });
         }
-
-        if (character.level < skill.level) {
-            return `Needs level ${skill.level}`;
-        }
-
-        if (skill.requires && !byId[skill.requires]?.learned) {
-            return `Learn ${byId[skill.requires]?.name ?? 'the previous jutsu'} first`;
-        }
-
-        if (character.gold < skill.price) {
-            return `Needs ${skill.price} gold`;
-        }
-
-        return null;
     };
 
     return (
         <>
-            <Head title="Jutsu" />
+            <Head title="Skills" />
             <VillageBackdrop>
-                <GameWindow title="Jutsu" closeHref={village().url}>
-                    <p className="mb-3 flex items-center justify-between text-sm text-slate-300">
-                        <span>
-                            Learned jutsu fire on their own in battle when their
-                            chance comes up and you have the chakra.
-                        </span>
-                        <span className="flex items-center gap-1 font-semibold text-amber-300">
-                            <Coins className="size-4" />
-                            {character?.gold.toLocaleString('en-US')} gold
-                        </span>
-                    </p>
-                    <div className="grid max-h-[60vh] gap-4 overflow-y-auto pr-1 md:grid-cols-2">
-                        {schools.map((school) => (
-                            <section
-                                key={school}
-                                aria-label={school}
-                                className="flex flex-col gap-2"
-                            >
-                                <h2 className="font-semibold text-amber-200">
-                                    {school}
-                                </h2>
-                                {skills
-                                    .filter((skill) => skill.school === school)
-                                    .map((skill) => {
-                                        const reason = skill.learned
-                                            ? null
-                                            : blocker(skill);
+                <section
+                    aria-label="Skills"
+                    className="skill-window relative mx-auto w-full max-w-[960px] px-3 pt-9 pb-4 sm:px-5"
+                >
+                    <h1 className="skill-label absolute -top-4 left-1/2 -translate-x-1/2 px-6 py-1 text-lg font-bold">
+                        Skills
+                    </h1>
+                    <Link
+                        href={village().url}
+                        aria-label="Close"
+                        className="game-close absolute -top-3 -right-3 block size-[22px]"
+                    />
 
-                                        return (
-                                            <article
-                                                key={skill.id}
-                                                className={cn(
-                                                    'flex gap-3 rounded-md border bg-slate-950/60 p-2',
-                                                    skill.learned
-                                                        ? 'border-amber-500/80'
-                                                        : 'border-amber-900/70',
-                                                )}
+                    <div className="skill-panel overflow-x-auto p-3">
+                        <div className="grid min-w-[560px] gap-3">
+                            <div className="grid grid-cols-[1fr_auto_1fr] items-center">
+                                <InfoDialog points={points} rules={rules}>
+                                    <button
+                                        type="button"
+                                        className="skill-button justify-self-start px-4 py-0.5 text-lg"
+                                    >
+                                        Info
+                                    </button>
+                                </InfoDialog>
+                                <h2 className="skill-label px-12 py-0.5">
+                                    Passive
+                                </h2>
+                                <ResetDialog coupons={rules.resetCoupons}>
+                                    <button
+                                        type="button"
+                                        className="skill-button justify-self-end px-4 py-0.5 text-lg"
+                                    >
+                                        Reset
+                                    </button>
+                                </ResetDialog>
+                            </div>
+                            <ul
+                                className="grid grid-cols-10 justify-items-center gap-y-2"
+                                aria-label="Passive skills"
+                            >
+                                {passives.map((passive) => (
+                                    <li key={passive.id}>
+                                        <SkillCell
+                                            icon={passive.icon}
+                                            name={`${passive.name} (level ${passive.level}): strengthens this school's jutsu`}
+                                            faded={
+                                                !learnedSchools.has(
+                                                    passive.school,
+                                                )
+                                            }
+                                            bar={`Lv ${passive.level}`}
+                                        />
+                                    </li>
+                                ))}
+                            </ul>
+
+                            <div className="grid grid-cols-[1fr_auto_1fr] items-center">
+                                <span />
+                                <h2 className="skill-label px-12 py-0.5">
+                                    Active
+                                </h2>
+                                <p className="justify-self-end text-sm font-semibold text-sky-100">
+                                    Skill points: {points}
+                                </p>
+                            </div>
+                            <ul
+                                className="grid grid-cols-10 justify-items-center gap-y-2"
+                                aria-label="Active skills"
+                            >
+                                {skills.map((jutsu) => {
+                                    const previous = jutsu.requires
+                                        ? byId[jutsu.requires]
+                                        : null;
+
+                                    return (
+                                        <li key={jutsu.id}>
+                                            <SkillCell
+                                                icon={jutsu.icon}
+                                                name={jutsu.name}
+                                                faded={jutsu.level === 0}
+                                                bar={upgradeLabel(jutsu.level)}
+                                                dragId={
+                                                    jutsu.level > 0
+                                                        ? jutsu.id
+                                                        : undefined
+                                                }
+                                                dragType={DRAG_TYPE}
                                             >
-                                                <img
-                                                    src={skill.icon}
-                                                    alt=""
-                                                    className={cn(
-                                                        'size-12 shrink-0 rounded',
-                                                        !skill.learned &&
-                                                            reason &&
-                                                            'opacity-50 grayscale',
-                                                    )}
-                                                />
-                                                <div className="min-w-0 flex-1 text-sm">
-                                                    <p className="flex items-center gap-2 font-semibold text-slate-100">
-                                                        {skill.name}
-                                                        <span className="text-xs font-normal text-sky-300">
-                                                            {KIND_LABELS[
-                                                                skill.kind
-                                                            ] ?? skill.kind}
-                                                        </span>
-                                                    </p>
-                                                    <p className="text-xs text-slate-300">
-                                                        {skill.description}
-                                                    </p>
-                                                    <p className="mt-1 text-xs text-slate-400">
-                                                        Lv {skill.level} ·{' '}
-                                                        {skill.price} gold
-                                                        {skill.requires &&
-                                                            ` · after ${byId[skill.requires]?.name}`}
-                                                    </p>
-                                                </div>
-                                                <div className="flex shrink-0 flex-col items-end justify-center gap-1">
-                                                    {skill.learned ? (
-                                                        <span className="flex items-center gap-1 text-xs font-semibold text-emerald-300">
-                                                            <Check className="size-4" />{' '}
-                                                            Learned
-                                                        </span>
-                                                    ) : (
-                                                        <>
-                                                            <button
-                                                                type="button"
-                                                                disabled={
-                                                                    reason !==
-                                                                    null
-                                                                }
-                                                                onClick={() =>
-                                                                    router.post(
-                                                                        learn(
-                                                                            skill.id,
-                                                                        ).url,
-                                                                        {},
-                                                                        {
-                                                                            preserveScroll: true,
-                                                                        },
-                                                                    )
-                                                                }
-                                                                className="game-button px-3 py-0.5 text-sm"
-                                                            >
-                                                                Learn
-                                                            </button>
-                                                            {reason && (
-                                                                <span className="flex items-center gap-1 text-[11px] text-slate-400">
-                                                                    <Lock className="size-3" />{' '}
-                                                                    {reason}
-                                                                </span>
-                                                            )}
-                                                        </>
-                                                    )}
-                                                </div>
-                                            </article>
-                                        );
-                                    })}
-                            </section>
-                        ))}
+                                                {(icon) => (
+                                                    <SkillMenu
+                                                        jutsu={jutsu}
+                                                        missing={
+                                                            previous &&
+                                                            previous.level === 0
+                                                                ? previous.name
+                                                                : null
+                                                        }
+                                                        points={points}
+                                                        rules={rules}
+                                                        freeSlot={freeSlot}
+                                                    >
+                                                        {icon}
+                                                    </SkillMenu>
+                                                )}
+                                            </SkillCell>
+                                        </li>
+                                    );
+                                })}
+                            </ul>
+                        </div>
                     </div>
-                </GameWindow>
+
+                    <div className="skill-panel mt-3 overflow-x-auto p-3">
+                        <div className="grid min-w-[560px] gap-3">
+                            <div className="grid grid-cols-[1fr_auto_1fr] items-center">
+                                <ScrollSkillDialog>
+                                    <button
+                                        type="button"
+                                        className="skill-button justify-self-start px-3 py-0.5 text-lg"
+                                    >
+                                        Scroll Skill
+                                    </button>
+                                </ScrollSkillDialog>
+                                <h2 className="skill-label px-12 py-0.5">
+                                    Equipped
+                                </h2>
+                                <span />
+                            </div>
+                            <ol
+                                className="grid grid-cols-10 justify-items-center gap-y-2"
+                                aria-label={`Equipped page ${page + 1}`}
+                            >
+                                {Array.from(
+                                    { length: TOTAL_SLOTS },
+                                    (_, slot) => (
+                                        <li key={slot}>
+                                            <Slot
+                                                slot={slot}
+                                                jutsu={
+                                                    equipped[slot]
+                                                        ? byId[equipped[slot]]
+                                                        : undefined
+                                                }
+                                                open={slot < openSlots}
+                                                price={
+                                                    slot === openSlots
+                                                        ? nextPrice
+                                                        : undefined
+                                                }
+                                                onDrop={drop(slot)}
+                                            />
+                                        </li>
+                                    ),
+                                )}
+                            </ol>
+                            <nav
+                                className="flex items-center justify-center gap-4 text-lg font-bold text-white"
+                                aria-label="Equipped pages"
+                            >
+                                <button
+                                    type="button"
+                                    aria-label="Previous page"
+                                    disabled={page === 0}
+                                    onClick={() =>
+                                        send(switchPage().url, {
+                                            page: page - 1,
+                                        })
+                                    }
+                                    className="text-sky-200 disabled:opacity-40"
+                                >
+                                    <ChevronLeft className="size-7" />
+                                </button>
+                                <span>
+                                    {page + 1}/{pages.length}
+                                </span>
+                                <button
+                                    type="button"
+                                    aria-label="Next page"
+                                    disabled={page === pages.length - 1}
+                                    onClick={() =>
+                                        send(switchPage().url, {
+                                            page: page + 1,
+                                        })
+                                    }
+                                    className="text-amber-300 disabled:opacity-40"
+                                >
+                                    <ChevronRight className="size-7" />
+                                </button>
+                            </nav>
+                        </div>
+                    </div>
+
+                    {error && (
+                        <p
+                            role="alert"
+                            className="mt-2 text-center text-sm text-red-200"
+                        >
+                            {error}
+                        </p>
+                    )}
+                </section>
             </VillageBackdrop>
         </>
+    );
+}
+
+type SlotProps = {
+    slot: number;
+    jutsu: Jutsu | undefined;
+    open: boolean;
+    /** Gift coupons to open this slot, when it is the next one for sale. */
+    price: number | undefined;
+    onDrop: (event: DragEvent) => void;
+};
+
+function Slot({ slot, jutsu, open, price, onDrop }: SlotProps) {
+    if (!open) {
+        const lock = (
+            <span
+                className={cn(
+                    'flex size-11 items-center justify-center rounded-md border-2 sm:size-12',
+                    price !== undefined
+                        ? 'border-amber-700 bg-amber-400 text-amber-950'
+                        : 'border-slate-500 bg-slate-400 text-slate-600',
+                )}
+            >
+                <Lock className="size-6" />
+            </span>
+        );
+
+        return price !== undefined ? (
+            <div className="flex flex-col items-center gap-1">
+                <BuySlotDialog price={price}>
+                    <button
+                        type="button"
+                        aria-label={`Open slot ${slot + 1} for ${price} gift coupons`}
+                    >
+                        {lock}
+                    </button>
+                </BuySlotDialog>
+                <span className="skill-bar flex h-4 w-11 items-center justify-center text-[11px] sm:w-12">
+                    {price}
+                </span>
+            </div>
+        ) : (
+            <div
+                className="flex flex-col items-center gap-1"
+                aria-label={`Slot ${slot + 1} locked`}
+            >
+                {lock}
+                <span className="skill-bar h-4 w-11 sm:w-12" />
+            </div>
+        );
+    }
+
+    return (
+        <div onDragOver={(event) => event.preventDefault()} onDrop={onDrop}>
+            {jutsu ? (
+                <SkillCell
+                    icon={jutsu.icon}
+                    name={jutsu.name}
+                    bar={upgradeLabel(jutsu.level)}
+                >
+                    {(icon) => (
+                        <DropdownMenu>
+                            <DropdownMenuTrigger className="rounded-sm focus-visible:ring-2 focus-visible:ring-sky-300 focus-visible:outline-none">
+                                {icon}
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
+                                <DropdownMenuLabel>
+                                    {slot + 1}. {jutsu.name}{' '}
+                                    {upgradeLabel(jutsu.level)}
+                                </DropdownMenuLabel>
+                                <DropdownMenuItem
+                                    onSelect={() =>
+                                        send(unequip().url, { slot })
+                                    }
+                                >
+                                    Unequip
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    )}
+                </SkillCell>
+            ) : (
+                <div
+                    className="flex flex-col items-center gap-1"
+                    aria-label={`Slot ${slot + 1} empty`}
+                >
+                    <span className="size-11 rounded-sm bg-[#16323f] shadow-inner sm:size-12" />
+                    <span className="skill-bar h-4 w-11 sm:w-12" />
+                </div>
+            )}
+        </div>
     );
 }

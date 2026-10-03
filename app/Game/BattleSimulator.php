@@ -289,7 +289,8 @@ final class BattleSimulator
             $this->rechargeShield($actor, intdiv($damage, 3));
         }
 
-        if ($struck && ! $backfire) {
+        // A knocked-out target takes no more statuses.
+        if ($struck && ! $backfire && $this->hp[$target] > 0) {
             $effects = [...$effects, ...$this->applyEffect($skill, $actor, $target, $damage)];
         }
 

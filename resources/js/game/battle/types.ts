@@ -49,9 +49,67 @@ export type StrikeEvent = {
     actorMp?: number;
     actorHp?: number;
     backfire?: boolean;
+    // Status notes (BattleSimulator): untouchable, lost in mist, Sunset's
+    // double damage, a frozen target shattered, damage soaked by Static Field.
+    immune?: boolean;
+    mist?: boolean;
+    double?: boolean;
+    shatter?: boolean;
+    absorbed?: number;
+    // Chakra drained or cut from the target.
+    targetMp?: number;
 };
 
-export type StunnedEvent = { type: 'stunned'; actor: Side };
+export type StunnedEvent = {
+    type: 'stunned';
+    actor: Side;
+    // Missing for a plain stun.
+    reason?: 'freeze' | 'charm' | 'slow';
+};
+// A jutsu with only an effect (Crystal Blade, Earth Prison, ...).
+export type CastEvent = {
+    type: 'cast';
+    actor: Side;
+    target: Side;
+    skill: string;
+    mpCost: number;
+    actorMp: number;
+    targetMp?: number;
+};
+export type StatusEvent = {
+    type: 'status';
+    actor: Side;
+    status: string;
+    turns: number | null;
+    skill: string | null;
+    source: Side;
+};
+export type ExpireEvent = {
+    type: 'expire';
+    actor: Side;
+    status: string;
+    // The jutsu that lifted it, if any.
+    skill?: string;
+};
+// Burn, poison, nightmares, healing over time and exploding clay.
+export type TickEvent = {
+    type: 'tick';
+    actor: Side;
+    status: string;
+    hp: number;
+    damage?: number;
+    heal?: number;
+    mp?: number;
+};
+export type CloudEvent = {
+    type: 'cloud';
+    actor: Side;
+    target: Side;
+    damage: number;
+    absorbed: number;
+    targetHp: number;
+};
+export type HasteEvent = { type: 'haste'; actor: Side };
 export type ReflectEvent = {
     type: 'reflect';
     actor: Side;
@@ -79,6 +137,12 @@ export type EndEvent = { type: 'end'; winner: 0 | 1; reason: 'ko' | 'timeout' };
 export type BattleEvent =
     | StrikeEvent
     | StunnedEvent
+    | CastEvent
+    | StatusEvent
+    | ExpireEvent
+    | TickEvent
+    | CloudEvent
+    | HasteEvent
     | ReflectEvent
     | HealEvent
     | ReviveEvent

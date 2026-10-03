@@ -6,7 +6,13 @@ import { effectDuration, isRanged, playEffect } from './effects';
 import type { EffectIndex, EffectSpec } from './effects';
 import type { Fighter } from './fighter';
 import { tween, wait } from './tween';
-import type { BattleEvent, EndEvent, StrikeEvent } from './types';
+import type {
+    BattleEvent,
+    CastEvent,
+    EndEvent,
+    StrikeEvent,
+    TickEvent,
+} from './types';
 
 type Side = 0 | 1;
 
@@ -20,6 +26,8 @@ export type ReplayContext = {
     onMp: (side: Side, mp: number) => void;
     /** A jutsu was used (lets the HUD light up its icon). */
     onSkill: (side: Side, skillId: string) => void;
+    /** A status started (true) or ended (false) on a side. */
+    onStatus: (side: Side, status: string, active: boolean) => void;
     skillName: (skillId: string) => string;
     skillSound: (skillId: string) => Sfx;
     /** Original effects of the jutsu used in this battle. */
@@ -47,6 +55,41 @@ const COLOURS = {
     heal: 0x4ade80,
     status: 0xc4b5fd,
     counter: 0x7dd3fc,
+    poison: 0x86efac,
+    burn: 0xf97316,
+    lightning: 0xfde047,
+};
+
+// What floats over a fighter when a status lands (BattleSimulator statuses).
+const STATUS_LABELS: Record<string, string> = {
+    burn: 'BURNING',
+    drunk: 'DRUNK',
+    freeze: 'FROZEN',
+    slow: 'SLOWED',
+    shield: 'SHIELD',
+    invulnerable: 'UNTOUCHABLE',
+    poison: 'POISONED',
+    seal: 'SEALED',
+    dead_demon: 'DEMON SEAL',
+    bloodboil: 'BLOODBOIL',
+    charm: 'CHARMED',
+    snare: 'SNARED',
+    clay: 'CLAY',
+    prison: 'DEFENSE DOWN',
+    mirage: 'NIGHTMARE',
+    regen: 'REGENERATING',
+    chakra_burn: 'CHAKRA DRAIN',
+    gates: 'GATE OPEN',
+    cloud: 'THUNDER CLOUD',
+    mist: 'MIST',
+    sunset: 'SUNSET',
+    cursed_seal: 'CURSED SEAL',
+};
+
+const STUN_LABELS: Record<string, string> = {
+    freeze: 'FROZEN',
+    charm: 'CHARMED',
+    slow: 'TOO SLOW',
 };
 
 /** Replay the server's battle log; resolves with the final event. */
@@ -68,11 +111,62 @@ export async function replay(
                 floatText(
                     ctx,
                     ctx.fighters[event.actor],
-                    'STUNNED',
+                    event.reason ? STUN_LABELS[event.reason] : 'STUNNED',
                     COLOURS.status,
                     22,
                 );
                 await wait(ctx.ticker, SHOUT_MS, ctx.speed);
+                break;
+            case 'cast':
+                await cast(ctx, event);
+                break;
+            case 'status':
+                ctx.onStatus(event.actor, event.status, true);
+                floatText(
+                    ctx,
+                    ctx.fighters[event.actor],
+                    STATUS_LABELS[event.status] ?? event.status.toUpperCase(),
+                    COLOURS.status,
+                    18,
+                    0.95,
+                );
+                await wait(ctx.ticker, PAUSE_MS, ctx.speed);
+                break;
+            case 'expire':
+                ctx.onStatus(event.actor, event.status, false);
+
+                if (event.skill) {
+                    shout(ctx, event.actor, event.skill);
+                }
+                break;
+            case 'tick':
+                await tick(ctx, event);
+                break;
+            case 'cloud':
+                playSfx('lightning');
+                ctx.fighters[event.target].flash();
+                ctx.onHp(event.target, event.targetHp);
+                floatText(
+                    ctx,
+                    ctx.fighters[event.target],
+                    event.absorbed > 0
+                        ? `${event.damage} (SHIELD ${event.absorbed})`
+                        : `${event.damage}`,
+                    COLOURS.lightning,
+                    24,
+                );
+                knockedOut(ctx, event.target, event.targetHp);
+                await wait(ctx.ticker, SHOUT_MS, ctx.speed);
+                break;
+            case 'haste':
+                floatText(
+                    ctx,
+                    ctx.fighters[event.actor],
+                    'HASTE!',
+                    COLOURS.counter,
+                    22,
+                );
+                await wait(ctx.ticker, PAUSE_MS, ctx.speed);
                 break;
             case 'reflect':
                 shout(ctx, event.actor, event.skill);
@@ -142,6 +236,85 @@ function shout(ctx: ReplayContext, side: Side, skillId: string): void {
         24,
         1.05,
     );
+}
+
+/** An effect-only jutsu: its name, chakra and art on the target, no dash. */
+async function cast(ctx: ReplayContext, event: CastEvent): Promise<void> {
+    shout(ctx, event.actor, event.skill);
+    ctx.onMp(event.actor, event.actorMp);
+
+    if (event.targetMp !== undefined) {
+        ctx.onMp(event.target, event.targetMp);
+    }
+
+    playSfx(ctx.skillSound(event.skill));
+    void ctx.fighters[event.actor]
+        .play('attack', ctx.speed())
+        .then(() =>
+            ctx.fighters[event.actor].play('stance', ctx.speed(), true),
+        );
+    await Promise.all(
+        (ctx.effects[event.skill] ?? []).map((spec) =>
+            playAt(
+                ctx,
+                spec,
+                event.actor,
+                event.target,
+                typeof spec.start === 'number' ? spec.start : 0,
+            ),
+        ),
+    );
+    await wait(ctx.ticker, PAUSE_MS, ctx.speed);
+}
+
+/** Damage or healing from a status, before the fighter moves. */
+async function tick(ctx: ReplayContext, event: TickEvent): Promise<void> {
+    const fighter = ctx.fighters[event.actor];
+    ctx.onHp(event.actor, event.hp);
+
+    if (event.mp !== undefined) {
+        ctx.onMp(event.actor, event.mp);
+    }
+
+    if (event.heal !== undefined) {
+        floatText(ctx, fighter, `+${event.heal}`, COLOURS.heal, 24);
+    } else {
+        fighter.flash();
+        const colour =
+            event.status === 'poison'
+                ? COLOURS.poison
+                : event.status === 'burn'
+                  ? COLOURS.burn
+                  : COLOURS.damage;
+        floatText(
+            ctx,
+            fighter,
+            event.status === 'clay'
+                ? `BOOM ${event.damage}`
+                : `${event.damage}`,
+            colour,
+            event.status === 'clay' ? 30 : 22,
+        );
+        playSfx(event.status === 'clay' ? 'explosion' : 'hit');
+        knockedOut(ctx, event.actor, event.hp);
+    }
+
+    await wait(ctx.ticker, SHOUT_MS, ctx.speed);
+}
+
+function knockedOut(ctx: ReplayContext, side: Side, hp: number): void {
+    if (hp > 0) {
+        return;
+    }
+
+    const fighter = ctx.fighters[side];
+    playSfx('ko');
+
+    if (fighter.isAnimated) {
+        void fighter.play('dead', ctx.speed());
+    } else {
+        fighter.fadeOut();
+    }
 }
 
 async function strike(ctx: ReplayContext, event: StrikeEvent): Promise<void> {
@@ -284,8 +457,18 @@ function impact(
         floatText(ctx, victim, 'THROWN BACK!', COLOURS.jutsu, 22, 1.05);
     }
 
+    if (event.targetMp !== undefined) {
+        ctx.onMp(event.target, event.targetMp);
+    }
+
     if (!event.hit) {
-        floatText(ctx, victim, 'MISS', COLOURS.miss, 22);
+        floatText(
+            ctx,
+            victim,
+            event.mist ? 'LOST IN MIST' : 'MISS',
+            COLOURS.miss,
+            22,
+        );
         playSfx('miss');
         void victim
             .play('dodge', ctx.speed())
@@ -305,6 +488,34 @@ function impact(
         return;
     }
 
+    if (event.immune) {
+        floatText(ctx, victim, 'UNTOUCHABLE', COLOURS.parry, 24);
+        playSfx('block');
+        return;
+    }
+
+    if (event.double || event.shatter) {
+        floatText(
+            ctx,
+            victim,
+            event.shatter ? 'SHATTER!' : 'DOUBLE!',
+            COLOURS.crit,
+            22,
+            1.05,
+        );
+    }
+
+    if (event.absorbed) {
+        floatText(
+            ctx,
+            victim,
+            `SHIELD ${event.absorbed}`,
+            COLOURS.lightning,
+            20,
+            0.95,
+        );
+    }
+
     victim.flash();
     ctx.onHp(event.target, event.targetHp);
     const label = event.crit
@@ -319,15 +530,7 @@ function impact(
           : COLOURS.damage;
     floatText(ctx, victim, label, colour, event.crit ? 34 : 26);
     playSfx(event.crit ? 'crit' : 'hit');
-
-    if (event.targetHp === 0) {
-        playSfx('ko');
-        if (victim.isAnimated) {
-            void victim.play('dead', ctx.speed());
-        } else {
-            victim.fadeOut();
-        }
-    }
+    knockedOut(ctx, event.target, event.targetHp);
 }
 
 function floatText(

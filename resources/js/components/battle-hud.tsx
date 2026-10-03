@@ -3,7 +3,8 @@ import { cn } from '@/lib/utils';
 import { characterAssets } from '@/types/game';
 
 const FIGHT_UI = '/game-assets/ui/fight';
-const SKILL_SLOTS = 15;
+// Equipped jutsu slots (config('skills.slots.total')).
+const SKILL_SLOTS = 10;
 
 // Pixel geometry of the original bar frame (bar-frame-left.png, 425x29).
 const HP_TRACK = { left: 38, top: 3, width: 370, height: 12 };
@@ -18,6 +19,8 @@ type Props = {
     skills: Record<string, SkillInfo>;
     /** Jutsu just used by the player, lit up in the skill grid. */
     glowing: string | null;
+    /** Active statuses per side (icons under the bars). */
+    statuses: [string[], string[]];
     /** Where the battle happens, e.g. "Training Tower · Floor 3". */
     place: string;
 };
@@ -39,6 +42,7 @@ export default function BattleHud({
     mp,
     skills,
     glowing,
+    statuses,
     place,
 }: Props) {
     const [player, opponent] = fighters;
@@ -46,7 +50,13 @@ export default function BattleHud({
     return (
         <div className="pointer-events-none absolute inset-0 z-10 select-none">
             <div className="absolute inset-x-0 top-0 flex items-start justify-between px-1 pt-1">
-                <TopGroup side="ally" fighter={player} hp={hp[0]} mp={mp[0]} />
+                <TopGroup
+                    side="ally"
+                    fighter={player}
+                    hp={hp[0]}
+                    mp={mp[0]}
+                    statuses={statuses[0]}
+                />
                 <div className="relative mt-0.5 h-[62px] w-[63px] shrink-0">
                     <img
                         src={`${FIGHT_UI}/vs-diamond.png`}
@@ -64,6 +74,7 @@ export default function BattleHud({
                     fighter={opponent}
                     hp={hp[1]}
                     mp={mp[1]}
+                    statuses={statuses[1]}
                 />
             </div>
 
@@ -94,11 +105,13 @@ function TopGroup({
     fighter,
     hp,
     mp,
+    statuses,
 }: {
     side: Side;
     fighter: FighterInfo;
     hp: number;
     mp: number;
+    statuses: string[];
 }) {
     const maxMp = fighter.maxMp ?? 0;
     const mirrored = side === 'enemy';
@@ -129,27 +142,44 @@ function TopGroup({
                     />
                 </div>
             </div>
-            <div
-                className="relative mt-[22px] h-[29px] w-[425px]"
-                style={mirrored ? { transform: 'scaleX(-1)' } : undefined}
-            >
-                <img
-                    src={`${FIGHT_UI}/bar-frame-left.png`}
-                    alt=""
-                    className="absolute inset-0"
-                />
-                <Fill
-                    track={HP_TRACK}
-                    image="hp-fill.png"
-                    amount={share(hp, fighter.maxHp)}
-                    label={`${fighter.name} health`}
-                />
-                <Fill
-                    track={MP_TRACK}
-                    image="mp-fill.png"
-                    amount={share(mp, maxMp)}
-                    label={`${fighter.name} chakra`}
-                />
+            <div className="mt-[22px] flex flex-col gap-1">
+                <div
+                    className="relative h-[29px] w-[425px]"
+                    style={mirrored ? { transform: 'scaleX(-1)' } : undefined}
+                >
+                    <img
+                        src={`${FIGHT_UI}/bar-frame-left.png`}
+                        alt=""
+                        className="absolute inset-0"
+                    />
+                    <Fill
+                        track={HP_TRACK}
+                        image="hp-fill.png"
+                        amount={share(hp, fighter.maxHp)}
+                        label={`${fighter.name} health`}
+                    />
+                    <Fill
+                        track={MP_TRACK}
+                        image="mp-fill.png"
+                        amount={share(mp, maxMp)}
+                        label={`${fighter.name} chakra`}
+                    />
+                </div>
+                <ul
+                    aria-label={`${fighter.name} statuses`}
+                    className={`flex gap-1 px-8 ${mirrored ? 'flex-row-reverse' : ''}`}
+                >
+                    {statuses.map((status) => (
+                        <li key={status}>
+                            <img
+                                src={`/game-assets/statuses/${status}.png`}
+                                alt={status.replace('_', ' ')}
+                                title={status.replace('_', ' ')}
+                                className="size-6 rounded-sm border border-black/60"
+                            />
+                        </li>
+                    ))}
+                </ul>
             </div>
         </div>
     );
