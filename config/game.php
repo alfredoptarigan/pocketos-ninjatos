@@ -201,6 +201,13 @@ return [
 
     'starting_coupons' => 10,
 
+    // Daily sign-in (Gifts menu): exp_percent of the exp to the next level,
+    // plus gift coupons by day of a 7-day streak. A missed day restarts it.
+    'sign_in' => [
+        'exp_percent' => 50,
+        'coupons' => [1, 1, 2, 2, 3, 3, 5],
+    ],
+
     'outfits' => [
         'bonus_percent' => ['grey' => 0, 'blue' => 5, 'orange' => 10],
         // Drawing an outfit the ninja already owns pays this much gold instead.

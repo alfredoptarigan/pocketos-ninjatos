@@ -14,6 +14,7 @@ const GAME_PAGES = [
     'village',
     'inventory',
     'dungeons',
+    'gifts',
     'buildings',
     'character',
     'tower',

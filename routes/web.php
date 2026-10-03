@@ -7,6 +7,7 @@ use App\Http\Controllers\DungeonController;
 use App\Http\Controllers\EquipmentShopController;
 use App\Http\Controllers\FieldController;
 use App\Http\Controllers\GearController;
+use App\Http\Controllers\GiftController;
 use App\Http\Controllers\OutfitController;
 use App\Http\Controllers\PharmacyController;
 use App\Http\Controllers\SkillController;
@@ -40,6 +41,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('bag', [BagController::class, 'show'])->name('bag');
         Route::post('bag/use', [BagController::class, 'use'])->name('bag.use');
         Route::post('bag/sell', [BagController::class, 'sell'])->name('bag.sell');
+        Route::get('gifts', [GiftController::class, 'show'])->name('gifts.show');
+        Route::post('gifts/sign-in', [GiftController::class, 'signIn'])->name('gifts.sign-in');
 
         Route::get('skills', [SkillController::class, 'index'])->name('skills.index');
         Route::post('skills/{skill}/learn', [SkillController::class, 'learn'])->name('skills.learn');

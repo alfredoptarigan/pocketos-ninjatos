@@ -2,6 +2,7 @@ import { Link } from '@inertiajs/react';
 import { toast } from 'sonner';
 import { bag } from '@/routes';
 import { show as character } from '@/routes/character';
+import { show as gifts } from '@/routes/gifts';
 import { index as skills } from '@/routes/skills';
 
 type MenuButton = { key: string; label: string; href?: string };
@@ -15,7 +16,7 @@ const BUTTONS: MenuButton[] = [
     { key: 'friends', label: 'Friends' },
     { key: 'missions', label: 'Missions' },
     { key: 'pet', label: 'Pet' },
-    { key: 'gifts', label: 'Gifts' },
+    { key: 'gifts', label: 'Gifts', href: gifts().url },
 ];
 
 const icon = (key: string, state: 'up' | 'over' | 'down') =>

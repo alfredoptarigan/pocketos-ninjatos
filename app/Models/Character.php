@@ -33,6 +33,8 @@ use Illuminate\Support\Carbon;
  * @property string $village Key of config('game.villages')
  * @property int $tower_floor Highest Training Tower floor cleared
  * @property list<string> $skills Learned jutsu ids (config('game.skills'))
+ * @property int $sign_in_streak Day (1-7) of the daily sign-in streak, 0 before the first
+ * @property Carbon|null $signed_in_on Last daily sign-in
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
@@ -54,7 +56,7 @@ class Character extends Model
      */
     protected function casts(): array
     {
-        return ['vitals_at' => 'datetime', 'skills' => 'array'];
+        return ['vitals_at' => 'datetime', 'skills' => 'array', 'signed_in_on' => 'date'];
     }
 
     /**

@@ -90,7 +90,8 @@ Tick an item when it ships and update its row in the tables below.
 **Quests and daily activities**
 
 - [ ] Main and side quests (Mission Hall)
-- [ ] Daily tasks, sign-in, login streak rewards
+- [x] Daily sign-in with a 7-day streak (Gifts menu: EXP + gift coupons)
+- [ ] Daily tasks
 - [ ] Newcomer gifts and tutorial
 - [ ] Seasonal events (Christmas, New Year)
 
