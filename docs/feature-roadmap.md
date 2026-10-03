@@ -44,6 +44,7 @@ Tick an item when it ships and update its row in the tables below.
 **Items and economy**
 
 - [x] Multi-Sell from the Inventory (spare gear and whole item stacks)
+- [x] Weapon classes (Blunt, Sharp, Fists; set by the outfit worn) and the weapon drawn in hand in battle
 - [ ] Forge: enhance to +12
 - [ ] Forge: crafting and compose
 - [ ] Forge: gems and sockets
@@ -99,6 +100,7 @@ Tick an item when it ships and update its row in the tables below.
 **Infrastructure**
 
 - [ ] Deploy for friends (server, PostgreSQL, HTTPS, assets extracted on the server)
+- [ ] One-off fix on deploy: weapons worn before the class rule that do not fit the outfit's class
 
 # Full feature list
 
@@ -144,6 +146,7 @@ Tick an item when it ships and update its row in the tables below.
 | ------ | ----------------------------------------------- | ---------------------------------------------------------------------------------------------- |
 | ✅     | Inventory (bag + character panel), Pharmacy     | `pharmacyitem`                                                                                 |
 | ✅     | Equipment (8 slots), Equipment Shop             | `equipitem`                                                                                    |
+| ✅     | Weapon classes and weapons held in battle       | `rolebase` (`Popsinger`), `equipitem` (`UsePopsinger`), `motion/weapon`, `weaponmotion`        |
 | ⬜     | Forge: enhance to +12                           | `equipconsolidate`, `upgradecue`                                                               |
 | ⬜     | Forge: crafting and compose                     | `equipcompose`, `composemethoditem`, `composetable`, `composetemp`, panels `equipcompose*`     |
 | ⬜     | Forge: gems and sockets                         | `jewelitem`, `equipimbrate`, panel `removejew`                                                 |
