@@ -17,9 +17,16 @@ type Props = {
     missingHint: string;
 };
 
-/** A letterboxed Pixi scene of clickable spots (village buildings, world map areas). */
-export default function HotspotCanvas({
-    sceneKey,
+/**
+ * A letterboxed Pixi scene of clickable spots (village buildings, world map areas).
+ * A new sceneKey remounts it: the React Compiler memoizes callbacks by what
+ * they read, so a deps entry alone would not rebuild the scene.
+ */
+export default function HotspotCanvas(props: Props) {
+    return <Scene key={props.sceneKey} {...props} />;
+}
+
+function Scene({
     width,
     height,
     build,
@@ -59,7 +66,7 @@ export default function HotspotCanvas({
                 app.renderer.on('resize', fit);
             }
         },
-        [sceneKey, width, height],
+        [width, height],
     );
 
     const error = usePixiApp(hostRef, setup, { background: 0x0a0a0a });

@@ -13,11 +13,14 @@ gitignored.
 
 from __future__ import annotations
 
+import json
 import shutil
 import sys
 from pathlib import Path
 
 from amf3 import load_compressed
+from extract_effect_assets import OUTFITS, ULTIMATE_BASE
+from extract_effect_assets import ultimate_ids as effect_ultimate_ids
 from upscale import available as upscaler_available
 from upscale import upscale_all
 
@@ -42,6 +45,11 @@ def latest_table(datatable: Path, name: str) -> dict:
     return load_compressed(versions[-1])
 
 
+def ultimate_icon_ids() -> list[str]:
+    """The ultimate of every extracted outfit: 1900 + its id (config('skills.ultimate.id_base'))."""
+    return sorted(i for i in effect_ultimate_ids([outfit['key'] for outfit in json.loads(OUTFITS.read_text())]) if len(i) == len(str(ULTIMATE_BASE)))
+
+
 def main() -> None:
     if len(sys.argv) not in (2, 3) or sys.argv[2:] not in ([], ['--hd']):
         sys.exit(__doc__)
@@ -61,6 +69,12 @@ def main() -> None:
         matches = sorted(icon_dir.glob(f"{skills['ResourceID'][index].lower()}.*png"))
         if matches:
             icons[f"{skills['FakeID'][index]}.png"] = matches[0]
+
+    # The Shippuden outfits' ultimates (2003-2014) have icons but no clientskill row.
+    for ultimate in ultimate_icon_ids():
+        matches = sorted(icon_dir.glob(f'icon_skill{ultimate}.*png'))
+        if f'{ultimate}.png' not in icons and matches:
+            icons[f'{ultimate}.png'] = matches[0]
 
     if hd:
         from PIL import Image
