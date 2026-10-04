@@ -164,6 +164,12 @@ function BattleResult({ battle, opponent, place }: ResultProps) {
     }
 
     const home = field ? showField(field.scene) : tower();
+    // Hunting-ground battles hunt the same monster again; tower battles fight their floor.
+    const again = field
+        ? hunt(field.monster).url
+        : floor !== null
+          ? fight(floor).url
+          : null;
 
     return (
         <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/50 px-4">
@@ -222,28 +228,22 @@ function BattleResult({ battle, opponent, place }: ResultProps) {
                                 <button
                                     type="button"
                                     onClick={() =>
-                                        router.post(
-                                            fight(String(floor + 1)).url,
-                                        )
+                                        router.post(fight(floor + 1).url)
                                     }
                                     className="game-button px-4 py-1"
                                 >
                                     Next floor
                                 </button>
                             )}
-                        <button
-                            type="button"
-                            onClick={() =>
-                                router.post(
-                                    field
-                                        ? hunt(field.monster).url
-                                        : fight(String(floor)).url,
-                                )
-                            }
-                            className="game-button px-4 py-1"
-                        >
-                            {won ? 'Fight again' : 'Retry'}
-                        </button>
+                        {again && (
+                            <button
+                                type="button"
+                                onClick={() => router.post(again)}
+                                className="game-button px-4 py-1"
+                            >
+                                {won ? 'Fight again' : 'Retry'}
+                            </button>
+                        )}
                         <Link href={bag()} className="game-button px-4 py-1">
                             Bag
                         </Link>

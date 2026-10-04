@@ -205,9 +205,7 @@ export default function Tower({ floors, cleared, stats }: Props) {
                                         type="button"
                                         disabled={locked(target.floor)}
                                         onClick={() =>
-                                            router.post(
-                                                fight(String(target.floor)).url,
-                                            )
+                                            router.post(fight(target.floor).url)
                                         }
                                         className="game-button flex items-center gap-2 px-5 py-1.5"
                                     >
