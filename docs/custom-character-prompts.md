@@ -90,6 +90,42 @@ background (#00FF00). One character, no shadow, no motion blur, no speed
 lines, no text.
 ```
 
+### Ready to paste: the first frame
+
+Start with `stance` frame 1: it sets the size and where the character stands.
+
+```
+Using the attached character design as the exact reference, draw frame 1 of
+4 of the character's stance animation: fighting stance, knees slightly bent,
+fists raised.
+
+Keep everything identical to the reference: proportions (2.2 heads tall),
+colors, outfit details, outline and shading style. 3/4 view facing LEFT.
+Same character size as the reference. Use the same square canvas for every
+frame, with the ground line at the same height: when the feet touch the
+ground they are exactly where they are in the reference. Flat pure green
+background (#00FF00). One character, no shadow, no motion blur, no speed
+lines, no text.
+```
+
+### Ready to paste: every next frame
+
+In the same chat, the AI already has the rules. Send one short message per
+frame, with the pose copied from "Poses, frame by frame":
+
+```
+Same rules and same reference. Frame 2 of 4 of the stance animation: same
+pose, the body 2% lower (breathing out).
+```
+
+```
+Same rules and same reference. Frame 3 of 6 of the attack animation: full
+extension, the arm stretched out to the left, body leaning in.
+```
+
+Attach the reference image again, or start a new chat with the full prompt,
+as soon as the colors, the size or the outfit start to drift.
+
 ### Frames to make
 
 The original characters play at 12 frames per second.
