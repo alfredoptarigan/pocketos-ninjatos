@@ -53,6 +53,24 @@ class TowerTest extends TestCase
         $this->assertNull($bare->log['fighters'][0]['weapon']);
     }
 
+    public function test_ninjas_and_avatar_bosses_bring_their_outfits_ultimate()
+    {
+        $character = Character::factory()->create(['avatar' => '0_3']);
+        $this->weakFloor(1, ['art' => ['type' => 'motion', 'motions' => '', 'face' => '', 'outfit' => '0_10', 'outfit_level' => 1]]);
+        $this->actingAs($character->user);
+
+        $this->post(route('tower.fight', 1));
+
+        $fighters = Battle::sole()->log['fighters'];
+        $this->assertSame('1903', $fighters[0]['ultimate']);
+        $this->assertSame('1910', $fighters[1]['ultimate']);
+
+        // The replay names and shows both sides' ultimates like any jutsu.
+        $this->get(route('battles.show', Battle::sole()))->assertInertia(fn (Assert $page) => $page
+            ->where('skills.1903.name', 'Secret Technique')
+            ->where('skills.1910.icon', '/game-assets/skills/1910.png'));
+    }
+
     public function test_tower_lists_the_floors_and_the_players_progress()
     {
         $character = Character::factory()->create(['tower_floor' => 1]);

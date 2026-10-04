@@ -5,7 +5,7 @@ Usage: python3 tools/extract_skill_assets.py <path-to-game-pockieninja> [--hd]
 --hd AI-upscales the icons 4x (see tools/upscale.py).
 
 Writes public/game-assets/skills/<skill id>.png for every skill-panel skill
-(clientskill Type 1), and the battle status icons (bitmap/icon/buff, picked
+and ultimate (clientskill Type 1 and 2), and the battle status icons (bitmap/icon/buff, picked
 by hand in STATUS_ICONS) to public/game-assets/statuses/<status>.png. Skill
 rules live in config/skills.php; this script only provides art. Output is
 gitignored.
@@ -32,7 +32,7 @@ STATUS_ICONS = {
     'cloud': 11827, 'mist': 11821, 'sunset': 11822, 'cursed_seal': 11829,
 }
 SOURCE = 'apache/source'
-PANEL_SKILL = '1'  # clientskill Type: 1 skill panel, 2 ultimate, 3 pet, 4 stage
+ICON_TYPES = {'1', '2'}  # clientskill Type: 1 skill panel, 2 ultimate, 3 pet, 4 stage
 HEADER_ROW = 1
 HD_ICON_SCALE = 4
 
@@ -56,7 +56,7 @@ def main() -> None:
 
     icons = {}
     for index in range(HEADER_ROW, len(skills['FakeID'])):
-        if skills['Type'][index] != PANEL_SKILL:
+        if skills['Type'][index] not in ICON_TYPES:
             continue
         matches = sorted(icon_dir.glob(f"{skills['ResourceID'][index].lower()}.*png"))
         if matches:

@@ -2,7 +2,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from extract_tower_assets import STATS, boss_avatar, mob_folder, stats
+from extract_tower_assets import STATS, boss_avatar, costume_level, mob_folder, stats
 
 
 class TowerTest(unittest.TestCase):
@@ -12,6 +12,8 @@ class TowerTest(unittest.TestCase):
         self.assertIsNone(boss_avatar('AvatarUserFace_N900163'))      # Kakuzu: not an avatar
         self.assertIsNone(boss_avatar('MapUserFace_N32053'))
         self.assertIsNone(boss_avatar('TGateUserFace_N4025111'))
+        self.assertEqual(costume_level('AvatarUserFace_N90277'), 2)
+        self.assertEqual(costume_level('AvatarUserFace_N91229'), 2)
 
 
     def test_late_floors_rate_dodge_block_and_crit_ten_times_higher(self):

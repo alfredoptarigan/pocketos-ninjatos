@@ -94,6 +94,21 @@ return [
     // its name: base + one per per_levels levels (+boss_bonus for bosses, at
     // most max), from tiers up to 1 + level / tier_per_levels, at skill level
     // 1 + level / skill_level_per_levels.
+    // Ultimates (clientskill Type 2, "Secret Technique"): one per outfit, id
+    // id_base + outfit id. The original only says it may finish an opponent on
+    // low health, more likely the more the outfits differ; the recordings in
+    // source/dazhao fire at 7-9% health. The numbers are ours: tried instead of
+    // the attack when the target is at or below below_health_percent, chance %
+    // plus per_outfit_level for each upgrade level above the opponent's outfit
+    // (min_chance..max_chance); no chakra, no limit. From upgraded_from_level
+    // the stronger cinematic plays (avatar 1901 is Kurosaki Ichigo +19).
+    'ultimate' => [
+        'name' => 'Secret Technique',
+        'description' => 'May finish an opponent at low health in one blow, more often the more your outfit is upgraded than theirs. No chakra.',
+        'id_base' => 1900, 'below_health_percent' => 10, 'chance' => 30, 'per_outfit_level' => 2,
+        'min_chance' => 10, 'max_chance' => 60, 'upgraded_from_level' => 19,
+    ],
+
     'monsters' => ['base' => 1, 'per_levels' => 20, 'boss_bonus' => 2, 'max' => 6, 'tier_per_levels' => 25, 'skill_level_per_levels' => 10],
 
     // Panel columns, left to right. Element schools are the five basic

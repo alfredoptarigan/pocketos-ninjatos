@@ -7,6 +7,7 @@ use App\Actions\EquipSkill;
 use App\Actions\LearnSkill;
 use App\Actions\ResetSkills;
 use App\Game\Skill;
+use App\Game\Ultimate;
 use Closure;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -42,6 +43,14 @@ class SkillController extends Controller
             'openSlots' => $character->openSkillSlots(),
             'slotPrices' => config('skills.slots.prices'),
             'slotsBought' => $character->skill_slots_bought,
+            // The worn outfit's ultimate, with its chance against an opponent without one.
+            'ultimate' => [
+                'id' => ($ultimate = $character->ultimate())->id,
+                ...Ultimate::info($ultimate->id),
+                'upgraded' => $ultimate->upgraded,
+                'chance' => $ultimate->chanceAgainst(null),
+                'upgradedFrom' => config('skills.ultimate.upgraded_from_level'),
+            ],
             'rules' => [
                 'maxLevel' => config('skills.max_level'),
                 'resetCoupons' => config('skills.reset_coupons'),

@@ -438,7 +438,47 @@ function SidePanel({
                     );
                 })}
             </ul>
+            <UltimateSlot
+                id={fighter.ultimate}
+                skills={skills}
+                glowing={glowing}
+            />
         </aside>
+    );
+}
+
+/** The outfit's ultimate, under the jutsu (App\Game\Ultimate). */
+function UltimateSlot({
+    id,
+    skills,
+    glowing,
+}: {
+    id?: string | null;
+    skills: Record<string, SkillInfo>;
+    glowing: string | null;
+}) {
+    const info = id ? skills[id] : undefined;
+
+    if (!id || !info) {
+        return null;
+    }
+
+    return (
+        <>
+            <Divider />
+            <p className="flex items-center gap-2" title={info.description}>
+                <img
+                    src={info.icon}
+                    alt=""
+                    className={cn(
+                        'size-[26px] rounded-sm border border-yellow-400 transition',
+                        id === glowing &&
+                            'scale-125 border-amber-200 shadow-[0_0_12px_rgba(253,224,71,0.95)]',
+                    )}
+                />
+                <span className="text-yellow-300">{info.name}</span>
+            </p>
+        </>
     );
 }
 

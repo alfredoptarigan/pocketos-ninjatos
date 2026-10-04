@@ -2,7 +2,12 @@ import { Container, Text } from 'pixi.js';
 import type { Ticker } from 'pixi.js';
 import { playSfx } from '@/game/sfx';
 import type { Sfx } from '@/game/sfx';
-import { effectDuration, isRanged, playEffect } from './effects';
+import {
+    effectDuration,
+    isRanged,
+    playEffect,
+    upgradedUltimate,
+} from './effects';
 import type { EffectIndex, EffectSpec } from './effects';
 import type { Fighter } from './fighter';
 import { statusLabel } from './statuses';
@@ -14,6 +19,7 @@ import type {
     EndEvent,
     StrikeEvent,
     TickEvent,
+    UltimateEvent,
 } from './types';
 
 type Side = 0 | 1;
@@ -177,6 +183,9 @@ export async function replay(
                 );
                 await wait(ctx.ticker, SHOUT_MS, ctx.speed);
                 break;
+            case 'ultimate':
+                await ultimate(ctx, event);
+                break;
             case 'revive':
                 shout(ctx, event.actor, event.skill);
                 playSfx('heal');
@@ -216,6 +225,53 @@ function shout(ctx: ReplayContext, side: Side, skillId: string): void {
         24,
         1.05,
     );
+}
+
+/**
+ * An ultimate: the original hides its user (motion 996 is empty) while the
+ * cinematic draws them finishing the opponent, laid out for the fighters'
+ * spacing; then the damage lands.
+ */
+async function ultimate(
+    ctx: ReplayContext,
+    event: UltimateEvent,
+): Promise<void> {
+    const attacker = ctx.fighters[event.actor];
+    const victim = ctx.fighters[event.target];
+    const upgraded = upgradedUltimate(event.skill);
+    const specs =
+        (event.upgraded ? ctx.effects[upgraded] : undefined) ??
+        ctx.effects[event.skill] ??
+        [];
+    shout(ctx, event.actor, event.skill);
+    playSfx(ctx.skillSound(event.skill));
+
+    if (specs.length > 0) {
+        attacker.view.visible = false;
+        await Promise.all(
+            specs.map((spec) =>
+                playAt(
+                    ctx,
+                    spec,
+                    event.actor,
+                    event.target,
+                    typeof spec.start === 'number' ? spec.start : 0,
+                ),
+            ),
+        );
+        attacker.view.visible = true;
+    } else {
+        // No art extracted: a plain swing still shows who struck.
+        await attacker.play('attack', ctx.speed());
+    }
+
+    void attacker.play('stance', ctx.speed(), true);
+    victim.flash();
+    playSfx('crit');
+    ctx.onHp(event.target, event.targetHp);
+    floatText(ctx, victim, `${event.damage}`, COLOURS.crit, 34);
+    knockedOut(ctx, event.target, event.targetHp);
+    await wait(ctx.ticker, SHOUT_MS, ctx.speed);
 }
 
 /** An effect-only jutsu: its name, chakra and art on the target, no dash. */

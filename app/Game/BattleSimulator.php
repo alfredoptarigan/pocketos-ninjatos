@@ -15,7 +15,8 @@ use Random\Randomizer;
  * in at the start ('battle'), before the opponent moves ('before_enemy'),
  * before the action ('prepare', 'extra'), as the action ('strike'), after it
  * ('follow_up'), when attacked ('block', 'counter', 'reflect', 'heal',
- * 'hurt') and on knock-out ('revive'). Their effects become statuses
+ * 'hurt') and on knock-out ('revive'). An outfit's Ultimate may replace the
+ * action and finish a low opponent. Their effects become statuses
  * (TracksStatuses, AppliesJutsuEffects). Without jutsu the random rolls happen
  * in exactly the old order.
  */
@@ -133,6 +134,10 @@ final class BattleSimulator
             }
         }
 
+        if ($this->unleashUltimate($actor, $target)) {
+            return $this->knockout();
+        }
+
         $jutsu = $this->trigger($actor, 'strike');
         $landed = $this->use('attack', $actor, $target, $jutsu);
 
@@ -159,6 +164,31 @@ final class BattleSimulator
         }
 
         return null;
+    }
+
+    /**
+     * On a target at low health, the ultimate may replace the attack: it
+     * cannot miss or be stopped and takes all remaining health (a revive
+     * jutsu still works).
+     */
+    private function unleashUltimate(int $actor, int $target): bool
+    {
+        $ultimate = $this->fighters[$actor]->ultimate;
+        $threshold = $this->fighters[$target]->maxHp * config('skills.ultimate.below_health_percent');
+
+        if ($ultimate === null || $threshold < $this->hp[$target] * 100
+            || ! $this->chance($ultimate->chanceAgainst($this->fighters[$target]->ultimate))) {
+            return false;
+        }
+
+        $damage = $this->hp[$target];
+        $this->hp[$target] = 0;
+        $this->events[] = [
+            'type' => 'ultimate', 'actor' => $actor, 'target' => $target, 'skill' => $ultimate->id,
+            'upgraded' => $ultimate->upgraded, 'damage' => $damage, 'targetHp' => 0,
+        ];
+
+        return true;
     }
 
     /**

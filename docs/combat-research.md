@@ -119,7 +119,13 @@ the backup; the recordings anchor level 1: HP 110, MP 56, Atk 20-25, Dodge 5, Cr
     - 3811 Sand Storm: 144% base attack; when attacked; 22%.
     - 1816 Earth Flow River: enemy speed -50% for 12 s; before enemy acts; 32%; once per fight.
     - 3803 Creation Rebirth: revive with 25% max HP on death; 100%, falling as the fight goes on.
-    - 19xx Ultimate (one per outfit): may instantly kill an opponent at low HP.
+    - 19xx Ultimate (one per outfit, id 1900 + outfit id, 20xx above outfit 99): may
+      instantly kill an opponent at low HP, more likely the more the outfits differ. The
+      demo fights in `source/dazhao/<outfit>vs46.fight` (server logs, JSON) fire it at 7-9%
+      HP for more than the remaining HP, cost no chakra, and a revive (3803) still works.
+      `serverskillconfig` Splite 996 (empty role motion) + `FightEffect_<id>_2/_3` in
+      `fighteffect/bigeffect`; `<id>0` effects belong to the +19 avatars. No numbers in the
+      data: ours live in `config('skills.ultimate')`.
 - `fightskill`, `serverskillconfig`, `clientskillconfig`: which motion/effect each skill
   plays (Action/BeAction motion ids, Splite).
 - `fightingbuffconfig` (104) + `bufftips` + `effectconfig` (485): buffs/debuffs
@@ -138,7 +144,7 @@ the backup; the recordings anchor level 1: HP 110, MP 56, Atk 20-25, Dodge 5, Cr
   (171 monsters, ~4400 files; same bitmap-frame format as character motions).
 - Monster faces: `bitmap/userfaceavatar/mapmob` (421).
 - Battle backgrounds: `movieclip/scene/battle/*.swf`; stage pictures `movieclip/ui/*tollgatepic*.jpg`.
-- Skill/hit effects: `movieclip/fighteffect` (556), ultimates in `source/dazhao`.
+- Skill/hit effects: `movieclip/fighteffect` (556), ultimates in `fighteffect/bigeffect` (85 + 44 at +19).
 - Stage/arena music: `music/singlegate.mp3`, `music/compete1-4.mp3`.
 
 ## Not in the backup

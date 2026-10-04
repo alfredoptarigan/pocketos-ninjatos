@@ -26,7 +26,7 @@ Important folders inside `apache/source/`:
 | `movieclip/motion/mob/{human,humanboss,inhuman,inhumanboss,searchboss}/n<id>/` | Monster motions `motion_<id>_<action>.swf`                                                                                                                                           |
 | `movieclip/ui/`                                                                | Client UI: `uilookandfeel*.swf` (AsWing window skin), `uiresource*.swf`, `sceneui/bottommenu*.swf` (bottom menu), `fighting*.swf` (battle HUD), `fightbg/*.jpg` (battle backdrops)   |
 | `movieclip/scene/battle/`                                                      | Old 500x300 battle backdrop                                                                                                                                                          |
-| `movieclip/fighteffect/`, `dazhao/`                                            | Skill/hit effects, ultimates (not used yet)                                                                                                                                          |
+| `movieclip/fighteffect/`, `dazhao/`                                            | Skill/hit effects; ultimates in `fighteffect/bigeffect`; `dazhao/` holds demo fights of them                                                                                         |
 | `bitmap/peoplecreate/`                                                         | Create-screen portraits `avatars_<sex>_<id>_clothing_create.swf`                                                                                                                     |
 | `bitmap/userfaceavatar/{people,mob,mapmob}/`                                   | Face icons                                                                                                                                                                           |
 | `bitmap/npcbackphoto/`                                                         | NPC and boss portraits `n<id>.s*.png`                                                                                                                                                |
@@ -203,7 +203,12 @@ drops are our own rule (`config('game.equipment')`).
   backup. Each monster borrows an unnamed original monster (`motion/mob/{human,inhuman,*boss}/n10xxx`,
   bitmap motions only); pin a better match in `ART_OVERRIDES`.
 
-`tools/extract_effect_assets.py [--hd]` (JPEXS) renders the jutsu battle effects. For each
+`tools/extract_effect_assets.py [--hd] [--ultimates]` (JPEXS, 4 renders at once) renders the jutsu
+battle effects, including every outfit's ultimate: id `1900 + outfit id` (`clientskill` Type 2) and
+the stronger cinematic `<id>0` for outfits at +19 and up (avatar `1901` is Kurosaki Ichigo +19). Their
+SWFs sit in `fighteffect/bigeffect/`; each draws its user (motion `996` is an empty stub) and the hit,
+from the user's feet, for the usual ~400-unit spacing. They are rendered at zoom 1: the sheets are
+halved to fit 4096 anyway. `--ultimates` re-renders only those and merges them into the index. For each
 `FightEffect_<skill id>[_part]` row of `effectconfig` it finds the SWF in
 `movieclip/fighteffect/` (`EffectSourceID` `FightEffect_18071` lives in `fighteffect_1807_1`,
 `FightEffect_3826_M` in `fighteffect_3826_m`), renders its `MotionEffectSource` symbol and

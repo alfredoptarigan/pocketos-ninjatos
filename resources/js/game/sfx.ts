@@ -35,6 +35,7 @@ const SCHOOL_SOUNDS: Record<string, Sfx> = {
     seal: 'genjutsu',
     illusion: 'genjutsu',
     healing: 'heal',
+    ultimate: 'explosion',
 };
 
 const loaded = new Map<Sfx, HTMLAudioElement>();

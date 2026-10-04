@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
 """Extract the original jutsu (skill) battle effects from the Pockie Ninja backup.
 
-Usage: python3 tools/extract_effect_assets.py <path-to-game-pockieninja> [--hd]
+Usage: python3 tools/extract_effect_assets.py <path-to-game-pockieninja> [--hd] [--ultimates]
 --hd renders the vector effects at 2x (JPEXS zoom, no AI needed).
+--ultimates only renders the ultimates and adds them to the existing index.
 
 Needs JPEXS + Java, like tools/extract_ui_assets.py:
   JAVA       java binary   (default /opt/homebrew/opt/openjdk/bin/java)
   FFDEC_JAR  ffdec.jar     (default ~/.local/opt/jpexs/ffdec.jar)
 
-For every skill-panel jutsu (clientskill Type 1) it reads the FightEffect_<id>*
-rows of effectconfig, renders the 'MotionEffectSource' symbol of the matching
+For every skill-panel jutsu (clientskill Type 1) and the ultimate of every
+outfit with art (1900 + outfit id, and <that>0 for outfits at +19 and up; their
+cinematics sit in fighteffect/bigeffect) it reads the FightEffect_<id>* rows of
+effectconfig, renders the 'MotionEffectSource' symbol of the matching
 movieclip/fighteffect SWF and packs its frames into a Pixi spritesheet:
 
   public/game-assets/effects/<effect>.png / .json   (anchor = SWF origin)
@@ -28,6 +31,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from amf3 import load_compressed
@@ -42,10 +46,14 @@ PANEL_SKILL = '1'  # clientskill Type 1 = skill panel
 HEADER_ROW = 1
 MAX_SHEET_WIDTH = 4096
 HD_ZOOM = 2
+WORKERS = max(1, (os.cpu_count() or 2) // 2)
 # Original stage-wide black shapes (Assassinate darkens the screen) would float as a box here;
 # they are keyed out and replayed as a screen-wide shade instead.
 MIN_BACKDROP_WIDTH = 400
-FIGHT_EFFECT = re.compile(r'^FightEffect_(\d{4})(?:_\w+)?$')
+FIGHT_EFFECT = re.compile(r'^FightEffect_(\d{4,5})(?:_\w+)?$')
+BIG_EFFECT_DIR = 'bigeffect'
+OUTFITS = Path(__file__).resolve().parent.parent / 'database' / 'data' / 'outfits.json'
+ULTIMATE_BASE = 1900  # outfit 1 -> ultimate 1901, outfit 103 -> 2003
 
 
 def latest_table(datatable: Path, name: str) -> dict:
@@ -61,26 +69,40 @@ def start_of(play_time: str) -> int | str:
 
 
 def find_swf(effect_dir: Path, effect_id: str, source_id: str) -> Path | None:
-    """FightEffect_18071 lives in fighteffect_1807_1.*; FightEffect_3826_M in fighteffect_3826_m.*."""
+    """FightEffect_18071 lives in fighteffect_1807_1.*; FightEffect_3826_M in fighteffect_3826_m.*;
+    ultimates in bigeffect/."""
     digits = source_id.removeprefix('FightEffect_')
     stems = [f'fighteffect_{digits}', f'fighteffect_{digits[:4]}_{digits[4:]}', effect_id.lower()]
-    for stem in stems:
-        matches = sorted(effect_dir.glob(f'{stem}.*swf'))
-        if matches:
-            return matches[0]
+    for folder in (effect_dir, effect_dir / BIG_EFFECT_DIR):
+        for stem in stems:
+            matches = sorted(folder.glob(f'{stem}.*swf'))
+            if matches:
+                return matches[0]
     return None
 
 
-def effect_rows(source: Path) -> list[dict]:
+def ultimate_ids(outfit_keys: list[str]) -> set[str]:
+    """'0_1' -> '1901' and its upgraded cinematic '19010' (Kurosaki Ichigo +19 is avatar 1901)."""
+    ids = set()
+    for key in outfit_keys:
+        ultimate = str(ULTIMATE_BASE + int(key.split('_')[1]))
+        ids |= {ultimate, f'{ultimate}0'}
+    return ids
+
+
+def panel_ids(source: Path) -> set[str]:
+    skills = latest_table(source / 'binary/datatable', 'clientskill')
+    return {str(skills['FakeID'][i]) for i in range(HEADER_ROW, len(skills['FakeID'])) if skills['Type'][i] == PANEL_SKILL}
+
+
+def effect_rows(source: Path, wanted: set[str]) -> list[dict]:
     datatable = source / 'binary/datatable'
-    skills = latest_table(datatable, 'clientskill')
-    panel = {str(skills['FakeID'][i]) for i in range(HEADER_ROW, len(skills['FakeID'])) if skills['Type'][i] == PANEL_SKILL}
     table = latest_table(datatable, 'effectconfig')
     rows = []
     for index in range(HEADER_ROW, len(table['EffectID'])):
         effect_id = str(table['EffectID'][index])
         match = FIGHT_EFFECT.match(effect_id)
-        if not match or match.group(1) not in panel:
+        if not match or match.group(1) not in wanted:
             continue
         swf = find_swf(source / EFFECT_DIR, effect_id, str(table['EffectSourceID'][index]))
         if swf is None:
@@ -185,10 +207,25 @@ def pack(images: list) -> tuple[list, int]:
     return placed, y + shelf
 
 
+def build_sheet(row: dict, java: str, ffdec: Path, zoom: int) -> dict:
+    """Render one effect SWF and pack it into public/game-assets/effects/<key>.*; returns the row."""
+    swf = read_swf(row['swf'])
+    with tempfile.TemporaryDirectory() as tmp:
+        out = Path(tmp)
+        symbol = symbol_classes(swf)[SYMBOL]
+        render(java, ffdec, row['swf'], symbol, zoom, out)
+        sprite = next((out / 'png').glob('DefineSprite_*')).name
+        backdrop = frames_showing(swf, symbol, black_backdrops(swf, MIN_BACKDROP_WIDTH))
+        write_sheet(row['key'], out / 'png' / sprite, out / 'svg' / sprite, zoom, swf.frame_rate, backdrop)
+    print(f"{row['key']}: {row['swf'].name}", flush=True)
+    return row
+
+
 def main() -> None:
-    if len(sys.argv) not in (2, 3) or sys.argv[2:] not in ([], ['--hd']):
+    flags = set(sys.argv[2:])
+    if len(sys.argv) < 2 or not flags <= {'--hd', '--ultimates'}:
         sys.exit(__doc__)
-    zoom = HD_ZOOM if '--hd' in sys.argv else 1
+    zoom = HD_ZOOM if '--hd' in flags else 1
     java = os.environ.get('JAVA', '/opt/homebrew/opt/openjdk/bin/java')
     ffdec = Path(os.environ.get('FFDEC_JAR', '~/.local/opt/jpexs/ffdec.jar')).expanduser()
     if not ffdec.is_file() or not shutil.which(java):
@@ -196,25 +233,24 @@ def main() -> None:
 
     source = Path(sys.argv[1]).expanduser() / SOURCE
     OUT_DIR.mkdir(parents=True, exist_ok=True)
-    index: dict[str, list[dict]] = {}
-    for row in effect_rows(source):
-        swf = read_swf(row['swf'])
-        with tempfile.TemporaryDirectory() as tmp:
-            out = Path(tmp)
-            symbol = symbol_classes(swf)[SYMBOL]
-            render(java, ffdec, row['swf'], symbol, zoom, out)
-            sprite = next((out / 'png').glob('DefineSprite_*')).name
-            backdrop = frames_showing(swf, symbol, black_backdrops(swf, MIN_BACKDROP_WIDTH))
-            write_sheet(row['key'], out / 'png' / sprite, out / 'svg' / sprite, zoom, swf.frame_rate, backdrop)
-        index.setdefault(row['skill'], []).append({
-            'sheet': f"{URL_DIR}/{row['key']}.json",
-            'type': row['type'],
-            'layer': row['layer'],
-            'start': row['start'],
-        })
-        print(f"{row['key']}: {row['swf'].name}")
+    ultimates = ultimate_ids([outfit['key'] for outfit in json.loads(OUTFITS.read_text())])
+    only_ultimates = '--ultimates' in flags
+    index_file = OUT_DIR / 'index.json'
+    index: dict[str, list[dict]] = json.loads(index_file.read_text()) if only_ultimates and index_file.is_file() else {}
+    for skill in ultimates & index.keys():
+        del index[skill]
+    rows = effect_rows(source, ultimates if only_ultimates else panel_ids(source) | ultimates)
+    # JPEXS (a Java process per render) is the slow part: run a few at once.
+    with ThreadPoolExecutor(max_workers=WORKERS) as pool:
+        for row in pool.map(lambda row: build_sheet(row, java, ffdec, zoom), rows):
+            index.setdefault(row['skill'], []).append({
+                'sheet': f"{URL_DIR}/{row['key']}.json",
+                'type': row['type'],
+                'layer': row['layer'],
+                'start': row['start'],
+            })
 
-    (OUT_DIR / 'index.json').write_text(json.dumps(index))
+    index_file.write_text(json.dumps(index))
     print(f'Wrote effects for {len(index)} jutsu to {OUT_DIR.relative_to(OUT_DIR.parents[2])}')
 
 

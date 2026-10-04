@@ -27,7 +27,7 @@ Tick an item when it ships and update its row in the tables below.
 **Combat and PvE**
 
 - [x] Skill tree and skill upgrades (40 jutsu with all effects, 10 passives, skill points, +1..+12 upgrades, 3 loadout pages; scroll skills are not in the backup)
-- [ ] Ultimate jutsu
+- [x] Ultimate jutsu (one per outfit, the original cinematics, a stronger one from +19; avatar bosses in the Training Tower use theirs)
 - [x] Dungeons: 17 tollgates (trial, normal, hard), one battle per wave leader, daily runs
 - [ ] Dungeon "Super" difficulty (needs the Abyss Pass item), weekly ranking, end-of-stage card flip
 - [ ] Tailed Beast raids and ranking
@@ -122,7 +122,7 @@ Tick an item when it ships and update its row in the tables below.
 | ✅     | Battle replay: jutsu effects, statuses, sound, HD fighters        | `effectconfig`, `movieclip/fighteffect`, `bitmap/icon/buff`                                                 |
 | ✅     | Opponents fight with chakra and jutsu (our rule: no data)         | `config/skills.php` (`monsters`)                                                                            |
 | ✅     | Skills: 40 jutsu, 10 passives, upgrades, loadouts, status effects | `clientskill`, `serverskillconfig`, `upskillcfg`, panels `skilltree`, `skilllearn`                          |
-| ⬜     | Ultimate jutsu                                                    | `clientskill` type 2, folder `dazhao`                                                                       |
+| ✅     | Ultimate jutsu                                                    | `clientskill` type 2, `serverskillconfig`, `fighteffect/bigeffect`, demo fights `dazhao`                    |
 | 🟡     | Dungeons (9 tiered tollgates with sub-stages)                     | `tollgate`, `subtollgate`, `monstergroup`, `fightmonsterpoint`, `movieclip/scene/tollclone`, `ui/tollgate*` |
 | ⬜     | Tailed Beast raids and ranking                                    | `tailbeastnpc`, `taildiffculty`, `tailheroreward`, `tailhonorprize`, `tailhonorreward`, panels `beast*`     |
 | ⬜     | Public field fights (cost energy)                                 | `pubfightmonster`, `pubscenefightnpc`, `pubfightbonusrand`                                                  |

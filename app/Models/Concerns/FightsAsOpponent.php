@@ -4,10 +4,13 @@ namespace App\Models\Concerns;
 
 use App\Game\Combatant;
 use App\Game\MonsterSkills;
+use App\Game\Ultimate;
 
 /**
  * Turns a row with the original npc stat columns (tower floors, field monsters,
  * dungeon leaders) into a fighter, with its chakra and jutsu (MonsterSkills).
+ * Bosses that are avatars in costume (art 'outfit', 'outfit_level') bring that
+ * outfit's Ultimate.
  *
  * @property string $name
  * @property bool $is_boss
@@ -23,6 +26,7 @@ use App\Game\MonsterSkills;
  * @property int $parry
  * @property int $counter
  * @property int $priority
+ * @property array<string, mixed> $art
  */
 trait FightsAsOpponent
 {
@@ -45,6 +49,7 @@ trait FightsAsOpponent
             mp: $this->max_mp,
             maxMp: $this->max_mp,
             skills: MonsterSkills::for($this->name, $this->level, (bool) $this->is_boss),
+            ultimate: isset($this->art['outfit']) ? Ultimate::for($this->art['outfit'], $this->art['outfit_level'] ?? 0) : null,
         );
     }
 }

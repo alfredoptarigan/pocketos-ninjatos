@@ -59,6 +59,8 @@ STATS = {
 ANIMATED_PREFIX = 'MapUserFace_'
 AVATAR_RESOURCE = re.compile(r'AvatarUserFace_N9[01](\d{3})')
 BUILT: set[str] = set()
+ULTIMATE_DIR = 'movieclip/fighteffect/bigeffect'
+ULTIMATE_BASE = 1900
 BACKGROUNDS_DIR = 'movieclip/ui/fightbg'
 # arena.jpg carries red guide lines; 103001 and 4001 belong to special events.
 SKIPPED_BACKGROUNDS = {'arena', 'fightbg_103001', 'fightbg_4001'}
@@ -115,6 +117,11 @@ def mob_folder(mob_dir: Path, key: str) -> Path:
     return min(mob_dir.glob(f'*/{key}'), key=lambda folder: max(map(file_version, folder.iterdir()), default=0))
 
 
+def costume_level(resource_id: str) -> int:
+    """'AvatarUserFace_N90277' (Aaroniero +2) -> 2: the boss's outfit upgrade, for its Ultimate."""
+    return int(AVATAR_RESOURCE.fullmatch(resource_id)[1]) // 100
+
+
 def avatar_art(source: Path, avatar: int, scale: int) -> dict | None:
     """Motions and face of the avatar a boss is, if the backup has them (either sex)."""
     for sex in ('0', '1'):
@@ -126,10 +133,19 @@ def avatar_art(source: Path, avatar: int, scale: int) -> dict | None:
     return None
 
 
+def has_ultimate(source: Path, avatar: int) -> bool:
+    """Whether the outfit's ultimate cinematic exists (the Bleach villains 77-83 have none)."""
+    return any((source / ULTIMATE_DIR).glob(f'fighteffect_{ULTIMATE_BASE + avatar}*'))
+
+
 def extract_art(source: Path, resource_id: str, scale: int) -> dict:
     avatar = boss_avatar(resource_id)
     if avatar is not None and (art := avatar_art(source, avatar, scale)):
-        return art
+        if not has_ultimate(source, avatar):
+            return art
+        # The boss fights with its outfit's Ultimate (config('skills.ultimate')).
+        outfit = art['motions'].split('/')[3]
+        return {**art, 'outfit': outfit, 'outfit_level': costume_level(resource_id)}
 
     key = art_id(resource_id)
     out = ASSETS / 'monsters' / key

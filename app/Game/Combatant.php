@@ -25,6 +25,7 @@ final readonly class Combatant
         public int $maxMp = 0,
         /** @var list<Skill> */
         public array $skills = [],
+        public ?Ultimate $ultimate = null,
     ) {}
 
     /**
@@ -33,6 +34,10 @@ final readonly class Combatant
     public function toArray(): array
     {
         // The replay only needs which jutsu were learned, not their rules.
-        return [...get_object_vars($this), 'skills' => array_map(fn (Skill $skill) => $skill->id, $this->skills)];
+        return [
+            ...get_object_vars($this),
+            'skills' => array_map(fn (Skill $skill) => $skill->id, $this->skills),
+            'ultimate' => $this->ultimate?->id,
+        ];
     }
 }

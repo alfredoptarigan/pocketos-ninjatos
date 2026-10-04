@@ -28,6 +28,11 @@ export type Stage = {
     underIndex: number;
 };
 
+/** Outfits at +19 and up play the stronger cinematic of their ultimate. */
+export function upgradedUltimate(skillId: string): string {
+    return `${skillId}0`;
+}
+
 /**
  * Load the effect index and every sheet this battle uses. Effects are
  * optional art: missing files only mean a jutsu plays without them.
@@ -37,6 +42,9 @@ export async function loadEffects(events: BattleEvent[]): Promise<EffectIndex> {
         events.flatMap((event) => [
             'skill' in event ? event.skill : undefined,
             'blockSkill' in event ? event.blockSkill : undefined,
+            event.type === 'ultimate'
+                ? upgradedUltimate(event.skill)
+                : undefined,
         ]),
     );
 

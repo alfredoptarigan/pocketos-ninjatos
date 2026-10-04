@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Game\Ultimate;
 use App\Models\Battle;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -40,7 +41,10 @@ class BattleController extends Controller
                 'school' => $skill['school'],
                 'description' => $skill['description'] ?? '',
                 'icon' => "/game-assets/skills/$id.png",
-            ]),
+            ])->union(
+                // Both sides' ultimates (older battles have none).
+                collect($battle->log['fighters'])->pluck('ultimate')->filter()->mapWithKeys(fn (string $id) => [$id => Ultimate::info($id)]),
+            ),
         ]);
     }
 }

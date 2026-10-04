@@ -9,6 +9,7 @@ use App\Game\CombatStats;
 use App\Game\Leveling;
 use App\Game\Skill;
 use App\Game\StatBonus;
+use App\Game\Ultimate;
 use App\Game\Vitals;
 use Database\Factories\CharacterFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -390,7 +391,16 @@ class Character extends Model
             mp: $this->currentMp(),
             maxMp: $stats->maxMp,
             skills: $this->equippedSkills(),
+            ultimate: $this->ultimate(),
         );
+    }
+
+    /**
+     * The worn outfit's ultimate (or the created avatar's), at the outfit's upgrade level.
+     */
+    public function ultimate(): Ultimate
+    {
+        return Ultimate::for($this->look(), $this->outfitLevel($this->outfit_id));
     }
 
     /**

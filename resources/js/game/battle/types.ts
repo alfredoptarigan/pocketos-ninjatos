@@ -27,6 +27,8 @@ export type FighterInfo = {
     level?: number;
     // Learned jutsu ids; missing on battles recorded before jutsu existed.
     skills?: string[];
+    // The outfit's ultimate jutsu id; missing on older battles and most monsters.
+    ultimate?: string | null;
     isBoss?: boolean;
     art?: MonsterArt;
 };
@@ -136,6 +138,18 @@ export type ReviveEvent = {
     hp: number;
 };
 
+/** An outfit's ultimate finishing a low opponent (App\Game\Ultimate). */
+export type UltimateEvent = {
+    type: 'ultimate';
+    actor: Side;
+    target: Side;
+    skill: string;
+    // Outfit at +19 or more: the stronger cinematic (effect `${skill}0`).
+    upgraded: boolean;
+    damage: number;
+    targetHp: number;
+};
+
 export type EndEvent = { type: 'end'; winner: 0 | 1; reason: 'ko' | 'timeout' };
 
 export type BattleEvent =
@@ -151,6 +165,7 @@ export type BattleEvent =
     | ReflectEvent
     | HealEvent
     | ReviveEvent
+    | UltimateEvent
     | EndEvent;
 
 export type SkillInfo = {

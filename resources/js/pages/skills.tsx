@@ -23,6 +23,17 @@ import { cn } from '@/lib/utils';
 import { village } from '@/routes';
 import { equip, page as switchPage, unequip } from '@/routes/skills';
 
+type UltimateInfo = {
+    id: string;
+    name: string;
+    description: string;
+    icon: string;
+    upgraded: boolean;
+    /** Percent chance against an opponent without an upgraded outfit. */
+    chance: number;
+    upgradedFrom: number;
+};
+
 type Props = {
     passives: Passive[];
     /** Tier by tier, schools left to right: ten per row. */
@@ -35,6 +46,7 @@ type Props = {
     slotPrices: number[];
     slotsBought: number;
     rules: SkillRules;
+    ultimate: UltimateInfo;
 };
 
 const TOTAL_SLOTS = 10;
@@ -49,6 +61,7 @@ export default function Skills({
     slotPrices,
     slotsBought,
     rules,
+    ultimate,
 }: Props) {
     const { errors } = usePage().props;
     const error = Object.values(errors ?? {})[0];
@@ -268,6 +281,8 @@ export default function Skills({
                         </div>
                     </div>
 
+                    <UltimatePanel ultimate={ultimate} />
+
                     {error && (
                         <p
                             role="alert"
@@ -369,6 +384,38 @@ function Slot({ slot, jutsu, open, price, onDrop }: SlotProps) {
                     <span className="skill-bar h-4 w-11 sm:w-12" />
                 </div>
             )}
+        </div>
+    );
+}
+
+/** The worn outfit's ultimate: always ready, nothing to learn or equip. */
+function UltimatePanel({ ultimate }: { ultimate: UltimateInfo }) {
+    return (
+        <div
+            aria-label="Ultimate"
+            className="mx-auto mt-3 flex max-w-xl items-center gap-3 rounded border border-yellow-500/60 bg-slate-950/70 p-2 text-sm"
+        >
+            <img
+                src={ultimate.icon}
+                alt=""
+                className="size-11 rounded border border-yellow-400"
+            />
+            <div className="min-w-0">
+                <p className="font-semibold text-yellow-300">
+                    Ultimate: {ultimate.name}
+                    {ultimate.upgraded && (
+                        <span className="ml-2 text-xs text-amber-200">
+                            Upgraded cinematic
+                        </span>
+                    )}
+                </p>
+                <p className="text-xs text-slate-200">{ultimate.description}</p>
+                <p className="text-xs text-slate-400">
+                    {ultimate.chance}% chance on a low opponent · comes with the
+                    outfit you wear · stronger cinematic from +
+                    {ultimate.upgradedFrom}
+                </p>
+            </div>
         </div>
     );
 }

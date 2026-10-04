@@ -2,7 +2,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from extract_effect_assets import find_swf, origin_of, start_of, without_black
+from extract_effect_assets import find_swf, origin_of, start_of, ultimate_ids, without_black
 
 SVG = (
     '<svg ffdec:objectType="frame" height="361.45px" width="722.3px">'
@@ -32,6 +32,18 @@ class EffectTest(unittest.TestCase):
             self.assertEqual(find_swf(folder, 'FightEffect_1807_1', 'FightEffect_18071').name, 'fighteffect_1807_1.s113.swf')
             self.assertEqual(find_swf(folder, 'FightEffect_3826_M', 'FightEffect_38262').name, 'fighteffect_3826_m.swf')
             self.assertIsNone(find_swf(folder, 'FightEffect_3806', 'FightEffect_3806'))
+
+    def test_find_swf_also_looks_in_the_big_effects(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            folder = Path(tmp)
+            (folder / 'bigeffect').mkdir()
+            for name in ('fighteffect_1901_2.s113.swf', 'fighteffect_19010_2.s7467.swf'):
+                (folder / 'bigeffect' / name).touch()
+            self.assertEqual(find_swf(folder, 'FightEffect_1901_2', 'FightEffect_19012').name, 'fighteffect_1901_2.s113.swf')
+            self.assertEqual(find_swf(folder, 'FightEffect_19010_2', 'FightEffect_190102').name, 'fighteffect_19010_2.s7467.swf')
+
+    def test_every_outfit_has_an_ultimate_and_its_upgraded_version(self):
+        self.assertEqual(ultimate_ids(['0_1', '1_46', '0_103']), {'1901', '19010', '1946', '19460', '2003', '20030'})
 
     def test_without_black_turns_brightness_into_alpha(self):
         from PIL import Image

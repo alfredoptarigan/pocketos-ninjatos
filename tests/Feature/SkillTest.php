@@ -46,6 +46,19 @@ class SkillTest extends TestCase
             ->where('openSlots', 4)); // level 10
     }
 
+    public function test_the_skills_page_shows_the_worn_outfits_ultimate()
+    {
+        $character = $this->ninja(['avatar' => '0_3']);
+        $this->actingAs($character->user);
+
+        $this->get(route('skills.index'))->assertInertia(fn (Assert $page) => $page
+            ->where('ultimate.id', '1903')
+            ->where('ultimate.name', 'Secret Technique')
+            ->where('ultimate.upgraded', false)
+            ->where('ultimate.chance', 30)
+            ->where('ultimate.upgradedFrom', 19));
+    }
+
     public function test_learning_costs_a_point_and_needs_the_previous_jutsu()
     {
         $character = $this->ninja(['level' => 3]);
