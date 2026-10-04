@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Equipment;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\File;
 use RuntimeException;
 
 class EquipmentSeeder extends Seeder
@@ -23,7 +24,7 @@ class EquipmentSeeder extends Seeder
             );
         }
 
-        foreach (json_decode(file_get_contents($path), true, flags: JSON_THROW_ON_ERROR) as $piece) {
+        foreach (File::json($path, JSON_THROW_ON_ERROR) as $piece) {
             Equipment::updateOrCreate(['code' => $piece['code']], $piece);
         }
     }

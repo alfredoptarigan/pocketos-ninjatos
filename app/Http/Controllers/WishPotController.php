@@ -26,7 +26,7 @@ class WishPotController extends Controller
         $titles = $character->titles()->pluck('titles.code');
 
         return Inertia::render('buildings/wish-pot', [
-            'pots' => collect(config('game.outfits.pots'))
+            'pots' => collect(config()->array('game.outfits.pots'))
                 ->map(fn (array $pot, string $key) => [
                     'key' => $key,
                     ...Arr::except($pot, ['pick', 'pool', 'titles']),

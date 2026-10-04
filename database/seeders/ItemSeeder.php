@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Item;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\File;
 use RuntimeException;
 
 class ItemSeeder extends Seeder
@@ -23,7 +24,7 @@ class ItemSeeder extends Seeder
             );
         }
 
-        $items = json_decode(file_get_contents($path), true, flags: JSON_THROW_ON_ERROR);
+        $items = File::json($path, JSON_THROW_ON_ERROR);
 
         foreach ($items as $item) {
             Item::updateOrCreate(

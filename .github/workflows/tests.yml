@@ -31,8 +31,15 @@ jobs:
         with:
           node-version: '22'
 
+      # .env.example points at PostgreSQL; the runner has none, so setup
+      # migrates a SQLite file (the tests use in-memory SQLite anyway).
       - name: Setup Application
-        run: composer setup
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ${{ github.workspace }}/database/database.sqlite
+        run: |
+          touch database/database.sqlite
+          composer setup
 
       - name: Run CI Checks
         run: composer ci:check

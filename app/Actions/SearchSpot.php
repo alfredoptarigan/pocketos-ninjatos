@@ -52,7 +52,7 @@ class SearchSpot
     }
 
     /**
-     * @param  array{key: string|null, cooldown: int}  $search
+     * @param  array{spot: string, key: string|null, cooldown: int}  $search
      */
     private function ensureCanSearch(Character $ninja, Field $field, array $search): void
     {

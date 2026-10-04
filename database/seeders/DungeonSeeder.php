@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Dungeon;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\File;
 use RuntimeException;
 
 class DungeonSeeder extends Seeder
@@ -23,7 +24,7 @@ class DungeonSeeder extends Seeder
             );
         }
 
-        foreach (json_decode(file_get_contents($path), true, flags: JSON_THROW_ON_ERROR) as $dungeon) {
+        foreach (File::json($path, JSON_THROW_ON_ERROR) as $dungeon) {
             Dungeon::updateOrCreate(['code' => $dungeon['code']], $dungeon);
         }
     }

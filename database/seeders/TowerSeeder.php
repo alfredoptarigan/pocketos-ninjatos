@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\TowerFloor;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\File;
 use RuntimeException;
 
 class TowerSeeder extends Seeder
@@ -23,7 +24,7 @@ class TowerSeeder extends Seeder
             );
         }
 
-        foreach (json_decode(file_get_contents($path), true, flags: JSON_THROW_ON_ERROR) as $floor) {
+        foreach (File::json($path, JSON_THROW_ON_ERROR) as $floor) {
             TowerFloor::updateOrCreate(['floor' => $floor['floor']], $floor);
         }
     }

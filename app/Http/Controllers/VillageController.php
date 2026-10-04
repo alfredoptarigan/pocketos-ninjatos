@@ -16,7 +16,7 @@ class VillageController extends Controller
      */
     public function show(Request $request): Response
     {
-        $villages = config('game.villages');
+        $villages = config()->array('game.villages');
         $current = $request->user()->character->village;
 
         return Inertia::render('village', [
@@ -37,7 +37,7 @@ class VillageController extends Controller
         $travel->handle($request->user()->character, null);
         $request->user()->character->forceFill(['village' => $village])->save();
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => 'Arrived at '.config("game.villages.$village").'.']);
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Arrived at '.config()->array('game.villages')[$village].'.']);
 
         return to_route('village');
     }

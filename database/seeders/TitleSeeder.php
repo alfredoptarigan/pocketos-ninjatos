@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Title;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\File;
 use RuntimeException;
 
 class TitleSeeder extends Seeder
@@ -23,7 +24,7 @@ class TitleSeeder extends Seeder
             );
         }
 
-        foreach (json_decode(file_get_contents($path), true, flags: JSON_THROW_ON_ERROR) as $title) {
+        foreach (File::json($path, JSON_THROW_ON_ERROR) as $title) {
             Title::updateOrCreate(['id' => $title['id']], $title);
         }
     }

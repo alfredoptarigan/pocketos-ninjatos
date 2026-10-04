@@ -22,13 +22,15 @@ class OutfitController extends Controller
     {
         $character = $request->user()->character;
 
+        $levels = $character->outfits()->pluck('character_outfits.level', 'outfits.id');
+
         return Inertia::render('character/outfits', [
             'outfits' => $character->outfits()->orderBy('name')->get()
                 ->sortBy(fn (Outfit $outfit) => array_search($outfit->rarity, self::RARITY_ORDER, true))
                 ->values()
                 ->map(fn (Outfit $outfit) => [
-                    ...$outfit->summary($outfit->pivot->level),
-                    'upgrade' => OutfitUpgrade::from($outfit->pivot->level),
+                    ...$outfit->summary($levels[$outfit->id]),
+                    'upgrade' => OutfitUpgrade::from($levels[$outfit->id]),
                 ]),
             'worn' => $character->outfit_id,
             'shards' => $character->outfit_shards,

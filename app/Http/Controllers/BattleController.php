@@ -36,16 +36,15 @@ class BattleController extends Controller
                 ] : null,
             ],
             // Names, icons, schools (for the sound) and descriptions (status tooltips) of the jutsu the replay may show.
-            'skills' => collect(config('skills.skills'))->map(fn (array $skill, string|int $id) => [
+            'skills' => collect(config()->array('skills.skills'))->map(fn (array $skill, string|int $id) => [
                 'name' => $skill['name'],
                 'school' => $skill['school'],
                 'description' => $skill['description'] ?? '',
                 'icon' => "/game-assets/skills/$id.png",
                 'art' => $skill['art'] ?? null,
-            ])->union(
+            ])->all() + collect($battle->log['fighters'])->pluck('ultimate')->filter()
                 // Both sides' ultimates (older battles have none).
-                collect($battle->log['fighters'])->pluck('ultimate')->filter()->mapWithKeys(fn (string $id) => [$id => Ultimate::info($id)]),
-            ),
+                ->mapWithKeys(fn (string $id) => [$id => Ultimate::info($id)])->all(),
         ]);
     }
 }

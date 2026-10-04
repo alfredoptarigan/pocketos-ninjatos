@@ -26,14 +26,14 @@ class SkillController extends Controller
         $passive = $character->passiveLevel();
 
         return Inertia::render('skills', [
-            'passives' => collect(config('skills.schools'))->map(fn (array $school, string $key) => [
+            'passives' => collect(config()->array('skills.schools'))->map(fn (array $school, string $key) => [
                 'id' => $school['passive'],
                 'school' => $key,
                 'name' => $school['name'],
                 'level' => $passive,
                 'icon' => "/game-assets/skills/{$school['passive']}.png",
             ])->values(),
-            'skills' => collect(config('skills.skills'))
+            'skills' => collect(config()->array('skills.skills'))
                 ->sortBy(fn (array $data) => [$data['tier'], array_search($data['school'], array_keys(config('skills.schools')), true)])
                 ->map(fn (array $data, string|int $id) => $this->summary((string) $id, $data, $character->skills[$id] ?? 0, $passive))
                 ->values(),

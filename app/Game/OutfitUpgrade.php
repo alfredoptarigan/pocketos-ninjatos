@@ -30,7 +30,7 @@ final readonly class OutfitUpgrade
             toLevel: $next,
             gold: $next * $rules['gold'],
             shards: $next * $rules['shards'],
-            characterLevel: max(1, $rules['level_step'] * ($next - 1)),
+            characterLevel: max(1, config()->integer('game.outfits.upgrade.level_step') * ($next - 1)),
         );
     }
 }

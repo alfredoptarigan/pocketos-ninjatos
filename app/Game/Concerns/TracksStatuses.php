@@ -16,7 +16,7 @@ trait TracksStatuses
     // Debuffs that stop moving: Tailed Beast Heart cannot lift them, revives fail under them.
     private const IMMOBILE = ['freeze', 'charm'];
 
-    /** @var array{0: array<string, array<string, mixed>>, 1: array<string, array<string, mixed>>} status => turns, amount, skill, ... */
+    /** @var array<int, array<string, array<string, mixed>>> per side: status => turns, amount, skill, ... */
     private array $statuses;
 
     private function has(int $side, string $status): bool
@@ -140,7 +140,7 @@ trait TracksStatuses
             }
 
             if ($status === 'clay' && $this->hp[$side] > 0) {
-                $damage = $data['stored'];
+                $damage = (int) $data['stored'];
                 $this->hp[$side] = max(0, $this->hp[$side] - $damage);
                 $this->events[] = ['type' => 'tick', 'actor' => $side, 'status' => 'clay', 'damage' => $damage, 'hp' => $this->hp[$side]];
             }

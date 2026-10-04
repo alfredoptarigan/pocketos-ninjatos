@@ -65,7 +65,7 @@ class FieldController extends Controller
     /**
      * The area's search spots with when each is ready again and whether the ninja holds the key.
      *
-     * @return list<array<string, mixed>>
+     * @return array<int, array<string, mixed>>
      */
     private function searches(Character $character, Field $field): array
     {

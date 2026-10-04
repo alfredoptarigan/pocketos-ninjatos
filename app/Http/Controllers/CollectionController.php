@@ -21,17 +21,18 @@ class CollectionController extends Controller
     public function index(Request $request): Response
     {
         $character = $request->user()->character;
-        $owned = $character->outfits()->get()->keyBy('id');
+        $levels = $character->outfits()->pluck('character_outfits.level', 'outfits.id');
+        $recorded = $character->outfits()->whereNotNull('character_outfits.recorded_at')->pluck('outfits.id');
 
         return Inertia::render('character/collection', [
             'outfits' => Outfit::query()->whereNotNull('collection')->where('sex', $character->sex())->orderBy('name')->get()
                 ->sortBy(fn (Outfit $outfit) => array_search($outfit->rarity, self::RARITY_ORDER, true))
                 ->values()
                 ->map(fn (Outfit $outfit) => [
-                    ...$outfit->summary($owned->get($outfit->id)?->pivot->level ?? 0),
+                    ...$outfit->summary($levels->get($outfit->id, 0)),
                     'attributes' => $outfit->collection,
-                    'owned' => $owned->has($outfit->id),
-                    'recorded' => $owned->get($outfit->id)?->pivot->recorded_at !== null,
+                    'owned' => $levels->has($outfit->id),
+                    'recorded' => $recorded->contains($outfit->id),
                 ]),
             'tiers' => AvatarCollection::for($character)->tiers,
             'rules' => config('game.collection'),

@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Outfit;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\File;
 use RuntimeException;
 
 class OutfitSeeder extends Seeder
@@ -27,10 +28,10 @@ class OutfitSeeder extends Seeder
 
         // Attributes of collectible outfits by outfit id (tools/extract_progression_data.py).
         $collection = is_file(base_path(self::COLLECTION))
-            ? json_decode(file_get_contents(base_path(self::COLLECTION)), true, flags: JSON_THROW_ON_ERROR)
+            ? File::json(base_path(self::COLLECTION), JSON_THROW_ON_ERROR)
             : [];
 
-        foreach (json_decode(file_get_contents($path), true, flags: JSON_THROW_ON_ERROR) as $outfit) {
+        foreach (File::json($path, JSON_THROW_ON_ERROR) as $outfit) {
             $id = explode('_', $outfit['key'])[1];
             Outfit::updateOrCreate(['key' => $outfit['key']], [...$outfit, 'collection' => $collection[$id] ?? null]);
         }

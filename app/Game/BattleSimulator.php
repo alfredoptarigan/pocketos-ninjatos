@@ -33,16 +33,18 @@ final class BattleSimulator
     /** @var array{0: Combatant, 1: Combatant} */
     private array $fighters;
 
-    /** @var array{0: int, 1: int} */
+    // Per-side state below is keyed by side: 0 the challenger, 1 the defender.
+
+    /** @var array<int, int> */
     private array $hp;
 
-    /** @var array{0: int, 1: int} */
+    /** @var array<int, int> */
     private array $mp;
 
-    /** @var array{0: int, 1: int} turns each side still has to skip */
+    /** @var array<int, int> turns each side still has to skip */
     private array $stun;
 
-    /** @var array{0: array<string, int>, 1: array<string, int>} jutsu (or shared group) uses this battle */
+    /** @var array<int, array<string, int>> jutsu (or shared group) uses this battle */
     private array $uses;
 
     /** @var list<array<string, mixed>> */
@@ -337,6 +339,8 @@ final class BattleSimulator
 
     /**
      * Revive anyone knocked out who can; returns the winner if someone stays down.
+     *
+     * @phpstan-impure the outcome changes as the fight goes on
      */
     private function knockout(): ?int
     {
@@ -450,7 +454,7 @@ final class BattleSimulator
         $defender = $this->fighters[$target];
         $notes = [];
         $damage = $this->random->getInt($attacker->minAttack, max($attacker->minAttack, $attacker->maxAttack));
-        $damage = $damage * ($skill?->power ?? 100) / 100;
+        $damage = $damage * ($skill->power ?? 100) / 100;
 
         if ($crit) {
             $damage = $damage * $attacker->critMultiplier / 100;
@@ -465,7 +469,7 @@ final class BattleSimulator
         }
 
         // Some jutsu add a share of the target's max health, ignoring defense.
-        $damage += $defender->maxHp * ($skill?->maxHpDamage ?? 0) / 100;
+        $damage += $defender->maxHp * ($skill->maxHpDamage ?? 0) / 100;
         $damage *= $this->damageFactor($actor, $target, $skill, $notes);
         [$dealt, $absorbed] = $this->absorb($target, max(1, (int) round($damage)));
 
@@ -489,7 +493,7 @@ final class BattleSimulator
 
         if ($this->has($actor, 'dead_demon')) {
             $seal = $this->statuses[$actor]['dead_demon'];
-            $cut = $skill?->school === self::BODY_SCHOOL || ($skill?->lifesteal ?? 0) > 0 ? $seal['body'] : $seal['amount'];
+            $cut = $skill?->school === self::BODY_SCHOOL || ($skill->lifesteal ?? 0) > 0 ? $seal['body'] : $seal['amount'];
             $factor *= (100 - $cut) / 100;
         }
 
@@ -542,6 +546,11 @@ final class BattleSimulator
     {
         $this->events[] = ['type' => 'end', 'winner' => $winner, 'reason' => $reason];
 
-        return ['winner' => $winner, 'events' => $this->events, 'hp' => $this->hp, 'mp' => $this->mp];
+        return [
+            'winner' => $winner,
+            'events' => $this->events,
+            'hp' => [$this->hp[0], $this->hp[1]],
+            'mp' => [$this->mp[0], $this->mp[1]],
+        ];
     }
 }

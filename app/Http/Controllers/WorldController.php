@@ -20,7 +20,7 @@ class WorldController extends Controller
                     ...$field->only(['scene', 'name', 'village', 'level']),
                     'monsters' => $field->monsters->map->only(['name', 'level', 'is_boss']),
                 ]),
-            'villages' => collect(config('game.villages'))
+            'villages' => collect(config()->array('game.villages'))
                 ->map(fn (string $name, string|int $id) => ['id' => (string) $id, 'name' => $name])
                 ->values(),
         ]);

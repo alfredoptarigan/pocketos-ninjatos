@@ -20,7 +20,7 @@ class DrawWishPot
      * boxes grant one of their titles not owned yet.
      *
      * @param  array<string, mixed>  $pot
-     * @return array{outfit?: Outfit, level?: int, duplicate?: bool, shards?: int, title?: Title}
+     * @return array{outfit: Outfit, level: int, duplicate: bool, shards: int}|array{title: Title}
      *
      * @throws ValidationException when the pot is locked, sold out, too dear or picked badly
      */
@@ -42,7 +42,7 @@ class DrawWishPot
             $result = isset($pot['titles']) ? $this->title($ninja, $pot) : $this->outfit($ninja, $pot, $choice);
             $ninja->forceFill([
                 'coupons' => $ninja->coupons - $pot['price'],
-                'outfit_shards' => $ninja->outfit_shards + ($result['shards'] ?? 0),
+                'outfit_shards' => $ninja->outfit_shards + (isset($result['shards']) ? $result['shards'] : 0),
             ])->save();
 
             return $result;

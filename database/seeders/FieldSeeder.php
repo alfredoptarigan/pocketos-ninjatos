@@ -5,6 +5,8 @@ namespace Database\Seeders;
 use App\Models\Field;
 use App\Models\Item;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\File;
 use RuntimeException;
 
 class FieldSeeder extends Seeder
@@ -24,8 +26,8 @@ class FieldSeeder extends Seeder
             );
         }
 
-        foreach (json_decode(file_get_contents($path), true, flags: JSON_THROW_ON_ERROR) as $data) {
-            $field = Field::updateOrCreate(['scene' => $data['scene']], collect($data)->except(['monsters', 'key_item'])->all());
+        foreach (File::json($path, JSON_THROW_ON_ERROR) as $data) {
+            $field = Field::updateOrCreate(['scene' => $data['scene']], Arr::except($data, ['monsters', 'key_item']));
 
             if ($data['key_item']) {
                 Item::updateOrCreate(['code' => $data['key_item']['code']], [

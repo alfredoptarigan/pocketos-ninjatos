@@ -44,7 +44,7 @@ class Outfit extends Model
      */
     public function scopeInPots(Builder $query): void
     {
-        $listed = collect(config('game.outfits.pots'))->flatMap(fn (array $pot) => [...$pot['pick'] ?? [], ...$pot['pool'] ?? []]);
+        $listed = collect(config()->array('game.outfits.pots'))->flatMap(fn (array $pot) => [...$pot['pick'] ?? [], ...$pot['pool'] ?? []]);
 
         $query->whereNotIn('key', [...config('game.outfits.event_only'), ...$listed]);
     }

@@ -188,11 +188,11 @@ class Character extends Model
     /**
      * The wardrobe: outfits drawn from the Wishing Pot.
      *
-     * @return BelongsToMany<Outfit, $this>
+     * @return BelongsToMany<Outfit, $this, CharacterOutfit, 'pivot'>
      */
     public function outfits(): BelongsToMany
     {
-        return $this->belongsToMany(Outfit::class, 'character_outfits')->withPivot('level', 'recorded_at')->withTimestamps();
+        return $this->belongsToMany(Outfit::class, 'character_outfits')->using(CharacterOutfit::class)->withPivot('level', 'recorded_at')->withTimestamps();
     }
 
     /**
@@ -240,17 +240,17 @@ class Character extends Model
     {
         $made = $this->honor_exchanged_on?->isToday() ? $this->honor_exchanges : 0;
 
-        return max(0, config('game.honor.daily_exchanges') - $made);
+        return max(0, config()->integer('game.honor.daily_exchanges') - $made);
     }
 
     /**
      * Completed achievements.
      *
-     * @return BelongsToMany<Achievement, $this>
+     * @return BelongsToMany<Achievement, $this, CharacterAchievement, 'pivot'>
      */
     public function achievements(): BelongsToMany
     {
-        return $this->belongsToMany(Achievement::class, 'character_achievements')->withPivot('completed_at');
+        return $this->belongsToMany(Achievement::class, 'character_achievements')->using(CharacterAchievement::class)->withPivot('completed_at');
     }
 
     /**
@@ -411,11 +411,10 @@ class Character extends Model
      */
     public function equippedSkills(): array
     {
-        return collect($this->skill_pages[$this->skill_page] ?? [])
+        return array_values(collect($this->skill_pages[$this->skill_page] ?? [])
             ->filter(fn (?string $id) => $id !== null && isset($this->skills[$id]))
             ->map(fn (string $id) => Skill::find($id, $this->skills[$id], $this->passiveLevel()))
-            ->values()
-            ->all();
+            ->all());
     }
 
     /**
@@ -439,14 +438,13 @@ class Character extends Model
      */
     public function openSkillSlots(): int
     {
-        $slots = config('skills.slots');
-        $free = max(array_map(
-            fn (int $level, int $count) => $this->level >= $level ? $count : 0,
-            array_keys($slots['free']),
-            $slots['free'],
-        ));
+        // Character level => free slots from that level.
+        $free = 0;
+        foreach (config()->array('skills.slots.free') as $level => $count) {
+            $free = $this->level >= $level ? max($free, $count) : $free;
+        }
 
-        return min($slots['total'], $free + $this->skill_slots_bought);
+        return min(config()->integer('skills.slots.total'), $free + $this->skill_slots_bought);
     }
 
     /**

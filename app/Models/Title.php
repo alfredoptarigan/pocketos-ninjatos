@@ -14,7 +14,7 @@ use Illuminate\Support\Carbon;
  * @property string $code Original name key, e.g. "EffortTitle01", used by achievements and the collection
  * @property string $name
  * @property int $category Original title group (1 level, 3 collection, ...)
- * @property array<string, int|float> $bonus StatBonus fields while worn
+ * @property array{strength?: int, agility?: int, stamina?: int, hp?: int, attack?: int, defense?: int, dodge?: int, crit?: int, hpPercent?: float, attackPercent?: float, defensePercent?: float} $bonus StatBonus fields while worn
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */

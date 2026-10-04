@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Achievement;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\File;
 use RuntimeException;
 
 class AchievementSeeder extends Seeder
@@ -24,7 +25,7 @@ class AchievementSeeder extends Seeder
             );
         }
 
-        $original = collect(json_decode(file_get_contents($path), true, flags: JSON_THROW_ON_ERROR))->keyBy('id');
+        $original = collect(File::json($path, JSON_THROW_ON_ERROR))->keyBy('id');
 
         foreach (config('game.achievements.tracked') as $id => $tracked) {
             $data = $original[$id] ?? throw new RuntimeException("Achievement {$id} is not in the original data.");

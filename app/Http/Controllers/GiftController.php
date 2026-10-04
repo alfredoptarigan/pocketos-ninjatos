@@ -25,7 +25,7 @@ class GiftController extends Controller
         return Inertia::render('gifts', [
             'streak' => $streak,
             'claimedToday' => $claimedToday,
-            'rewards' => collect($config['coupons'])->map(fn (int $coupons, int $index) => [
+            'rewards' => collect(config()->array('game.sign_in.coupons'))->map(fn (int $coupons, int $index) => [
                 'day' => $index + 1,
                 'coupons' => $coupons,
             ]),

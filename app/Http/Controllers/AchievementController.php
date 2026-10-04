@@ -20,7 +20,7 @@ class AchievementController extends Controller
         $character = $request->user()->character;
         $track->handle($character);
         $counters = $track->counters($character);
-        $completed = $character->achievements()->get()->keyBy('id');
+        $completed = $character->achievements()->pluck('character_achievements.completed_at', 'achievements.id');
         $titles = Title::query()->pluck('name', 'code');
 
         return Inertia::render('character/achievements', [
@@ -32,7 +32,7 @@ class AchievementController extends Controller
                 'progress' => min($counters[$achievement->counter], $achievement->target),
                 'points' => $achievement->points,
                 'title' => $titles[$achievement->title] ?? null,
-                'completed_at' => $completed->get($achievement->id)?->pivot->completed_at,
+                'completed_at' => $completed->get($achievement->id),
             ]),
             'points' => $counters['points'],
         ]);

@@ -13,10 +13,10 @@ trait AppliesJutsuEffects
 {
     private const MAX_GATES = 8;
 
-    /** @var array{0: array{open: int, last: int}, 1: array{open: int, last: int}} Eight Inner Gates per side */
+    /** @var array<int, array{open: int, last: int}> Eight Inner Gates per side */
     private array $gates;
 
-    /** @var array{0: bool, 1: bool} poison works once a fight */
+    /** @var array<int, bool> poison works once a fight, per side */
     private array $poisoned;
 
     /**
