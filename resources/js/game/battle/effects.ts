@@ -1,5 +1,5 @@
 import { AnimatedSprite, Assets, Graphics } from 'pixi.js';
-import type { Container, Spritesheet, Ticker } from 'pixi.js';
+import type { Container, Spritesheet, Texture, Ticker } from 'pixi.js';
 import type { BattleEvent } from './types';
 
 // Written by tools/extract_effect_assets.py from the original effectconfig table.
@@ -10,7 +10,10 @@ const DEFAULT_FPS = 12;
 const SHADE_ALPHA = 0.85;
 
 export type EffectSpec = {
-    sheet: string;
+    /** Pages of one effect, played in order (big cinematics need several 4096 textures). */
+    sheets?: string[];
+    /** Older indexes: a single page. */
+    sheet?: string;
     /** 'attack' plays at the jutsu user, 'beaten' at whoever it hits. */
     type: 'attack' | 'beaten';
     layer: 'before' | 'under';
@@ -44,11 +47,12 @@ export async function loadEffects(
 ): Promise<EffectIndex> {
     const used = new Set(
         events.flatMap((event) => [
-            'skill' in event ? event.skill : undefined,
-            'blockSkill' in event ? event.blockSkill : undefined,
             event.type === 'ultimate'
-                ? upgradedUltimate(event.skill)
-                : undefined,
+                ? undefined
+                : 'skill' in event
+                  ? event.skill
+                  : undefined,
+            'blockSkill' in event ? event.blockSkill : undefined,
         ]),
     );
 
@@ -63,13 +67,23 @@ export async function loadEffects(
                     .map(([id, art]) => [id, original[art]]),
             ),
         };
+        // Only the cinematic an ultimate will play: the +19 one when it exists.
+        events.forEach((event) => {
+            if (event.type === 'ultimate') {
+                const upgraded = upgradedUltimate(event.skill);
+                used.add(
+                    event.upgraded && index[upgraded] ? upgraded : event.skill,
+                );
+            }
+        });
         const wanted = Object.fromEntries(
             Object.entries(index).filter(([id]) => used.has(id)),
         );
         await Promise.all(
             Object.values(wanted)
                 .flat()
-                .map((spec) => Assets.load<Spritesheet>(spec.sheet)),
+                .flatMap(pagesOf)
+                .map((page) => Assets.load<Spritesheet>(page)),
         );
 
         return wanted;
@@ -88,8 +102,28 @@ export function isRanged(specs: EffectSpec[]): boolean {
 
 type EffectMeta = { fps?: number; backdrop?: number[] };
 
-function fpsOf(sheet: Spritesheet): number {
-    return (sheet.data.meta as EffectMeta).fps ?? DEFAULT_FPS;
+function pagesOf(spec: EffectSpec): string[] {
+    return spec.sheets ?? (spec.sheet ? [spec.sheet] : []);
+}
+
+/** Every frame of an effect across its pages, and the first page's meta (fps, backdrop frames). */
+function framesOf(
+    spec: EffectSpec,
+): { textures: Texture[]; meta: EffectMeta } | null {
+    const pages = pagesOf(spec).map((page) =>
+        Assets.get<Spritesheet | undefined>(page),
+    );
+
+    if (pages.length === 0 || pages.some((page) => !page)) {
+        return null;
+    }
+
+    const loaded = pages as Spritesheet[];
+
+    return {
+        textures: loaded.flatMap((page) => page.animations.effect),
+        meta: loaded[0].data.meta as EffectMeta,
+    };
 }
 
 /** A dark cover over the whole battle world, for frames that darkened the original stage. */
@@ -103,9 +137,11 @@ function shadeOver(world: Container): Graphics {
 
 /** How long an effect runs at 1x speed, in ms. */
 export function effectDuration(spec: EffectSpec): number {
-    const sheet = Assets.get<Spritesheet | undefined>(spec.sheet);
+    const frames = framesOf(spec);
 
-    return sheet ? (sheet.animations.effect.length / fpsOf(sheet)) * 1000 : 0;
+    return frames
+        ? (frames.textures.length / (frames.meta.fps ?? DEFAULT_FPS)) * 1000
+        : 0;
 }
 
 /**
@@ -119,23 +155,24 @@ export function playEffect(
     y: number,
     facingRight: boolean,
 ): Promise<void> {
-    const sheet = Assets.get<Spritesheet | undefined>(spec.sheet);
+    const frames = framesOf(spec);
 
-    if (!sheet) {
+    if (!frames) {
         return Promise.resolve();
     }
 
     const sprite = new AnimatedSprite({
-        textures: sheet.animations.effect,
+        textures: frames.textures,
         updateAnchor: true,
         loop: false,
     });
     // Original stage units: the art is laid out for the original fighter spacing.
     sprite.scale.x = facingRight ? -1 : 1;
     sprite.position.set(x, y);
-    sprite.animationSpeed = (fpsOf(sheet) / TICKER_FPS) * stage.speed();
+    sprite.animationSpeed =
+        ((frames.meta.fps ?? DEFAULT_FPS) / TICKER_FPS) * stage.speed();
 
-    const backdrop = (sheet.data.meta as EffectMeta).backdrop ?? [];
+    const backdrop = frames.meta.backdrop ?? [];
     const shade = backdrop.length > 0 ? shadeOver(stage.world) : undefined;
     // The shade sits right below the effect, covering whatever it covered.
     const layers = shade ? [shade, sprite] : [sprite];

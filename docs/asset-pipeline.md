@@ -215,16 +215,19 @@ drops are our own rule (`config('game.equipment')`).
 battle effects, including every outfit's ultimate: id `1900 + outfit id` (`clientskill` Type 2) and
 the stronger cinematic `<id>0` for outfits at +19 and up (avatar `1901` is Kurosaki Ichigo +19). Their
 SWFs sit in `fighteffect/bigeffect/`; each draws its user (motion `996` is an empty stub) and the hit,
-from the user's feet, for the usual ~400-unit spacing. They are rendered at zoom 1: the sheets are
-halved to fit 4096 anyway. `--ultimates` re-renders only those and merges them into the index. For each
+from the user's feet, for the usual ~400-unit spacing. They are rendered at their original size
+(zoom 1, even with `--hd`): at 2x the 227 cinematics would run to ~33 gigapixels. `--ultimates` re-renders only those and merges them into the index. For each
 `FightEffect_<skill id>[_part]` row of `effectconfig` it finds the SWF in
 `movieclip/fighteffect/` (`EffectSourceID` `FightEffect_18071` lives in `fighteffect_1807_1`,
 `FightEffect_3826_M` in `fighteffect_3826_m`), renders its `MotionEffectSource` symbol and
-packs the trimmed frames into `effects/<effect>.{png,json}`. The anchor is the SWF origin:
+packs the trimmed frames into WebP pages `effects/<effect>-<page>.{webp,json}`. The anchor is the SWF origin:
 JPEXS puts it at the root `translate` of the frame SVG, and the PNG adds an even filter
-margin around the SVG bounds. `effects/index.json` maps skill id to
-`{sheet, type: attack|beaten, layer: before|under, start: ms|'hit'}` (`EffectType`,
-`LayoutIndex`, `PlayEffectTime`). Sheets taller than 4096 px are halved (lower `meta.scale`).
+margin around the SVG bounds. `effects/index.json` maps skill id to the pages in order and
+`{sheets, type: attack|beaten, layer: before|under, start: ms|'hit'}` (`EffectType`,
+`LayoutIndex`, `PlayEffectTime`). An effect that overflows a 4096 page goes on to the next page instead of being shrunk (shrinking
+blurred the ultimates); only a single frame larger than a page is halved (lower `meta.scale`).
+Lossy WebP keeps a full-size ultimate to a few MB, and the replay loads only the cinematic a battle
+plays.
 Effects are laid out in original stage units for fighters ~400 units apart (a Fireball
 explodes ~386 units in front of its caster), so the replay draws them at scale 1 and casts
 jutsu with cast-time art from where the user stands. `BuffEffect_*` (status loops) and
@@ -286,7 +289,7 @@ statuses/<status>.png                 battle status icons
 equipment/<code>.png                  equipment icons
 world/map.png, world/spots/<scene>.png  world map and its clickable regions (world.json)
 fields/<scene>.jpg                    hunting ground backdrops
-effects/<effect>.{png,json}           jutsu battle effects (Pixi spritesheet, animation 'effect')
+effects/<effect>-<page>.{webp,json}  jutsu battle effects (Pixi spritesheet, animation 'effect')
 effects/index.json                    skill id -> effects to play
 ```
 

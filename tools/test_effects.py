@@ -2,7 +2,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from extract_effect_assets import find_swf, origin_of, start_of, ultimate_ids, without_black
+from extract_effect_assets import MAX_SHEET_WIDTH, find_swf, origin_of, pack, start_of, ultimate_ids, without_black
 
 SVG = (
     '<svg ffdec:objectType="frame" height="361.45px" width="722.3px">'
@@ -44,6 +44,17 @@ class EffectTest(unittest.TestCase):
 
     def test_every_outfit_has_an_ultimate_and_its_upgraded_version(self):
         self.assertEqual(ultimate_ids(['0_1', '1_46', '0_103']), {'1901', '19010', '1946', '19460', '2003', '20030'})
+
+    def test_big_effects_go_on_more_pages_instead_of_shrinking(self):
+        from PIL import Image
+
+        side = MAX_SHEET_WIDTH // 2 + 1  # one frame per shelf row, two rows don't fit a page
+        frames = [Image.new('RGBA', (side, side), (255, 0, 0, 255)) for _ in range(3)]
+
+        pages = pack(frames)
+
+        self.assertEqual([len(page) for page in pages], [1, 1, 1])
+        self.assertEqual([crop.size for page in pages for crop, _, _, _ in page], [(side, side)] * 3)
 
     def test_without_black_turns_brightness_into_alpha(self):
         from PIL import Image

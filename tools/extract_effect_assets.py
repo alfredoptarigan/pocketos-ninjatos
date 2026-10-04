@@ -16,7 +16,7 @@ cinematics sit in fighteffect/bigeffect) it reads the FightEffect_<id>* rows of
 effectconfig, renders the 'MotionEffectSource' symbol of the matching
 movieclip/fighteffect SWF and packs its frames into a Pixi spritesheet:
 
-  public/game-assets/effects/<effect>.png / .json   (anchor = SWF origin)
+  public/game-assets/effects/<effect>-<page>.webp / .json   (anchor = SWF origin)
   public/game-assets/effects/index.json             skill id -> effects to play
 
 Effects are drawn facing left (towards the opponent of a right-hand player),
@@ -47,6 +47,8 @@ PANEL_SKILL = '1'  # clientskill Type 1 = skill panel
 HEADER_ROW = 1
 MAX_SHEET_WIDTH = 4096
 HD_ZOOM = 2
+WEBP_QUALITY = 85  # lossy keeps the cinematics' many pages small
+WEBP_METHOD = 4
 WORKERS = max(1, (os.cpu_count() or 2) // 2)
 # Original stage-wide black shapes (Assassinate darkens the screen) would float as a box here;
 # they are keyed out and replayed as a screen-wide shade instead.
@@ -154,8 +156,13 @@ def without_black(image):
     return Image.frombytes('RGBA', image.size, bytes(data))
 
 
-def write_sheet(key: str, frames_dir: Path, svg_dir: Path, zoom: float, fps: float, backdrop: list[bool]) -> None:
-    """Pack trimmed frames shelf-style; every frame keeps the full-size anchor at the SWF origin."""
+def write_sheet(key: str, frames_dir: Path, svg_dir: Path, zoom: float, fps: float, backdrop: list[bool]) -> list[str]:
+    """Pack trimmed frames shelf-style onto as many WebP pages as they need; returns the pages' URLs.
+
+    Every frame keeps the full-size anchor at the SWF origin. Big cinematics
+    (ultimates) spread over several 4096 pages instead of being shrunk; only a
+    single frame larger than a page is halved.
+    """
     from PIL import Image
 
     paths = sorted(frames_dir.glob('*.png'), key=lambda p: int(p.stem))
@@ -163,53 +170,63 @@ def write_sheet(key: str, frames_dir: Path, svg_dir: Path, zoom: float, fps: flo
     images = [without_black(image) if index < len(backdrop) and backdrop[index] else image for index, image in enumerate(images)]
     width, height = images[0].size
     ox, oy = origin_of(svg_dir / '1.svg', (width, height))
-    # Halve huge effects until the sheet fits a 4096 texture.
-    while (placed := pack(images))[-1] > MAX_SHEET_WIDTH:
+    while max(max((image.getbbox() or (0, 0, 1, 1))[2:]) for image in images) > MAX_SHEET_WIDTH:
         images = [image.resize((max(1, image.width // 2), max(1, image.height // 2))) for image in images]
         width, height, ox, oy, zoom = width / 2, height / 2, ox / 2, oy / 2, zoom / 2
-    placed = placed[0]
 
-    sheet = Image.new('RGBA', (max(px + c.width for c, _, px, _ in placed), max(py + c.height for c, _, _, py in placed)))
-    frame_data, names = {}, []
-    for index, (crop, box, px, py) in enumerate(placed):
-        sheet.alpha_composite(crop, (px, py))
-        name = f'{key}_{index}'
-        frame_data[name] = {
-            'frame': {'x': px, 'y': py, 'w': crop.width, 'h': crop.height},
-            'trimmed': True,
-            'spriteSourceSize': {'x': box[0], 'y': box[1], 'w': crop.width, 'h': crop.height},
-            'sourceSize': {'w': round(width), 'h': round(height)},
-            'anchor': {'x': ox / width, 'y': oy / height},
-        }
-        names.append(name)
+    for old in OUT_DIR.glob(f'{key}.*'):  # the single-page layout of earlier runs
+        old.unlink()
+    urls, index = [], 0
+    for number, placed in enumerate(pack(images)):
+        page = f'{key}-{number}'
+        sheet = Image.new('RGBA', (max(px + c.width for c, _, px, _ in placed), max(py + c.height for c, _, _, py in placed)))
+        frame_data, names = {}, []
+        for crop, box, px, py in placed:
+            sheet.alpha_composite(crop, (px, py))
+            name = f'{key}_{index}'
+            frame_data[name] = {
+                'frame': {'x': px, 'y': py, 'w': crop.width, 'h': crop.height},
+                'trimmed': True,
+                'spriteSourceSize': {'x': box[0], 'y': box[1], 'w': crop.width, 'h': crop.height},
+                'sourceSize': {'w': round(width), 'h': round(height)},
+                'anchor': {'x': ox / width, 'y': oy / height},
+            }
+            names.append(name)
+            index += 1
 
-    sheet.save(OUT_DIR / f'{key}.png')
-    (OUT_DIR / f'{key}.json').write_text(json.dumps({
-        'frames': frame_data,
-        'animations': {'effect': names},
-        'meta': {
-            'image': f'{key}.png', 'size': {'w': sheet.width, 'h': sheet.height}, 'scale': zoom, 'fps': fps,
-            # Frames that darkened the whole original stage; the battle replay shades the screen for them.
-            'backdrop': [index for index, dark in enumerate(backdrop) if dark],
-        },
-    }))
+        sheet.save(OUT_DIR / f'{page}.webp', 'WEBP', quality=WEBP_QUALITY, method=WEBP_METHOD)
+        (OUT_DIR / f'{page}.json').write_text(json.dumps({
+            'frames': frame_data,
+            'animations': {'effect': names},
+            'meta': {
+                'image': f'{page}.webp', 'size': {'w': sheet.width, 'h': sheet.height}, 'scale': zoom, 'fps': fps,
+                # Frames (of the whole effect) that darkened the original stage; the replay shades the screen.
+                'backdrop': [i for i, dark in enumerate(backdrop) if dark],
+            },
+        }))
+        urls.append(f'{URL_DIR}/{page}.json')
+    return urls
 
 
-def pack(images: list) -> tuple[list, int]:
-    """Shelf-pack trimmed frames into rows of MAX_SHEET_WIDTH; returns placements and the sheet height."""
-    placed, x, y, shelf = [], 0, 0, 0
+def pack(images: list) -> list[list]:
+    """Shelf-pack trimmed frames into pages of MAX_SHEET_WIDTH squared, in frame order."""
+    pages, placed, x, y, shelf = [], [], 0, 0, 0
     for image in images:
         box = image.getbbox() or (0, 0, 1, 1)
         crop = image.crop(box)
         if x + crop.width > MAX_SHEET_WIDTH:
             x, y, shelf = 0, y + shelf, 0
+        if y + crop.height > MAX_SHEET_WIDTH and placed:
+            pages.append(placed)
+            placed, x, y, shelf = [], 0, 0, 0
         placed.append((crop, box, x, y))
         x, shelf = x + crop.width, max(shelf, crop.height)
-    return placed, y + shelf
+    pages.append(placed)
+    return pages
 
 
 def build_sheet(row: dict, java: str, ffdec: Path, zoom: int) -> dict:
-    """Render one effect SWF and pack it into public/game-assets/effects/<key>.*; returns the row."""
+    """Render one effect SWF into public/game-assets/effects/<key>-<page>.*; returns the row with its pages."""
     swf = read_swf(row['swf'])
     with tempfile.TemporaryDirectory() as tmp:
         out = Path(tmp)
@@ -217,9 +234,9 @@ def build_sheet(row: dict, java: str, ffdec: Path, zoom: int) -> dict:
         render(java, ffdec, row['swf'], symbol, zoom, out)
         sprite = next((out / 'png').glob('DefineSprite_*')).name
         backdrop = frames_showing(swf, symbol, black_backdrops(swf, MIN_BACKDROP_WIDTH))
-        write_sheet(row['key'], out / 'png' / sprite, out / 'svg' / sprite, zoom, swf.frame_rate, backdrop)
-    print(f"{row['key']}: {row['swf'].name}", flush=True)
-    return row
+        sheets = write_sheet(row['key'], out / 'png' / sprite, out / 'svg' / sprite, zoom, swf.frame_rate, backdrop)
+    print(f"{row['key']}: {row['swf'].name} ({len(sheets)} pages)", flush=True)
+    return {**row, 'sheets': sheets}
 
 
 def main() -> None:
@@ -244,13 +261,15 @@ def main() -> None:
     # JPEXS (a Java process per render) is the slow part: run a few at once.
     with ThreadPoolExecutor(max_workers=WORKERS) as pool:
         def build(row: dict) -> dict:
-            if '--missing' in flags and (OUT_DIR / f"{row['key']}.json").is_file():
-                return row
-            return build_sheet(row, java, ffdec, zoom)
+            pages = sorted(OUT_DIR.glob(f"{row['key']}-*.json"), key=lambda page: int(page.stem.rsplit('-', 1)[1]))
+            if '--missing' in flags and pages:
+                return {**row, 'sheets': [f'{URL_DIR}/{page.name}' for page in pages]}
+            # Ultimates stay at the original size: at 2x their pages would run to gigabytes.
+            return build_sheet(row, java, ffdec, 1 if row['skill'] in ultimates else zoom)
 
         for row in pool.map(build, rows):
             index.setdefault(row['skill'], []).append({
-                'sheet': f"{URL_DIR}/{row['key']}.json",
+                'sheets': row['sheets'],
                 'type': row['type'],
                 'layer': row['layer'],
                 'start': row['start'],
