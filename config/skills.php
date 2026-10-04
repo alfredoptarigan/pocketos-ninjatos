@@ -27,6 +27,9 @@
 |   revive        comes back with a share of max health on knock-out
 |   battle        always on from the start, if its chakra can be paid
 |
+| art: a jutsu whose original effect it plays instead: the backup ships no
+| effect for the later 38xx jutsu, so some borrow one of their school.
+|
 | effect (besides damage; its parameters sit in the same entry):
 |   burn          target loses 'amount' % of the hit over 'turns' turns
 |   bloodboil     +amount chance to every jutsu for 'turns' turns; chakra
@@ -97,7 +100,9 @@ return [
     // Ultimates (clientskill Type 2, "Secret Technique"): one per outfit, id
     // id_base + outfit id. The original only says it may finish an opponent on
     // low health, more likely the more the outfits differ; the recordings in
-    // source/dazhao fire at 7-9% health. The numbers are ours: tried instead of
+    // source/dazhao fire at 7-9% health, but a strong ninja hits harder than
+    // that window, so it opens at 30% (at 10% Lugi rolled once in four
+    // fights). The numbers are ours: tried instead of
     // the attack when the target is at or below below_health_percent, chance %
     // plus per_outfit_level for each upgrade level above the opponent's outfit
     // (min_chance..max_chance); no chakra, no limit. From upgraded_from_level
@@ -105,7 +110,7 @@ return [
     'ultimate' => [
         'name' => 'Secret Technique',
         'description' => 'May finish an opponent at low health in one blow, more often the more your outfit is upgraded than theirs. No chakra.',
-        'id_base' => 1900, 'below_health_percent' => 10, 'chance' => 30, 'per_outfit_level' => 2,
+        'id_base' => 1900, 'below_health_percent' => 30, 'chance' => 30, 'per_outfit_level' => 2,
         'min_chance' => 10, 'max_chance' => 60, 'upgraded_from_level' => 19,
     ],
 
@@ -166,6 +171,7 @@ return [
             'effect' => 'prison', 'amount' => 3, 'defense' => 50,
             'description' => 'After an attack, absorbs 3% of the opponent\'s chakra and lowers its defense by 50.'],
         '3806' => ['name' => 'Mud Wall', 'school' => 'earth', 'tier' => 4, 'requires' => '1815', 'kind' => 'reflect', 'chance' => 19, 'power' => 60, 'chakra' => 0,
+            'art' => '1816',
             'description' => 'Raises a wall of mud that returns 60% of the damage taken.'],
 
         // Lightning

@@ -62,9 +62,10 @@ class UltimateTest extends TestCase
         $this->assertSame(0, last($events)['winner']);
     }
 
-    public function test_the_ultimate_waits_until_the_opponent_is_at_ten_percent_health()
+    public function test_the_ultimate_waits_until_the_opponent_is_low_enough()
     {
         $this->alwaysUnleashed();
+        config(['skills.ultimate.below_health_percent' => 10]);
         $ninja = $this->fighter(['ultimate' => Ultimate::for('0_1', 0)]);
 
         $events = $this->events($ninja, $this->fighter(['hp' => 12, 'minAttack' => 0, 'maxAttack' => 0]));

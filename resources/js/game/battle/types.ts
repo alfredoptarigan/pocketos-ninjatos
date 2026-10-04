@@ -173,6 +173,8 @@ export type SkillInfo = {
     icon: string;
     school: string;
     description: string;
+    /** Another jutsu whose original effect this one plays (no art of its own). */
+    art?: string | null;
 };
 
 /** A status on a fighter, as the battle HUD shows it. */

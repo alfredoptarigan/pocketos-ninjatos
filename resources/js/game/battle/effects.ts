@@ -37,7 +37,11 @@ export function upgradedUltimate(skillId: string): string {
  * Load the effect index and every sheet this battle uses. Effects are
  * optional art: missing files only mean a jutsu plays without them.
  */
-export async function loadEffects(events: BattleEvent[]): Promise<EffectIndex> {
+export async function loadEffects(
+    events: BattleEvent[],
+    /** Jutsu id => jutsu whose effect it borrows (config('skills.skills.*.art')). */
+    borrowed: Record<string, string> = {},
+): Promise<EffectIndex> {
     const used = new Set(
         events.flatMap((event) => [
             'skill' in event ? event.skill : undefined,
@@ -50,7 +54,15 @@ export async function loadEffects(events: BattleEvent[]): Promise<EffectIndex> {
 
     try {
         const response = await fetch(INDEX_URL);
-        const index: EffectIndex = response.ok ? await response.json() : {};
+        const original: EffectIndex = response.ok ? await response.json() : {};
+        const index: EffectIndex = {
+            ...original,
+            ...Object.fromEntries(
+                Object.entries(borrowed)
+                    .filter(([id, art]) => !original[id] && original[art])
+                    .map(([id, art]) => [id, original[art]]),
+            ),
+        };
         const wanted = Object.fromEntries(
             Object.entries(index).filter(([id]) => used.has(id)),
         );

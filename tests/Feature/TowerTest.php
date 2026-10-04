@@ -68,7 +68,9 @@ class TowerTest extends TestCase
         // The replay names and shows both sides' ultimates like any jutsu.
         $this->get(route('battles.show', Battle::sole()))->assertInertia(fn (Assert $page) => $page
             ->where('skills.1903.name', 'Secret Technique')
-            ->where('skills.1910.icon', '/game-assets/skills/1910.png'));
+            ->where('skills.1910.icon', '/game-assets/skills/1910.png')
+            // Mud Wall has no art of its own in the backup: it borrows Great Mud River's.
+            ->where('skills.3806.art', '1816'));
     }
 
     public function test_tower_lists_the_floors_and_the_players_progress()

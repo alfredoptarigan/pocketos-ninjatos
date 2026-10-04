@@ -41,6 +41,7 @@ class BattleController extends Controller
                 'school' => $skill['school'],
                 'description' => $skill['description'] ?? '',
                 'icon' => "/game-assets/skills/$id.png",
+                'art' => $skill['art'] ?? null,
             ])->union(
                 // Both sides' ultimates (older battles have none).
                 collect($battle->log['fighters'])->pluck('ultimate')->filter()->mapWithKeys(fn (string $id) => [$id => Ultimate::info($id)]),

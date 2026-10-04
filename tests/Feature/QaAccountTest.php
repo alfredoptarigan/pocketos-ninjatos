@@ -48,6 +48,16 @@ class QaAccountTest extends TestCase
         $this->assertTrue(Hash::check('two', User::where('email', 'qa@pocketo.test')->sole()->password));
     }
 
+    public function test_a_second_qa_account_needs_its_own_ninja_name()
+    {
+        $this->artisan('game:qa-account')->assertSuccessful();
+
+        $this->artisan('game:qa-account', ['--email' => 'qa-female@pocketo.test', '--avatar' => '1_26'])->assertFailed();
+        $this->artisan('game:qa-account', ['--email' => 'qa-female@pocketo.test', '--avatar' => '1_26', '--name' => 'QA Kunoichi'])->assertSuccessful();
+
+        $this->assertSame(1, User::where('email', 'qa-female@pocketo.test')->sole()->character->sex());
+    }
+
     public function test_it_refuses_to_run_in_production()
     {
         $this->app['env'] = 'production';

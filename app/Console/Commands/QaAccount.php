@@ -23,7 +23,8 @@ use Illuminate\Support\Str;
 #[Signature('game:qa-account
     {--email=qa@pocketo.test : Login email}
     {--password= : Login password (a random one is printed when left out)}
-    {--avatar=0_3 : Created avatar, which also sets the sex of the outfits given}')]
+    {--avatar=0_3 : Created avatar, which also sets the sex of the outfits given}
+    {--name=QA Ninja : Ninja name (names are unique: give each QA account its own)}')]
 #[Description('Create or refresh a maxed-out QA account to try every feature (local only)')]
 class QaAccount extends Command
 {
@@ -53,10 +54,17 @@ class QaAccount extends Command
         $email = (string) $this->option('email');
         $password = $this->option('password') ?: Str::password(16, symbols: false);
 
-        DB::transaction(function () use ($email, $password, $avatar) {
+        $name = (string) $this->option('name');
+        if (Character::query()->where('name', $name)->whereHas('user', fn ($query) => $query->where('email', '!=', $email))->exists()) {
+            $this->error("Another account's ninja is named {$name}; pass --name.");
+
+            return self::FAILURE;
+        }
+
+        DB::transaction(function () use ($email, $password, $avatar, $name) {
             $user = User::query()->updateOrCreate(['email' => $email], ['name' => 'QA', 'password' => $password]);
             $user->forceFill(['email_verified_at' => now()])->save();
-            $ninja = $user->character ?? $user->character()->create(['name' => 'QA Ninja', 'avatar' => $avatar]);
+            $ninja = $user->character ?? $user->character()->create(['name' => $name, 'avatar' => $avatar]);
             $this->fillUp($ninja->refresh());
         });
 

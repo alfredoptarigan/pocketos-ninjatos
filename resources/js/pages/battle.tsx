@@ -43,6 +43,12 @@ function BattleView({ battle, skills }: Props) {
         opponent.mp ?? opponent.maxMp ?? 0,
     ]);
     const [glowing, setGlowing] = useState<string | null>(null);
+    // Jutsu without original art play the effect of the jutsu they borrow.
+    const borrowedArt = Object.fromEntries(
+        Object.entries(skills).flatMap(([id, skill]) =>
+            skill.art ? [[id, skill.art]] : [],
+        ),
+    );
     const [statuses, setStatuses] = useState<[ActiveStatus[], ActiveStatus[]]>([
         [],
         [],
@@ -104,6 +110,7 @@ function BattleView({ battle, skills }: Props) {
                 onStatus={updateStatus}
                 skillName={(id) => skills[id]?.name ?? 'Jutsu'}
                 skillSound={(id) => schoolSound(skills[id]?.school)}
+                borrowedArt={borrowedArt}
             />
             <BattleHud
                 fighters={battle.log.fighters}

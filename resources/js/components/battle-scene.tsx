@@ -31,6 +31,8 @@ type Props = {
     onStatus: (change: StatusChange) => void;
     skillName: (skillId: string) => string;
     skillSound: (skillId: string) => Sfx;
+    /** Jutsu id => jutsu whose effect it borrows. */
+    borrowedArt: Record<string, string>;
 };
 
 export default function BattleScene({
@@ -43,6 +45,7 @@ export default function BattleScene({
     onStatus,
     skillName,
     skillSound,
+    borrowedArt,
 }: Props) {
     const hostRef = useRef<HTMLDivElement>(null);
     // Keep the latest callbacks without restarting the replay on every render.
@@ -54,6 +57,7 @@ export default function BattleScene({
         onStatus,
         skillName,
         skillSound,
+        borrowedArt,
     });
     callbacks.current = {
         onFinished,
@@ -63,6 +67,7 @@ export default function BattleScene({
         onStatus,
         skillName,
         skillSound,
+        borrowedArt,
     };
 
     const setup = useCallback(
@@ -73,7 +78,7 @@ export default function BattleScene({
             const background = new Sprite(await Assets.load<Texture>(backdrop));
             background.setSize(WORLD_WIDTH, WORLD_HEIGHT);
             const [effects, ...fighters] = (await Promise.all([
-                loadEffects(log.events),
+                loadEffects(log.events, callbacks.current.borrowedArt),
                 ...log.fighters.map((info) => Fighter.create(info)),
             ])) as [Awaited<ReturnType<typeof loadEffects>>, Fighter, Fighter];
 
