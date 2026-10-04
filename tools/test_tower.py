@@ -2,7 +2,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from extract_tower_assets import STATS, boss_avatar, costume_level, mob_folder, stats
+from extract_tower_assets import STATS, boss_avatar, costume_level, mob_folder, outfit_art, stats
 
 
 class TowerTest(unittest.TestCase):
@@ -15,6 +15,12 @@ class TowerTest(unittest.TestCase):
         self.assertEqual(costume_level('AvatarUserFace_N90277'), 2)
         self.assertEqual(costume_level('AvatarUserFace_N91229'), 2)
 
+
+    def test_bust_bosses_fight_as_their_outfit_with_its_ultimate(self):
+        self.assertEqual(outfit_art('0_111'), {
+            'type': 'motion', 'motions': '/game-assets/characters/0_111/motions.json',
+            'face': '/game-assets/characters/0_111/face.png', 'outfit': '0_111', 'outfit_level': 0,
+        })
 
     def test_late_floors_rate_dodge_block_and_crit_ten_times_higher(self):
         npcs = {column: ['', '7'] + ['0'] * 149 + ['256'] for column in STATS.values()}

@@ -120,8 +120,10 @@ Izanagi) are not in this backup.
 Tower bosses: `singlegatenpc.ResourceID` `AvatarUserFace_N9<sex><avatar id>` is an avatar in
 costume (avatar id = costume level * 100 + outfit id, e.g. `N90277` Aaroniero +2 = `0_77`), so
 `extract_tower_assets.py` writes that avatar's motions to `characters/<sex>_<id>/` (also for Bleach
-villains that are not wearable outfits, ids 77-83). Only the Akatsuki (`N9001xx`) and
-`TGateUserFace_` bosses fall back to the `npcbackphoto` bust. Gotcha: floors 151-170 rate dodge,
+villains that are not wearable outfits, ids 77-83). The last ten bosses (Akatsuki `N9001xx`,
+Orochimaru, Sasori, Itachi) only have an `npcbackphoto` bust; `BOSS_OUTFITS` maps them to the
+outfits we extract (Kakuzu `0_103`.. Sasuke `0_111`, run `extract_outfit_assets.py` first), so they
+fight in those motions with that outfit's ultimate; without the outfit art they keep the bust. Gotcha: floors 151-170 rate dodge,
 block and crit 10x (like dungeon npcs); the extractor divides them by 10. English names
 (`lg_name_n9001xx`) fill the floors `NAMES` does not cover. Gotcha: a later patch reused two mob
 ids in a second kind folder (`n32056` Di Roy is `human/` and a beast in `inhumanboss/`, also

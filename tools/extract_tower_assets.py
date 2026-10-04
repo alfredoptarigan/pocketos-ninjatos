@@ -60,6 +60,14 @@ ANIMATED_PREFIX = 'MapUserFace_'
 AVATAR_RESOURCE = re.compile(r'AvatarUserFace_N9[01](\d{3})')
 BUILT: set[str] = set()
 ULTIMATE_DIR = 'movieclip/fighteffect/bigeffect'
+# The last ten bosses only have a bust (npcbackphoto); they are outfits we
+# extract, so they fight in that outfit's motions and use its ultimate.
+BOSS_OUTFITS = {
+    'n4025111': '0_51', 'n4012311': '0_23', 'n900163': '0_103', 'n900164': '0_104',
+    'n900165': '0_105', 'n900166': '1_108', 'n4024911': '0_49', 'n900167': '0_107',
+    'n900168': '0_106', 'n900169': '0_111',
+}
+CHARACTERS_URL = '/game-assets/characters'
 ULTIMATE_BASE = 1900
 BACKGROUNDS_DIR = 'movieclip/ui/fightbg'
 # arena.jpg carries red guide lines; 103001 and 4001 belong to special events.
@@ -138,6 +146,12 @@ def has_ultimate(source: Path, avatar: int) -> bool:
     return any((source / ULTIMATE_DIR).glob(f'fighteffect_{ULTIMATE_BASE + avatar}*'))
 
 
+def outfit_art(outfit: str) -> dict:
+    """A boss fighting as an extracted outfit (run extract_outfit_assets.py first), with its ultimate."""
+    url = f'{CHARACTERS_URL}/{outfit}'
+    return {'type': 'motion', 'motions': f'{url}/motions.json', 'face': f'{url}/face.png', 'outfit': outfit, 'outfit_level': 0}
+
+
 def extract_art(source: Path, resource_id: str, scale: int) -> dict:
     avatar = boss_avatar(resource_id)
     if avatar is not None and (art := avatar_art(source, avatar, scale)):
@@ -148,6 +162,8 @@ def extract_art(source: Path, resource_id: str, scale: int) -> dict:
         return {**art, 'outfit': outfit, 'outfit_level': costume_level(resource_id)}
 
     key = art_id(resource_id)
+    if (outfit := BOSS_OUTFITS.get(key)) and (ASSETS / 'characters' / outfit / 'motions.json').is_file():
+        return outfit_art(outfit)
     out = ASSETS / 'monsters' / key
     out.mkdir(parents=True, exist_ok=True)
     url = f'/game-assets/monsters/{key}'
