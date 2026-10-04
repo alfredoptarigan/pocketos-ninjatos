@@ -6,6 +6,7 @@ use App\Models\Equipment;
 use App\Models\Item;
 use App\Models\Outfit;
 use App\Models\Title;
+use App\Models\TowerFloor;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -22,6 +23,8 @@ class QaAccountTest extends TestCase
         Equipment::factory()->count(2)->create();
         Item::factory()->create();
         Title::create(['code' => 'EffortTitle48', 'name' => 'Bankai Blue Beast', 'category' => 6, 'bonus' => []]);
+        TowerFloor::factory()->create(['floor' => 1]);
+        TowerFloor::factory()->create(['floor' => 170]);
 
         $this->artisan('game:qa-account', ['--password' => 'secret-pass'])->assertSuccessful();
 
@@ -37,6 +40,7 @@ class QaAccountTest extends TestCase
         $this->assertSame(2, $ninja->gear()->count());
         $this->assertSame(1, $ninja->inventory()->count());
         $this->assertSame(1, $ninja->titles()->count());
+        $this->assertSame(170, $ninja->tower_floor);
     }
 
     public function test_running_it_again_refreshes_the_same_account()

@@ -7,6 +7,7 @@ use App\Models\Equipment;
 use App\Models\Item;
 use App\Models\Outfit;
 use App\Models\Title;
+use App\Models\TowerFloor;
 use App\Models\User;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
@@ -17,7 +18,7 @@ use Illuminate\Support\Str;
 /**
  * A local QA ninja to try every feature: max level, plenty of gold, gift
  * coupons, shards and medals, every outfit of its sex, one of every piece of
- * gear, a full stack of every item, and every title. Running it again refreshes the same account.
+ * gear, a full stack of every item, every title and every tower floor. Running it again refreshes the same account.
  * Never in production: it hands out everything.
  */
 #[Signature('game:qa-account
@@ -85,6 +86,8 @@ class QaAccount extends Command
             'coupons' => self::COUPONS,
             'outfit_shards' => self::OUTFIT_SHARDS,
             'medals' => self::MEDALS,
+            // Every Training Tower floor open (cleared up to the top).
+            'tower_floor' => (int) TowerFloor::query()->max('floor'),
         ])->save();
 
         $ninja->outfits()->syncWithoutDetaching(Outfit::query()->where('sex', $ninja->sex())->pluck('id'));
