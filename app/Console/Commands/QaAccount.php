@@ -90,7 +90,11 @@ class QaAccount extends Command
             'tower_floor' => (int) TowerFloor::query()->max('floor'),
         ])->save();
 
-        $ninja->outfits()->syncWithoutDetaching(Outfit::query()->where('sex', $ninja->sex())->pluck('id'));
+        // Every outfit of its sex at the top upgrade, so the ultimates show their best odds.
+        $maxLevel = config()->integer('game.outfits.upgrade.max_level');
+        $ninja->outfits()->syncWithoutDetaching(
+            Outfit::query()->where('sex', $ninja->sex())->pluck('id')->mapWithKeys(fn (int $id) => [$id => ['level' => $maxLevel]]),
+        );
         $ninja->titles()->syncWithoutDetaching(Title::query()->pluck('id'));
 
         $owned = $ninja->gear()->pluck('equipment_id');

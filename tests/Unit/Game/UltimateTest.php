@@ -41,9 +41,9 @@ class UltimateTest extends TestCase
 
     public function test_a_higher_outfit_level_than_the_opponent_raises_the_chance_within_bounds()
     {
-        $this->assertSame(30, Ultimate::for('0_1', 0)->chanceAgainst(null));
-        $this->assertSame(40, Ultimate::for('0_1', 5)->chanceAgainst(null));
-        $this->assertSame(36, Ultimate::for('0_1', 5)->chanceAgainst(Ultimate::for('0_46', 2)));
+        $this->assertSame(40, Ultimate::for('0_1', 0)->chanceAgainst(null));
+        $this->assertSame(50, Ultimate::for('0_1', 5)->chanceAgainst(null));
+        $this->assertSame(46, Ultimate::for('0_1', 5)->chanceAgainst(Ultimate::for('0_46', 2)));
         $this->assertSame(60, Ultimate::for('0_1', 27)->chanceAgainst(null));
         $this->assertSame(10, Ultimate::for('0_1', 0)->chanceAgainst(Ultimate::for('0_46', 27)));
     }

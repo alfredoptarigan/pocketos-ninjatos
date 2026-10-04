@@ -110,7 +110,7 @@ return [
     'ultimate' => [
         'name' => 'Secret Technique',
         'description' => 'May finish an opponent at low health in one blow, more often the more your outfit is upgraded than theirs. No chakra.',
-        'id_base' => 1900, 'below_health_percent' => 30, 'chance' => 30, 'per_outfit_level' => 2,
+        'id_base' => 1900, 'below_health_percent' => 30, 'chance' => 40, 'per_outfit_level' => 2,
         'min_chance' => 10, 'max_chance' => 60, 'upgraded_from_level' => 19,
     ],
 

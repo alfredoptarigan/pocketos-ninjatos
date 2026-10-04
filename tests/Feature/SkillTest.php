@@ -55,7 +55,7 @@ class SkillTest extends TestCase
             ->where('ultimate.id', '1903')
             ->where('ultimate.name', 'Secret Technique')
             ->where('ultimate.upgraded', false)
-            ->where('ultimate.chance', 30)
+            ->where('ultimate.chance', 40)
             ->where('ultimate.upgradedFrom', 19));
     }
 

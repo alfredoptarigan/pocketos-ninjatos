@@ -37,6 +37,7 @@ class QaAccountTest extends TestCase
         $this->assertGreaterThanOrEqual(1_000_000, $ninja->gold);
         $this->assertGreaterThanOrEqual(10_000, $ninja->coupons);
         $this->assertSame(['0_47'], $ninja->outfits()->pluck('key')->all()); // its own sex
+        $this->assertSame(config('game.outfits.upgrade.max_level'), $ninja->outfitLevel(Outfit::where('key', '0_47')->sole()));
         $this->assertSame(2, $ninja->gear()->count());
         $this->assertSame(1, $ninja->inventory()->count());
         $this->assertSame(1, $ninja->titles()->count());
