@@ -56,7 +56,8 @@ Tick an item when it ships and update its row in the tables below.
 - [ ] Item exchange
 - [ ] Gift bags
 - [x] Wish Pot for outfits (gift coupons, Lucky Pot building in Waterfall Village)
-- [x] Pick-one pots: Shippuden and S-rank (only outfits with art: 8 of the original 18)
+- [x] Lucky Pot after the original wishpot table: grey/blue/orange, +18 and +27 orange, Legend, Shippuden and S-rank (pick, and +27), Bankai title box; pet, tailed beast, forge and set pots show locked
+- [x] Shippuden outfits (Kakuzu, Hidan, Deidara, Pain, Kisame, Konan, Sage Naruto, Hebi Sasuke, Suigetsu, Karin) and Little Jun, with their ultimates
 - [ ] Pet and tailed beast pots (need pets and tailed beasts first)
 - [ ] Collectible cards
 - [ ] Premium shop and VIP
@@ -142,24 +143,24 @@ Tick an item when it ships and update its row in the tables below.
 
 ## Items and economy
 
-| Status | Feature                                         | Original data                                                                                  |
-| ------ | ----------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| ✅     | Inventory (bag + character panel), Pharmacy     | `pharmacyitem`                                                                                 |
-| ✅     | Equipment (8 slots), Equipment Shop             | `equipitem`                                                                                    |
-| ✅     | Weapon classes and weapons held in battle       | `rolebase` (`Popsinger`), `equipitem` (`UsePopsinger`), `motion/weapon`, `weaponmotion`        |
-| ⬜     | Forge: enhance to +12                           | `equipconsolidate`, `upgradecue`                                                               |
-| ⬜     | Forge: crafting and compose                     | `equipcompose`, `composemethoditem`, `composetable`, `composetemp`, panels `equipcompose*`     |
-| ⬜     | Forge: gems and sockets                         | `jewelitem`, `equipimbrate`, panel `removejew`                                                 |
-| ⬜     | Forge: identify and re-identify stats           | `equipidentifypro`, `equipmagicpro`, panel `reidentifyresult`                                  |
-| ⬜     | Forge: inscription                              | `equipinscribe`                                                                                |
-| ⬜     | Equipment set bonuses                           | `equipsuit`, `equipsuitpro`, panels `equipsuitshow*`                                           |
-| ⬜     | Player market                                   | `martcollect`, `martcollectshow`, `martsellshow`, panels `mart*`                               |
-| ⬜     | Storage (depot)                                 | panels `depot`, `exchangedepotlist`                                                            |
-| ⬜     | Item exchange                                   | `itemexchange`, panel `itemtransform`                                                          |
-| ⬜     | Gift bags                                       | `giftbagitem`, `giftid`, `normalgiftodd`, `specialgiftodd`                                     |
-| 🟡     | Lucky Pot and Wish Pot                          | `pottabvisible`, `wishpot`, panels `randpot*`, `wishpot*`                                      |
-| ⬜     | Collectible cards (Card Hall, rooms, card link) | `card_carditem`, `card_color`, `card_index_menu`, `cardprizeitem`, panels `card*`              |
-| ⬜     | Premium shop and VIP                            | `supershoptab`, `supershopsubtab`, `virtualshop`, `hotvirtualshop`, panels `supershop*`, `pay` |
+| Status | Feature                                              | Original data                                                                                  |
+| ------ | ---------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| ✅     | Inventory (bag + character panel), Pharmacy          | `pharmacyitem`                                                                                 |
+| ✅     | Equipment (8 slots), Equipment Shop                  | `equipitem`                                                                                    |
+| ✅     | Weapon classes and weapons held in battle            | `rolebase` (`Popsinger`), `equipitem` (`UsePopsinger`), `motion/weapon`, `weaponmotion`        |
+| ⬜     | Forge: enhance to +12                                | `equipconsolidate`, `upgradecue`                                                               |
+| ⬜     | Forge: crafting and compose                          | `equipcompose`, `composemethoditem`, `composetable`, `composetemp`, panels `equipcompose*`     |
+| ⬜     | Forge: gems and sockets                              | `jewelitem`, `equipimbrate`, panel `removejew`                                                 |
+| ⬜     | Forge: identify and re-identify stats                | `equipidentifypro`, `equipmagicpro`, panel `reidentifyresult`                                  |
+| ⬜     | Forge: inscription                                   | `equipinscribe`                                                                                |
+| ⬜     | Equipment set bonuses                                | `equipsuit`, `equipsuitpro`, panels `equipsuitshow*`                                           |
+| ⬜     | Player market                                        | `martcollect`, `martcollectshow`, `martsellshow`, panels `mart*`                               |
+| ⬜     | Storage (depot)                                      | panels `depot`, `exchangedepotlist`                                                            |
+| ⬜     | Item exchange                                        | `itemexchange`, panel `itemtransform`                                                          |
+| ⬜     | Gift bags                                            | `giftbagitem`, `giftid`, `normalgiftodd`, `specialgiftodd`                                     |
+| ✅     | Lucky Pot and Wish Pot (pet/beast/forge pots locked) | `pottabvisible`, `wishpot`, panels `randpot*`, `wishpot*`                                      |
+| ⬜     | Collectible cards (Card Hall, rooms, card link)      | `card_carditem`, `card_color`, `card_index_menu`, `cardprizeitem`, panels `card*`              |
+| ⬜     | Premium shop and VIP                                 | `supershoptab`, `supershopsubtab`, `virtualshop`, `hotvirtualshop`, panels `supershop*`, `pay` |
 
 ## Pets
 

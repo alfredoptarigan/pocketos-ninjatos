@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """Extract the original jutsu (skill) battle effects from the Pockie Ninja backup.
 
-Usage: python3 tools/extract_effect_assets.py <path-to-game-pockieninja> [--hd] [--ultimates]
+Usage: python3 tools/extract_effect_assets.py <path-to-game-pockieninja> [--hd] [--ultimates] [--missing]
 --hd renders the vector effects at 2x (JPEXS zoom, no AI needed).
 --ultimates only renders the ultimates and adds them to the existing index.
+--missing keeps sheets already written (e.g. after adding outfits).
 
 Needs JPEXS + Java, like tools/extract_ui_assets.py:
   JAVA       java binary   (default /opt/homebrew/opt/openjdk/bin/java)
@@ -223,7 +224,7 @@ def build_sheet(row: dict, java: str, ffdec: Path, zoom: int) -> dict:
 
 def main() -> None:
     flags = set(sys.argv[2:])
-    if len(sys.argv) < 2 or not flags <= {'--hd', '--ultimates'}:
+    if len(sys.argv) < 2 or not flags <= {'--hd', '--ultimates', '--missing'}:
         sys.exit(__doc__)
     zoom = HD_ZOOM if '--hd' in flags else 1
     java = os.environ.get('JAVA', '/opt/homebrew/opt/openjdk/bin/java')
@@ -242,7 +243,12 @@ def main() -> None:
     rows = effect_rows(source, ultimates if only_ultimates else panel_ids(source) | ultimates)
     # JPEXS (a Java process per render) is the slow part: run a few at once.
     with ThreadPoolExecutor(max_workers=WORKERS) as pool:
-        for row in pool.map(lambda row: build_sheet(row, java, ffdec, zoom), rows):
+        def build(row: dict) -> dict:
+            if '--missing' in flags and (OUT_DIR / f"{row['key']}.json").is_file():
+                return row
+            return build_sheet(row, java, ffdec, zoom)
+
+        for row in pool.map(build, rows):
             index.setdefault(row['skill'], []).append({
                 'sheet': f"{URL_DIR}/{row['key']}.json",
                 'type': row['type'],

@@ -37,13 +37,16 @@ class Outfit extends Model
     }
 
     /**
-     * Outfits a Wishing Pot can give: not event-only.
+     * Outfits a random Wishing Pot can give: not event-only, and not one a
+     * pick or pool pot offers (Shippuden, S-rank, Legend).
      *
      * @param  Builder<Outfit>  $query
      */
     public function scopeInPots(Builder $query): void
     {
-        $query->whereNotIn('key', config('game.outfits.event_only'));
+        $listed = collect(config('game.outfits.pots'))->flatMap(fn (array $pot) => [...$pot['pick'] ?? [], ...$pot['pool'] ?? []]);
+
+        $query->whereNotIn('key', [...config('game.outfits.event_only'), ...$listed]);
     }
 
     /**

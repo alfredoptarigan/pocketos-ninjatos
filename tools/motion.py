@@ -47,17 +47,19 @@ def motion_frames(motion_swf: Path):
     return frames, ticks, swf.frame_rate
 
 
-def write_motion_sheet(key: str, motions: dict[str, Path], out: Path, scale: int = 1) -> None:
+def write_motion_sheet(key: str, motions: dict[str, Path], out: Path, scale: int = 1, frames_of=None) -> None:
     """Pack every action into motions.png + motions.json (one shared anchor).
 
     Frame names carry `key` because Pixi caches textures globally by name.
     With scale > 1 frames are AI-upscaled (tools/upscale.py) and the sheet's
     meta.scale tells Pixi to draw them at their original size, only sharper.
+    `frames_of` replaces motion_frames for art drawn already at `scale`
+    (vector motions rendered by JPEXS), which then needs no AI.
     """
     from PIL import Image
 
-    actions = {name: motion_frames(path) for name, path in motions.items()}
-    if scale > 1:
+    actions = {name: (frames_of or motion_frames)(path) for name, path in motions.items()}
+    if scale > 1 and frames_of is None:
         actions = upscale_actions(actions, scale)
     every = [frame for frames, _, _ in actions.values() for frame in frames]
     left = min(x for _, x, _ in every)

@@ -1,5 +1,10 @@
 <?php
 
+// Original Magic Wishing Pots, male then female outfits (wishpot i160109, i160111);
+// their +27 pots offer the same.
+$shippudenPot = ['0_103', '0_104', '0_105', '0_107', '0_113', '1_114', '1_67', '1_31'];
+$sRankPot = ['0_106', '0_109', '0_111', '0_53', '1_108', '1_44'];
+
 return [
 
     /*
@@ -163,17 +168,40 @@ return [
         // level_step * (N - 1) (the original avataritem UseLevel) and adds
         // bonus_per_level percent per level on top of the rarity bonus.
         'upgrade' => ['max_level' => 27, 'gold' => 200, 'shards' => 1, 'level_step' => 3, 'bonus_per_level' => 1],
-        // Event and mascot outfits never come out of a pot.
-        'event_only' => ['1_86', '0_88', '1_89', '1_90', '0_98'],
+        // Event and mascot outfits never come out of a random pot; neither do
+        // those on a 'pick' or 'pool' list (Outfit::scopeInPots).
+        'event_only' => ['1_86', '0_88', '1_89', '0_98'],
+        // The Lucky Pot, after the original wishpot table (ids i1601xx). Random
+        // pots roll 'odds' (rarity => weight); 'pool' pots draw from their list;
+        // 'pick' pots let the ninja choose (owned ones only when the pot's level
+        // would raise them). 'level' gives the outfit already upgraded (+18,
+        // +27): an owned one is raised to it, or gives shards when already
+        // there. 'titles' grants one of those titles not owned yet. 'locked'
+        // pots wait for a missing feature. Prices are ours (gift coupons).
         'pots' => [
             'ninja' => ['name' => 'Ninja Wishing Pot', 'price' => 10, 'odds' => ['grey' => 70, 'blue' => 25, 'orange' => 5]],
             'grey' => ['name' => 'Grey Outfit Wishing Pot', 'price' => 5, 'odds' => ['grey' => 1]],
             'blue' => ['name' => 'Blue Outfit Wishing Pot', 'price' => 25, 'odds' => ['blue' => 1]],
             'orange' => ['name' => 'Orange Outfit Wishing Pot', 'price' => 100, 'odds' => ['orange' => 1]],
-            // Original Magic Wishing Pots: the ninja picks one outfit of the list
-            // (only those with art in the backup; Akatsuki, Pain, Sage Naruto have none).
-            'shippuden' => ['name' => 'Shippuden Wishing Pot', 'price' => 120, 'pick' => ['0_24', '1_31', '1_67', '1_70']],
-            's_rank' => ['name' => 'S-rank Ninja Wishing Pot', 'price' => 150, 'pick' => ['0_50', '0_53', '1_30', '1_44']],
+            'orange_18' => ['name' => 'Orange Wishing Pot +18', 'price' => 300, 'odds' => ['orange' => 1], 'level' => 18],
+            'orange_27' => ['name' => 'Orange Wishing Pot +27', 'price' => 500, 'odds' => ['orange' => 1], 'level' => 27],
+            'shippuden' => ['name' => 'Shippuden Wishing Pot', 'price' => 120, 'pick' => $shippudenPot],
+            's_rank' => ['name' => 'S-rank Ninja Wishing Pot', 'price' => 150, 'pick' => $sRankPot],
+            'shippuden_27' => ['name' => 'Shippuden Wishing Pot +27', 'price' => 600, 'pick' => $shippudenPot, 'level' => 27],
+            's_rank_27' => ['name' => 'S-rank Ninja Wishing Pot +27', 'price' => 700, 'pick' => $sRankPot, 'level' => 27],
+            'legend' => ['name' => 'Legend Wishing Pot', 'price' => 200, 'pool' => ['0_87', '0_88', '1_86', '1_89']],
+            'titles' => ['name' => 'Bankai Title Wishing Box', 'price' => 150, 'titles' => [
+                'EffortTitle48', 'EffortTitle49', 'EffortTitle50', 'EffortTitle51',
+                'EffortTitle52', 'EffortTitle53', 'EffortTitle54', 'EffortTitle55',
+            ]],
+            'pets_18' => ['name' => 'Pet Wishing Pot +18', 'locked' => 'Needs pets'],
+            'pets_21' => ['name' => 'Pet Wishing Pot +21', 'locked' => 'Needs pets'],
+            'pet_skill_books' => ['name' => 'Pet Skill Book Wishing Pot', 'locked' => 'Needs pets'],
+            'tailed_beasts' => ['name' => 'Tailed Beast Wishing Pot', 'locked' => 'Needs tailed beasts'],
+            's_rank_tailed_beasts' => ['name' => 'S-rank Tailed Beast Wishing Pot', 'locked' => 'Needs tailed beasts'],
+            'beast_hearts' => ['name' => 'Heart of Tailed Beast Wishing Box', 'locked' => 'Needs tailed beasts'],
+            'enchantment_stones' => ['name' => 'Enchantment Stone Wishbox', 'locked' => 'Needs the Forge'],
+            'super' => ['name' => 'Super Wishing Pot', 'locked' => 'Needs equipment sets'],
         ],
     ],
 

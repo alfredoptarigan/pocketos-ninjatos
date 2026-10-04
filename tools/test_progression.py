@@ -26,6 +26,8 @@ class ProgressionTest(unittest.TestCase):
         self.assertEqual(title_name('Katalog Buku Abu-Abu'), 'Grey Cataloguer')
         self.assertEqual(title_name('Brave Aries(7 hari)'), 'Brave Aries (7 days)')
         self.assertEqual(title_name('Wake of Sharingan'), 'Wake of Sharingan')
+        # The client drew the Bankai mark with a private-use glyph of its font.
+        self.assertEqual(title_name('\uf8dceBlue Beast'), 'Bankai Blue Beast')
 
     def test_titles_skip_no_title(self):
         rows = [{'ID': '0', 'Name': 'EffortTitle00', 'Level': '0', 'contentself': 'c0'},

@@ -74,13 +74,15 @@ TITLE_NAMES = {
     'Semangat, anak muda!': 'Fight On, Youngster!',
     'Domba Gemuk Legendaris': 'Legendary Fat Sheep',
 }
+# Bankai titles start with a glyph of the client font (U+F8DC) and an 'e'.
+BANKAI_MARK = r'^\uf8dce'
 COLLECTION_RANKS = {'Pengumpul': 'Gatherer', 'Penjaga': 'Keeper', 'Kolektor': 'Collector', 'Koleksi': 'Curator', 'Katalog Buku': 'Cataloguer'}
 COLLECTION_COLORS = {'Orange': 'Orange', 'Biru': 'Blue', 'Abu-Abu': 'Grey'}
 
 
 def title_name(name: str) -> str:
-    """English title name: the TITLE_NAMES fixes and '<rank> <colour>' collection titles."""
-    name = outfit_name(name)
+    """English title name: the TITLE_NAMES fixes, '<rank> <colour>' collection titles and Bankai titles."""
+    name = re.sub(BANKAI_MARK, 'Bankai ', outfit_name(name))
     for rank, english_rank in COLLECTION_RANKS.items():
         for color, english_color in COLLECTION_COLORS.items():
             if name == f'{rank} {color}':

@@ -135,12 +135,18 @@ and the backdrop `battle/backgrounds/fightbg_3102.jpg`. Gotchas: `tollgate` has 
 rate dodge/parry/crit ~10x the tower scale (divided by 10); their art is not in the backup, so they
 borrow `motion/mob` stand-ins and avatar-named bosses (`name_avatar45`) use the outfit art.
 
-`tools/extract_outfit_assets.py [--hd]` reads `avataritem` (base +0 outfits, ids 1-100: sex and
-`ItemColor` 0/1/2 = grey/blue/orange) and English names `lg_avatar<id>` from
-`keyvaluetable/language`, and writes `database/data/outfits.json` (`OutfitSeeder`) plus
-`face.png` and `motions.*` under `public/game-assets/characters/<sex>_<id>/` (no portrait:
-only create-screen avatars have one). 74 outfits have art; outfits without motion bitmaps
-(e.g. `0_87`) are skipped. Konan is forced to orange (the data says grey).
+`tools/extract_outfit_assets.py [--hd]` reads `avataritem` (base +0 outfits are the rows with
+`AvatarLevel` 1: sex, `ItemColor` 0/1/2 = grey/blue/orange, and `Clothing`, the `people_<id>` art
+they wear) and English names `lg_avatar<AvatarID>` from `keyvaluetable/language`, and writes
+`database/data/outfits.json` (`OutfitSeeder`) plus `face.png` and `motions.*` under
+`public/game-assets/characters/<sex>_<Clothing>/` (no portrait: only create-screen avatars have
+one). 85 outfits have art. Gotcha: the Shippuden outfits are avatars `40xx` (Kakuzu = 4003) wearing
+`people_103`-`114`; the labels `lg_avatar103`.. ("Ggio Vega +1") belong to +1 upgrade rows of
+outfits 3-14, so keying by AvatarID hid Kakuzu, Hidan, Deidara, Pain, Kisame, Konan, Sage Naruto,
+Hebi Sasuke, Suigetsu and Karin. Little Jun (`0_87`) is drawn in vectors: JPEXS renders its
+`MotionSource` symbol at the HD zoom. Nel, Chi, Priest, Zombie Lady, Arale, Bomb Rukia and the
+original Konan (68) have no motions; Kabuto, Guren, Kurenai and Lisa are not in the backup.
+Konan is forced to orange (the data says grey).
 Upgrades +1..+N are other `avataritem` rows (`AvatarID = level * 100 + base`, `UseLevel`
 3 per step); the backup has no upgrade cost or stats, so those are ours (`outfits.upgrade`).
 

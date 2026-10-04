@@ -4,7 +4,8 @@
 Usage: python3 tools/extract_outfit_assets.py <path-to-game-pockieninja> [--hd]
 --hd upscales the art 2x with Real-ESRGAN (see tools/upscale.py).
 
-Reads avataritem (one +0 item per outfit: sex, ItemColor) and the English names
+Reads avataritem (one +0 item per outfit, AvatarLevel 1: sex, ItemColor, and
+Clothing, the people_<id> art it wears) and the English names
 in keyvaluetable/language, and writes database/data/outfits.json (OutfitSeeder)
 plus face.png and motions.{png,json} under public/game-assets/characters/<sex>_<id>/
 for every outfit with art. The 18 creatable avatars are outfits too. Output is
@@ -15,8 +16,11 @@ from __future__ import annotations
 
 import json
 import re
+import os
 import shutil
+import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 from amf3 import load_compressed
@@ -31,9 +35,11 @@ ART_OUT = ROOT / 'public' / 'game-assets' / 'characters'
 DATA_OUT = ROOT / 'database' / 'data' / 'outfits.json'
 HD_SCALE = 2
 
-# Original ItemColor -> rarity. Outfit ids above this are the +1..+N upgrades.
+# Original ItemColor -> rarity.
 RARITIES = {0: 'grey', 1: 'blue', 2: 'orange'}
-LAST_BASE_OUTFIT = 100
+# AvatarLevel of the +0 item; +N upgrades are other rows.
+BASE_LEVEL = 1
+VECTOR_SYMBOL = 'MotionSource'
 # The data marks Konan grey, but the original sold her in the S-rank (orange) pot.
 RARITY_OVERRIDES = {'1_68': 'orange'}
 # rolebase.Popsinger (keyed by avatar id) -> the weapons an outfit holds; 7 (all) is None.
@@ -57,14 +63,19 @@ def weapon_classes(rolebase: dict) -> dict[int, str | None]:
 
 
 def outfits(avatar_items: list[dict], language: dict, classes: dict[int, str | None]) -> list[dict]:
-    """Every base (+0) outfit with an English name, ordered by id."""
+    """Every base (+0) outfit with an English name, ordered by art id.
+
+    The key is the art it wears ("<sex>_<Clothing>"). Most +0 avatars share
+    their id with the art; the Shippuden ones (avatar 4003, Kakuzu) wear
+    people_103, whose own label "Ggio Vega +1" belongs to an upgrade row.
+    """
     found = []
     for item in avatar_items:
         avatar_id = number(item['AvatarID'])
         name = outfit_name(language.get(f'lg_avatar{avatar_id}', ''))
-        if not 1 <= avatar_id <= LAST_BASE_OUTFIT or not name:
+        if number(item['AvatarLevel']) != BASE_LEVEL or not name:
             continue
-        key = f"{number(item['Sex'])}_{avatar_id}"
+        key = f"{number(item['Sex'])}_{number(item['Clothing'])}"
         found.append({
             'key': key,
             'name': name,
@@ -73,6 +84,35 @@ def outfits(avatar_items: list[dict], language: dict, classes: dict[int, str | N
             'weapon_class': classes.get(avatar_id),
         })
     return sorted(found, key=lambda outfit: int(outfit['key'].split('_')[1]))
+
+
+def vector_motion_frames(motion_swf: Path, zoom: int):
+    """(frames, ticks, fps) of a vector motion, as motion_frames gives for bitmap ones.
+
+    JPEXS renders the MotionSource symbol (needs Java, see extract_effect_assets);
+    frames are drawn at `zoom`, offsets from the character origin in those pixels.
+    """
+    from PIL import Image
+
+    from extract_effect_assets import origin_of, render
+    from swf import read_swf, symbol_classes
+
+    java = os.environ.get('JAVA', '/opt/homebrew/opt/openjdk/bin/java')
+    ffdec = Path(os.environ.get('FFDEC_JAR', '~/.local/opt/jpexs/ffdec.jar')).expanduser()
+    swf = read_swf(motion_swf)
+    with tempfile.TemporaryDirectory() as tmp:
+        out = Path(tmp)
+        render(java, ffdec, motion_swf, symbol_classes(swf)[VECTOR_SYMBOL], zoom, out)
+        sprite = next((out / 'png').glob('DefineSprite_*')).name
+        pngs = sorted((out / 'png' / sprite).glob('*.png'), key=lambda p: int(p.stem))
+        if not pngs:
+            raise ValueError(f'{motion_swf}: nothing rendered')
+        frames = []
+        for path in pngs:
+            image = Image.open(path).convert('RGBA')
+            ox, oy = origin_of(out / 'svg' / sprite / f'{path.stem}.svg', image.size)
+            frames.append((image, -ox, -oy))
+    return frames, list(range(len(frames))), swf.frame_rate
 
 
 def extract_art(source: Path, key: str, scale: int) -> bool:
@@ -90,9 +130,13 @@ def extract_art(source: Path, key: str, scale: int) -> bool:
     out.mkdir(parents=True, exist_ok=True)
     try:
         write_motion_sheet(key, motions, out, scale)
-    except ValueError as error:  # a few motion files are vector-only stubs
-        print(f'skipped {key}: {error}')
-        return False
+    except ValueError:
+        # Little Jun is drawn in vectors: JPEXS renders it, sharp at any scale.
+        try:
+            write_motion_sheet(key, motions, out, scale, frames_of=lambda swf: vector_motion_frames(swf, scale))
+        except (ValueError, OSError, subprocess.CalledProcessError) as error:
+            print(f'skipped {key}: {error}')
+            return False
     shutil.copyfile(faces[0], out / 'face.png')
     if scale > 1:
         upscale_file(out / 'face.png', scale)

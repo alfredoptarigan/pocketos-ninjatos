@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Character;
 use App\Models\Equipment;
 use App\Models\Outfit;
+use App\Models\Title;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -97,9 +98,9 @@ class OutfitTest extends TestCase
         $this->actingAs($character->user);
 
         $this->get(route('wish-pot.show'))->assertInertia(fn (Assert $page) => $page
-            ->where('pots.5.key', 's_rank')
-            ->has('pots.5.choices', 1)
-            ->where('pots.5.choices.0.key', '0_53'));
+            ->where('pots.7.key', 's_rank')
+            ->has('pots.7.choices', 1)
+            ->where('pots.7.choices.0.key', '0_53'));
 
         $this->post(route('wish-pot.draw', 's_rank'), ['outfit' => '0_53'])->assertRedirect(route('wish-pot.show'));
 
@@ -121,6 +122,103 @@ class OutfitTest extends TestCase
         $this->post(route('wish-pot.draw', 's_rank'), ['outfit' => '0_53'])->assertSessionHasErrors('outfit'); // owned
 
         $this->assertSame(200, $character->refresh()->coupons);
+    }
+
+    public function test_level_pots_give_the_outfit_already_upgraded()
+    {
+        $character = $this->ninja(['coupons' => 1000]);
+        $kakashi = Outfit::factory()->create(['key' => '0_47', 'sex' => 0, 'rarity' => 'orange']);
+        $this->actingAs($character->user);
+
+        $this->post(route('wish-pot.draw', 'orange_18'));
+
+        $this->assertSame(18, $character->outfitLevel($kakashi));
+        $this->assertSame(1000 - config('game.outfits.pots.orange_18.price'), $character->refresh()->coupons);
+    }
+
+    public function test_a_level_pot_raises_an_owned_outfit_or_gives_shards_when_it_is_already_higher()
+    {
+        $character = $this->ninja(['coupons' => 1000]);
+        $kakashi = Outfit::factory()->create(['key' => '0_47', 'sex' => 0, 'rarity' => 'orange']);
+        $character->outfits()->attach($kakashi, ['level' => 3]);
+        $this->actingAs($character->user);
+
+        $this->post(route('wish-pot.draw', 'orange_18'));
+        $this->assertSame(18, $character->outfitLevel($kakashi));
+        $this->assertSame(0, $character->refresh()->outfit_shards);
+
+        $this->post(route('wish-pot.draw', 'orange_18'));
+        $this->assertSame(18, $character->outfitLevel($kakashi));
+        $this->assertSame(config('game.outfits.duplicate_shards.orange'), $character->refresh()->outfit_shards);
+    }
+
+    public function test_a_plus_27_pick_pot_upgrades_an_owned_outfit()
+    {
+        $character = $this->ninja(['coupons' => 2000]);
+        $pain = Outfit::factory()->create(['key' => '0_106', 'sex' => 0, 'rarity' => 'orange']);
+        $character->outfits()->attach($pain);
+        $this->actingAs($character->user);
+
+        $this->post(route('wish-pot.draw', 's_rank_27'), ['outfit' => '0_106'])->assertSessionHasNoErrors();
+        $this->assertSame(27, $character->outfitLevel($pain));
+
+        $this->post(route('wish-pot.draw', 's_rank_27'), ['outfit' => '0_106'])->assertSessionHasErrors('outfit');
+    }
+
+    public function test_outfits_of_pick_and_legend_pots_never_come_out_of_random_pots()
+    {
+        $character = $this->ninja(['coupons' => 1000]);
+        Outfit::factory()->create(['key' => '0_103', 'sex' => 0, 'rarity' => 'orange']); // Shippuden Pot
+        Outfit::factory()->create(['key' => '0_87', 'sex' => 0, 'rarity' => 'orange']); // Legend Pot
+        $kakashi = Outfit::factory()->create(['key' => '0_47', 'sex' => 0, 'rarity' => 'orange']);
+        $this->actingAs($character->user);
+
+        $this->post(route('wish-pot.draw', 'orange'));
+        $this->post(route('wish-pot.draw', 'orange'));
+
+        $this->assertSame([$kakashi->id], $character->outfits()->pluck('outfits.id')->all());
+    }
+
+    public function test_the_legend_pot_draws_a_mascot_or_christmas_outfit_for_the_ninjas_sex()
+    {
+        $character = $this->ninja(['coupons' => 1000]);
+        $jun = Outfit::factory()->create(['key' => '0_87', 'sex' => 0, 'rarity' => 'orange']);
+        Outfit::factory()->create(['key' => '1_86', 'sex' => 1, 'rarity' => 'orange']);
+        $this->actingAs($character->user);
+
+        $this->post(route('wish-pot.draw', 'legend'));
+
+        $this->assertSame([$jun->id], $character->outfits()->pluck('outfits.id')->all());
+    }
+
+    public function test_the_title_box_grants_a_title_not_owned_yet_until_none_is_left()
+    {
+        $character = $this->ninja(['coupons' => 2000]);
+        $codes = config('game.outfits.pots.titles.titles');
+        foreach ($codes as $code) {
+            Title::create(['code' => $code, 'name' => $code, 'category' => 6, 'bonus' => []]);
+        }
+        $this->actingAs($character->user);
+
+        foreach ($codes as $ignored) {
+            $this->post(route('wish-pot.draw', 'titles'))->assertSessionHasNoErrors();
+        }
+        $this->post(route('wish-pot.draw', 'titles'))->assertSessionHasErrors('pot');
+
+        $this->assertEqualsCanonicalizing($codes, $character->titles()->pluck('code')->all());
+        $this->assertSame(2000 - count($codes) * config('game.outfits.pots.titles.price'), $character->refresh()->coupons);
+    }
+
+    public function test_locked_pots_show_what_they_wait_for_and_cannot_be_opened()
+    {
+        $character = $this->ninja(['coupons' => 1000]);
+        $this->actingAs($character->user);
+
+        $this->get(route('wish-pot.show'))->assertInertia(fn (Assert $page) => $page
+            ->where('pots.'.array_search('pets_18', array_keys(config('game.outfits.pots')), true).'.locked', 'Needs pets'));
+        $this->post(route('wish-pot.draw', 'pets_18'))->assertSessionHasErrors('pot');
+
+        $this->assertSame(1000, $character->refresh()->coupons);
     }
 
     public function test_wearing_an_outfit_changes_the_look_and_adds_its_bonus()
