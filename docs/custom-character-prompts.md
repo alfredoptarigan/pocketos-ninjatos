@@ -77,8 +77,9 @@ Save it as `face.png`.
 
 Run this once per frame. Replace the four placeholders before sending: `{N}`
 (frame number), `{TOTAL}` (frames in the action), `{ACTION}` (folder name) and
-`{POSE}` (the line for that frame under "Poses, frame by frame"). An AI that
-receives the braces unfilled asks for the values instead of drawing.
+`{POSE}` (what the character does in that frame). An AI that
+receives the braces unfilled asks for the values instead of drawing. The
+frames the game needs are filled in below; use this template for your own.
 
 ```
 Using the attached character design as the exact reference, draw frame {N} of
@@ -111,24 +112,6 @@ background (#00FF00). One character, no shadow, no motion blur, no speed
 lines, no text.
 ```
 
-### Ready to paste: every next frame
-
-In the same chat, the AI already has the rules. Send one short message per
-frame, with the pose copied from "Poses, frame by frame":
-
-```
-Same rules and same reference. Frame 2 of 4 of the stance animation: same
-pose, the body 2% lower (breathing out).
-```
-
-```
-Same rules and same reference. Frame 3 of 6 of the attack animation: full
-extension, the arm stretched out to the left, body leaning in.
-```
-
-Attach the reference image again, or start a new chat with the full prompt,
-as soon as the colors, the size or the outfit start to drift.
-
 ### Frames to make
 
 The original characters play at 12 frames per second.
@@ -144,52 +127,210 @@ The original characters play at 12 frames per second.
 
 Missing optional actions fall back to `stance` in the game.
 
-### Poses, frame by frame
+### Ready to paste: every frame
 
-`stance` (loops)
+In the same chat the AI already has the rules from the first frame, so each
+next frame is one short message. Send them one at a time and save each result
+under the file name above it.
 
-1. Fighting stance, knees slightly bent, fists raised.
-2. Same pose, the body 2% lower (breathing out).
-3. Same pose, the body at its lowest point, shoulders relaxed.
-4. Same pose, rising back, halfway to frame 1.
+Attach the reference image again, or start a new chat with the full prompt,
+as soon as the colors, the size or the outfit start to drift.
 
-`attack`
+#### `stance` (loops)
 
-1. Wind-up: weight on the back foot, the striking arm pulled back.
-2. Stepping forward to the left, the arm starting to swing.
-3. Full extension: the arm (or weapon) stretched out to the left, body leaning in.
-4. Follow-through: the arm past the target, the body still leaning.
-5. Recovering: stepping back, the arm coming home.
-6. Back in the fighting stance.
+`stance/01.png`: the full prompt under "Ready to paste: the first frame".
 
-`dead`
+`stance/02.png`
 
-1. Lying on the back on the ground, head to the right, feet to the left, eyes closed.
+```
+Same rules and same reference. Frame 2 of 4 of the stance animation:
+same pose, the body 2% lower (breathing out).
+```
 
-`run` (loops)
+`stance/03.png`
 
-1. Leaning forward to the left, right leg forward, arms swept back.
-2. Both feet off the ground, legs passing each other.
-3. Left leg forward, arms swept back.
-4. Both feet off the ground, legs passing each other.
+```
+Same rules and same reference. Frame 3 of 4 of the stance animation:
+same pose, the body at its lowest point, shoulders relaxed.
+```
 
-`idle` (loops)
+`stance/04.png`
 
-1. Standing upright and relaxed, arms at the sides.
-2. Same, the chest slightly raised (breathing in).
-3. Same as frame 1.
-4. Same, the head tilted one degree, blinking.
+```
+Same rules and same reference. Frame 4 of 4 of the stance animation:
+same pose, rising back, halfway to frame 1.
+```
 
-`dodge`
+#### `attack`
 
-1. Crouching, ready to jump back.
-2. Leaving the ground, leaning backwards.
-3. Upside down in the air, a quarter of the flip.
-4. Fully upside down, knees tucked.
-5. Three quarters of the flip, the feet coming round.
-6. Feet about to land, further to the right than the start.
-7. Landing in a crouch.
-8. Rising back into the fighting stance.
+`attack/01.png`
+
+```
+Same rules and same reference. Frame 1 of 6 of the attack animation:
+wind-up: weight on the back foot, the striking arm pulled back.
+```
+
+`attack/02.png`
+
+```
+Same rules and same reference. Frame 2 of 6 of the attack animation:
+stepping forward to the left, the arm starting to swing.
+```
+
+`attack/03.png`
+
+```
+Same rules and same reference. Frame 3 of 6 of the attack animation:
+full extension: the arm (or weapon) stretched out to the left, body leaning in.
+```
+
+`attack/04.png`
+
+```
+Same rules and same reference. Frame 4 of 6 of the attack animation:
+follow-through: the arm past the target, the body still leaning.
+```
+
+`attack/05.png`
+
+```
+Same rules and same reference. Frame 5 of 6 of the attack animation:
+recovering: stepping back, the arm coming home.
+```
+
+`attack/06.png`
+
+```
+Same rules and same reference. Frame 6 of 6 of the attack animation:
+back in the fighting stance.
+```
+
+#### `dead`
+
+`dead/01.png`
+
+```
+Same rules and same reference. Frame 1 of 1 of the dead animation:
+lying on the back on the ground, head to the right, feet to the left, eyes closed.
+```
+
+#### `run` (loops, optional)
+
+`run/01.png`
+
+```
+Same rules and same reference. Frame 1 of 4 of the run animation:
+leaning forward to the left, right leg forward, arms swept back.
+```
+
+`run/02.png`
+
+```
+Same rules and same reference. Frame 2 of 4 of the run animation:
+both feet off the ground, legs passing each other.
+```
+
+`run/03.png`
+
+```
+Same rules and same reference. Frame 3 of 4 of the run animation:
+left leg forward, arms swept back.
+```
+
+`run/04.png`
+
+```
+Same rules and same reference. Frame 4 of 4 of the run animation:
+both feet off the ground, legs passing each other.
+```
+
+#### `idle` (loops, optional)
+
+`idle/01.png`
+
+```
+Same rules and same reference. Frame 1 of 4 of the idle animation:
+standing upright and relaxed, arms at the sides.
+```
+
+`idle/02.png`
+
+```
+Same rules and same reference. Frame 2 of 4 of the idle animation:
+same, the chest slightly raised (breathing in).
+```
+
+`idle/03.png`
+
+```
+Same rules and same reference. Frame 3 of 4 of the idle animation:
+same as frame 1.
+```
+
+`idle/04.png`
+
+```
+Same rules and same reference. Frame 4 of 4 of the idle animation:
+same, the head tilted one degree, blinking.
+```
+
+#### `dodge` (optional)
+
+`dodge/01.png`
+
+```
+Same rules and same reference. Frame 1 of 8 of the dodge animation:
+crouching, ready to jump back.
+```
+
+`dodge/02.png`
+
+```
+Same rules and same reference. Frame 2 of 8 of the dodge animation:
+leaving the ground, leaning backwards.
+```
+
+`dodge/03.png`
+
+```
+Same rules and same reference. Frame 3 of 8 of the dodge animation:
+upside down in the air, a quarter of the flip.
+```
+
+`dodge/04.png`
+
+```
+Same rules and same reference. Frame 4 of 8 of the dodge animation:
+fully upside down, knees tucked.
+```
+
+`dodge/05.png`
+
+```
+Same rules and same reference. Frame 5 of 8 of the dodge animation:
+three quarters of the flip, the feet coming round.
+```
+
+`dodge/06.png`
+
+```
+Same rules and same reference. Frame 6 of 8 of the dodge animation:
+feet about to land, further to the right than the start.
+```
+
+`dodge/07.png`
+
+```
+Same rules and same reference. Frame 7 of 8 of the dodge animation:
+landing in a crouch.
+```
+
+`dodge/08.png`
+
+```
+Same rules and same reference. Frame 8 of 8 of the dodge animation:
+rising back into the fighting stance.
+```
 
 ## Checklist before importing
 
