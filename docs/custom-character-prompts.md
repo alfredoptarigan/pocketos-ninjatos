@@ -75,7 +75,10 @@ Save it as `face.png`.
 
 ## Prompt 3: battle frames
 
-Run this once per frame. Replace the three placeholders.
+Run this once per frame. Replace the four placeholders before sending: `{N}`
+(frame number), `{TOTAL}` (frames in the action), `{ACTION}` (folder name) and
+`{POSE}` (the line for that frame under "Poses, frame by frame"). An AI that
+receives the braces unfilled asks for the values instead of drawing.
 
 ```
 Using the attached character design as the exact reference, draw frame {N} of
