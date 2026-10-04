@@ -18,6 +18,8 @@ backup) on a modern stack.
   where they land, id cheat sheet, gotchas.
 - `docs/combat-research.md`: what the original data says about battles, stages, skills.
 - `docs/feature-roadmap.md`: every feature in the original client, what is done and the backlog.
+- `docs/custom-character-prompts.md`: image-AI prompts for a character in this art style;
+  `tools/import_custom_character.py` imports the frames as an outfit (`database/data/custom_outfits.json`).
 - `config/game.php`: every gameplay number (avatars and their growth, combat formulas,
   villages, tower rewards). Formulas are ours; the original server code is not in the backup.
 

@@ -22,6 +22,7 @@ Tick an item when it ships and update its row in the tables below.
 - [x] Achievements (14 of the original 68 tracked: levels, gold spent, field bosses, sign-in days, points; the rest need arena, missions, pets, cards)
 - [x] Honor and honor exchange (honor and medals from new tower floors and dungeon clears, 22 ranks, medals for EXP; the Equipment Set tab waits for equipment sets)
 - [x] Costume change (outfits with grey/blue/orange rarity, Wardrobe page)
+- [x] Custom characters: prompts for an image AI and an importer that adds the frames as an outfit
 - [x] Avatar collection set bonuses and outfit upgrades (+1..+27, paid with outfit shards from duplicate draws)
 
 **Combat and PvE**

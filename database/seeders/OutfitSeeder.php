@@ -13,6 +13,10 @@ class OutfitSeeder extends Seeder
 
     private const COLLECTION = 'database/data/avatar_collection.json';
 
+    // Characters made for this rework (tools/import_custom_character.py), kept
+    // apart so re-extracting the original outfits leaves them alone.
+    private const CUSTOM = 'database/data/custom_outfits.json';
+
     /**
      * Load the outfit catalogue extracted from the original game data.
      */
@@ -31,7 +35,9 @@ class OutfitSeeder extends Seeder
             ? File::json(base_path(self::COLLECTION), JSON_THROW_ON_ERROR)
             : [];
 
-        foreach (File::json($path, JSON_THROW_ON_ERROR) as $outfit) {
+        $custom = is_file(base_path(self::CUSTOM)) ? File::json(base_path(self::CUSTOM), JSON_THROW_ON_ERROR) : [];
+
+        foreach ([...File::json($path, JSON_THROW_ON_ERROR), ...$custom] as $outfit) {
             $id = explode('_', $outfit['key'])[1];
             Outfit::updateOrCreate(['key' => $outfit['key']], [...$outfit, 'collection' => $collection[$id] ?? null]);
         }
