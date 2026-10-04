@@ -70,7 +70,8 @@ class TowerTest extends TestCase
             ->where('skills.1903.name', 'Secret Technique')
             ->where('skills.1910.icon', '/game-assets/skills/1910.png')
             // Mud Wall has no art of its own in the backup: it borrows Great Mud River's.
-            ->where('skills.3806.art', '1816'));
+            ->where('skills.3806.art', '1816')
+            ->where('skills.3820.art', '1803'));
     }
 
     public function test_tower_lists_the_floors_and_the_players_progress()

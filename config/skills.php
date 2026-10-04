@@ -151,7 +151,7 @@ return [
             'effect' => 'mist', 'amount' => 2, 'cap' => 40,
             'description' => 'A thick mist: attacks and counters may miss, likelier the longer the fight lasts, and nobody burns. Cannot run with Sunset.'],
         '3820' => ['name' => 'Giant Waterfall', 'school' => 'water', 'tier' => 2, 'requires' => '3813', 'kind' => 'before_enemy', 'chance' => 43, 'power' => 0, 'chakra' => 130, 'max_uses' => 3,
-            'effect' => 'waterfall', 'turns' => 3,
+            'effect' => 'waterfall', 'turns' => 3, 'art' => '1803',
             'description' => 'While suffering a debuff, a wall of water stuns the opponent for 6 seconds before it moves. Up to 3 times a fight.'],
         '1803' => ['name' => 'Crystal Blade', 'school' => 'water', 'tier' => 3, 'requires' => '3820', 'kind' => 'strike', 'chance' => 26, 'power' => 0, 'chakra' => 260,
             'effect' => 'freeze', 'turns' => 11,
